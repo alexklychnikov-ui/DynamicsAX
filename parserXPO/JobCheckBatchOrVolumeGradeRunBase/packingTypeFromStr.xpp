@@ -1,0 +1,21 @@
+private InforMPPackingType packingTypeFromStr(str _packingTypeStr)
+        {
+            InforMPPackingType ret = InforMPPackingType::NoDefined;
+            ;
+            switch (_packingTypeStr)
+            {
+                case 'plt':
+                    ret = InforMPPackingType::plt;
+                    break;
+                case 'pack':
+                    ret = InforMPPackingType::pack;
+                    break;
+                case 'box':
+                    ret = InforMPPackingType::box;
+                    break;
+                case 'ea':
+                    ret = InforMPPackingType::ea;
+                    break;
+            }
+            return ret;
+        }

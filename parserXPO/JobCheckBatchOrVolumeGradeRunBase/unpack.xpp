@@ -1,0 +1,14 @@
+public boolean unpack(container _packedClass)
+        {
+            int version = runbase::getVersion(_packedClass);
+            ;
+            switch (version)
+            {
+                case #CurrentVersion:
+                    [version,#CurrentList] = _packedClass;
+                    break;
+                default:
+                    return false;
+            }
+            return true;
+        }

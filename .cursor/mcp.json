@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "dynamics-ax-mcp": {
+      "command": "C:\\Python\\Projects\\DynamicsAX\\venv\\Scripts\\python.exe",
+      "args": [
+        "-u",
+        "C:\\Python\\Projects\\DynamicsAX\\mcp_server\\server.py"
+      ],
+      "env": {
+        "PYTHONIOENCODING": "utf-8",
+        "PYTHONUNBUFFERED": "1"
+      }
+    }
+  }
+}

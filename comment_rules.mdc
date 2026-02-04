@@ -1,0 +1,9 @@
+# Comment Rules
+
+The `@commentmeta.json` file holds the metadata that must be referenced whenever inserting or updating X++ comments. For every change in `.xpp` under `parserXPO`:
+
+- `developer` must always be `a.klychn`.
+- `date` must be the current date (`today`) at the moment the comment is inserted.
+- `project` must be read from `"project"` inside `@commentmeta.json`.
+
+Maintain the existing `// developer date project` syntax, and ensure the `project` token is freshly fetched from `@commentmeta.json` before writing any comment. This keeps the metadata in sync with the source of truth while honoring the Rule documented in `@comment_rules`.

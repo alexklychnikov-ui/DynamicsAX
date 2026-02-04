@@ -1,0 +1,52 @@
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific
+*.db
+*.db-journal
+
+# Logs
+*.log
+
+# Папки проекта
+NewProjec/
+AOT_cus/
+
+# Документация и планы
+rabbitConectionsPlan.md
+TS_GTIN_IntegrationAX2012.md
+RabbitCheckMPCodesTransfer.md
+RabbitIntNewAlgoritm.md
+ToDoList.md
+SETUP.md
+VERSION_LOG.md
+work.md
+Разработка промпта.txt
+
+# Файлы документации Word
+TS_GTIN_IntegrationAX2012.docx
+ТЗ_Интеграция_GTIN_Infor_AX2012 V2.docx
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+
+
+
+
+

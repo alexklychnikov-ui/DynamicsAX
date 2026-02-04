@@ -1,0 +1,319 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; Microsoft Dynamics AX Class: JobCheckBatchOrVolumeGradeRunBase выгружен
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #JobCheckBatchOrVolumeGradeRunBase
+    PROPERTIES
+      Name                #JobCheckBatchOrVolumeGradeRunBase
+      Extends             #RunBase
+      RunOn               #Client
+      Origin              #{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #canGoBatch
+        #public boolean canGoBatch()
+        #{
+        #    return false;
+        #}
+      ENDSOURCE
+      SOURCE #classDeclaration
+        #// a.klychn 03.02.2026 X5SHP_INT_1_000002338_01
+        #class JobCheckBatchOrVolumeGradeRunBase extends RunBase
+        #{
+        #    str                     filePath;
+        #    SalesId                 salesId;
+        #    DialogField             dfFilePath;
+        #    DialogField             dfSalesId;
+        #    DialogRunBase           dialog;
+        #    #DEFINE.CurrentVersion(1)
+        #    #LOCALMACRO.CurrentList
+        #        filePath,
+        #        salesId
+        #    #ENDMACRO
+        #}
+      ENDSOURCE
+      SOURCE #dialog
+        #protected Object dialog()
+        #{
+        #    ;
+        #    dialog = super();
+        #    dfFilePath   = dialog.addFieldValue(extendedTypeStr(String255), filePath, "XML file");
+        #    dfFilePath.mandatory_RU(true);
+        #    dfSalesId    = dialog.addFieldValue(extendedTypeStr(SalesId), salesId, "Sales order");
+        #    dfSalesId.mandatory_RU(true);
+        #    return dialog;
+        #}
+      ENDSOURCE
+      SOURCE #getFromDialog
+        #public boolean getFromDialog()
+        #{
+        #    ;
+        #    filePath = dfFilePath.value();
+        #    salesId  = dfSalesId.value();
+        #    return super();
+        #}
+      ENDSOURCE
+      SOURCE #pack
+        #public container pack()
+        #{
+        #    return [#CurrentVersion,#CurrentList];
+        #}
+      ENDSOURCE
+      SOURCE #packingTypeFromStr
+        #private InforMPPackingType packingTypeFromStr(str _packingTypeStr)
+        #{
+        #    InforMPPackingType ret = InforMPPackingType::NoDefined;
+        #    ;
+        #    switch (_packingTypeStr)
+        #    {
+        #        case 'plt':
+        #            ret = InforMPPackingType::plt;
+        #            break;
+        #        case 'pack':
+        #            ret = InforMPPackingType::pack;
+        #            break;
+        #        case 'box':
+        #            ret = InforMPPackingType::box;
+        #            break;
+        #        case 'ea':
+        #            ret = InforMPPackingType::ea;
+        #            break;
+        #    }
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #readerLinesHonestFromXml
+        #private void readerLinesHonestFromXml(XmlDocument _xdoc, SalesTable _salesTable, RefRecId _queueRecId)
+        #{
+        #    XmlNodeList                         nodeListLine, mpList;
+        #    XmlNode                             xmlNode, nodeDrop;
+        #    int                                 i, j;
+        #    ItemId                              itemId;
+        #    WMSPalletIdInfor                    wmsPalletId;
+        #    InventBatchId                       inventBatchId;
+        #    MPCode                              mpCode, mpHighCode, mpMiddleCode;
+        #    Qty                                 qty;
+        #    str                                 packingTypeStr;
+        #    GTINFromInfor                       gtinFromInfor;
+        #    InforMPPackingType                  packingType;
+        #    RabbitIntEngineImpInforSalesMPTable salesMPTable;
+        #    RecordInsertList                    ril;
+        #    str                                 nodeName;
+        #    str                                 messageId = strFmt("JOB_%1", DateTimeUtil::time(DateTimeUtil::getSystemDateTime()));
+        #    ;
+        #    nodeListLine = _xdoc.getElementsByTagName('DropIDDetails');
+        #    if (nodeListLine && nodeListLine.length() > 0)
+        #        nodeListLine = nodeListLine.item(0).childNodes();
+        #    else
+        #    {
+        #        nodeListLine = _xdoc.getElementsByTagName('ShipmentConfirmation');
+        #        if (nodeListLine && nodeListLine.length() > 0)
+        #            nodeListLine = nodeListLine.item(0).childNodes();
+        #    }
+        #    if (!nodeListLine || nodeListLine.length() == 0)
+        #        return;
+        #    ril = new RecordInsertList(tableNum(RabbitIntEngineImpInforSalesMPTable));
+        #    for (i = 0; i < nodeListLine.length(); i++)
+        #    {
+        #        xmlNode = nodeListLine.item(i);
+        #        nodeName = xmlNode.name();
+        #        if (nodeName == 'DropIDDetail' || nodeName == 'DropIdDetail')
+        #        {
+        #            if (!xmlNode.hasChildNodes())
+        #                continue;
+        #            gtinFromInfor = '';
+        #            mpCode = '';
+        #            mpHighCode = '';
+        #            mpMiddleCode = '';
+        #            qty = 0;
+        #            packingTypeStr = '';
+        #            wmsPalletId = '';
+        #            inventBatchId = '';
+        #            itemId = '';
+        #            mpList = xmlNode.childNodes();
+        #            for (j = 0; j < mpList.length(); j++)
+        #            {
+        #                nodeDrop = mpList.item(j);
+        #                switch (nodeDrop.name())
+        #                {
+        #                    case 'Sku':
+        #                        itemId = InventTable::findItemId_Infor(nodeDrop.innerText()).ItemId;
+        #                        break;
+        #                    case 'InventBatchId':
+        #                        inventBatchId = nodeDrop.innerText();
+        #                        break;
+        #                    case 'DropId':
+        #                    case 'DROPID':
+        #                        wmsPalletId = nodeDrop.innerText();
+        #                        break;
+        #                    case 'mpCode':
+        #                    case 'MPCode':
+        #                        mpCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+        #                        break;
+        #                    case 'middleMPCode':
+        #                        mpMiddleCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+        #                        break;
+        #                    case 'highMPCode':
+        #                        mpHighCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+        #                        break;
+        #                    case 'Qty':
+        #                    case 'QTY':
+        #                        qty = str2num(nodeDrop.innerText());
+        #                        break;
+        #                    case 'hs_mark_type':
+        #                        packingTypeStr = nodeDrop.innerText();
+        #                        break;
+        #                    case 'hs_mark':
+        #                    case 'HS_MARK':
+        #                        mpCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+        #                        break;
+        #                    case 'GTIN':
+        #                        gtinFromInfor = strLRTrim(SysEmailTable::htmlDecode(nodeDrop.innerText()));
+        #                        break;
+        #                }
+        #            }
+        #            packingType = this.packingTypeFromStr(packingTypeStr);
+        #            salesMPTable.clear();
+        #            salesMPTable.SalesId       = _salesTable.SalesId;
+        #            salesMPTable.MessageId     = messageId;
+        #            salesMPTable.Queue         = _queueRecId;
+        #            salesMPTable.ItemId       = itemId;
+        #            salesMPTable.InventBatchId = inventBatchId;
+        #            salesMPTable.WMSPalletId   = wmsPalletId;
+        #            salesMPTable.MPCode        = mpCode;
+        #            salesMPTable.Qty           = qty;
+        #            salesMPTable.MPPackingType = packingType;
+        #            salesMPTable.GTINFromInfor = gtinFromInfor;
+        #            salesMPTable.CaseSensitive = NoYes::No;
+        #            salesMPTable.CorrectCode   = '';
+        #            ril.add(salesMPTable);
+        #        }
+        #    }
+        #    ril.insertDatabase();
+        #}
+      ENDSOURCE
+      SOURCE #run
+    #public void run()
+    #    {
+    #        SalesTable                              salesTable;
+    #        XmlDocument                             xdoc;
+    #        str                                     xmlStr;
+    #        System.IO.StreamReader                  reader;
+    #        System.Text.Encoding                    encoding;
+    #        RabbitIntEngineImpInforSalesMPTable     salesMPTable;
+    #        RabbitIntEngineImp_Infor                engine;
+    #        MPSalesPurchMarkCodeTable               codeTable;
+    #        InventTable                             inventTable;
+    #        RecordInsertList                        ril;
+    #        ItemId                                  itemId = '';
+    #        RefRecId                                queueRecId = 0;
+    #        RabbitQueue                             rabbitQueue;
+    #        ;
+    #        salesTable = SalesTable::find(salesId, true);
+    #        if (!salesTable.RecId)
+    #        {
+    #            error(strFmt("Заказ на продажу %1 не найден", salesId));
+    #            return;
+    #        }
+    #        try
+    #        {
+    #            encoding = System.Text.Encoding::get_Default();
+    #            reader = new System.IO.StreamReader(filePath, encoding);
+    #            xmlStr = reader.ReadToEnd();
+    #            reader.Close();
+    #        }
+    #        catch
+    #        {
+    #            error(strFmt("Не удалось прочитать файл: %1", filePath));
+    #            return;
+    #        }
+    #        xdoc = new XmlDocument();
+    #        if (!xdoc.loadXml(xmlStr))
+    #        {
+    #            error("Некорректный XML");
+    #            return;
+    #        }
+    #        select firstOnly rabbitQueue;
+    #        if (rabbitQueue.RecId)
+    #            queueRecId = rabbitQueue.RecId;
+    #        else
+    #            warning("Очередь RabbitQueue пуста; Queue будет 0. Убедитесь, что RabbitIntEngineImpInforSalesMPTable.Queue допускает 0 или добавьте запись в RabbitQueue.");
+    #        delete_from salesMPTable where salesMPTable.SalesId == salesId;
+    #        this.readerLinesHonestFromXml(xdoc, salesTable, queueRecId);
+    #        engine = new RabbitIntEngineImp_Infor();
+    #        if (!engine.checkBatchOrVolumeGradeAccountin(salesId, true))
+    #        {
+    #            error("Проверка checkBatchOrVolumeGradeAccountin завершилась с ошибкой");
+    #            return;
+    #        }
+    #        ttsBegin;
+    #        ril = new RecordInsertList(tableNum(MPSalesPurchMarkCodeTable));
+    #        while select * from salesMPTable
+    #            order by ItemId
+    #            where salesMPTable.SalesId == salesId
+    #        {
+    #            if (salesMPTable.MPCode || salesMPTable.GTINFromInfor)
+    #            {
+    #                if (itemId != salesMPTable.ItemId)
+    #                    inventTable = InventTable::find(salesMPTable.ItemId);
+    #                codeTable.clear();
+    #                codeTable.initValue();
+    #                codeTable.SalesPurch        = SalesPurch::Sales;
+    #                codeTable.SalesPurchId      = salesId;
+    #                codeTable.CustVendAC        = salesTable.CustAccount;
+    #                codeTable.ItemId           = salesMPTable.ItemId;
+    #                codeTable.InventLocationId  = salesTable.InventLocationId;
+    #                codeTable.ProductName      = inventTable.productName(CompanyInfo::languageId());
+    #                codeTable.UnitId            = inventTable.inventUnitId();
+    #                codeTable.ProductGroupId    = inventTable.MPGroupId;
+    #                codeTable.Qty                = salesMPTable.Qty;
+    #                codeTable.Agregation         = NoYes::No;
+    #                codeTable.AgregationCount    = salesMPTable.Qty;
+    #                codeTable.InforPalletteId    = NoYes::No;
+    #                if (salesMPTable.GTINFromInfor)
+    #                {
+    #                    codeTable.GTINFromInfor = salesMPTable.GTINFromInfor;
+    #                    codeTable.MPCode         = '';
+    #                }
+    #                else
+    #                {
+    #                    codeTable.GTINFromInfor = '';
+    #                    codeTable.MPCode         = salesMPTable.MPCode;
+    #                    codeTable.CorrectCode    = salesMPTable.CorrectCode;
+    #                    codeTable.CaseSensitive  = salesMPTable.CaseSensitive;
+    #                }
+    #                ril.add(codeTable);
+    #                itemId = salesMPTable.ItemId;
+    #            }
+    #        }
+    #        ril.insertDatabase();
+    #        ttsCommit;
+    #        info(strFmt("Готово. Таблица MPSalesPurchMarkCodeTable заполнена для заказа %1", salesId));
+    #    }
+      ENDSOURCE
+      SOURCE #unpack
+        #public boolean unpack(container _packedClass)
+        #{
+        #    int version = runbase::getVersion(_packedClass);
+        #    ;
+        #    switch (version)
+        #    {
+        #        case #CurrentVersion:
+        #            [version,#CurrentList] = _packedClass;
+        #            break;
+        #        default:
+        #            return false;
+        #    }
+        #    return true;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

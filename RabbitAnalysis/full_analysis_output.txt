@@ -1,0 +1,1011 @@
+﻿======================================================================
+������ ������ RABBITMQ ����������
+======================================================================
+
+======================================================================
+1. RABBITCONNECTION (������� �����)
+======================================================================
+
+������: 5000 ��������
+�������/������ SOURCE: 10
+  - classDeclaration
+  - closeConnect
+  - getSuccessFinish
+  - init
+  - initConnect
+  - new
+  - parmChannelRefRecId
+  - run
+  - runOperation
+  - validate
+
+======================================================================
+2. RABBITCONN_OUTPUT
+======================================================================
+
+������: 15090 ��������
+�������/������ SOURCE: 22
+
+--- classDeclaration ---
+#class RabbitConn_Output extends RabbitConnection
+        #{
+        #    RabbitOutputSettings    outputSettings;
+        #    str                     message;
+        #    str                     xmlMessage;
+        #    boolean                 sendXmlMessage;
+        #
+        #    RabbitContentType       contentType;
+        #    RabbitDeliveryMode      deliveryMode;
+        #    RabbitExchangeName      exchangeName;
+        #    RabbitRoutingKey        routingKey;
+        #    RabbitRoutingKey        replyTo;
+        #    RabbitCorrelationId     correlationId;
+        #    RabbitAppId     
+
+--- encode ---
+#private str encode(str _message)
+        #{
+        #    System.Text.Encoding    sysEncoding = System.Text.Encoding::get_UTF8();
+        #    System.Byte[]           bytes;
+        #
+        #    str                     ret = _message;
+        #    ;
+        #    if (! sysEncoding.Equals(encoding))
+        #    {
+        #        bytes   = sysEncoding.GetBytes(_message);
+        #        ret     = encoding.GetString(bytes);
+        #    }
+        #    return ret;
+        #}
+
+--- generateCorrelationId ---
+#public RabbitCorrelationId generateCorrelationId()
+        #{
+        #    return newGuid();
+        #}
+
+--- generateMessageId ---
+#// $40DE 17.05.2021 MIK_INT_5_000001395_12
+        #public RabbitMessageId generateMessageId()
+        #{
+        #    return newGuid();
+        #}
+
+--- getSendedMessage ---
+#str getSendedMessage()
+        #{
+        #    return (sendXmlMessage) ? xmlMessage : message;
+        #}
+
+--- getTimestamp ---
+#// $40DE 19.05.2021 MIK_INT_5_000001395_13
+        #protected RabbitMQ.Client.AmqpTimestamp getTimestamp()
+        #{
+        #    RabbitMQ.Client.AmqpTimestamp   amqpTimestamp;
+        #    int64                           timeStamp;
+        #    utcDateTime                     currentDateTime;
+        #    System.DateTime                 sysDateTime;
+        #    System.DateTimeOffset           dateTimeOffset;
+        #
+        #    currentDateTime = Global::utcDateTime2SystemDateTime(DateTimeUtil::applyTimeZoneOffset(DateTimeUtil::getSystemDateTime(), DateTimeUtil::getUserPreferredTimeZone(
+
+--- init ---
+#void init(
+        #    boolean _needConnection = true, // derin 15.02.2021 MIK_INT_5_000001395_03
+        #    boolean _keepSettings   = true) // aand 15.06.2021 SYM_SYM_000000184_03
+        #{
+        #    ;
+        #
+        #    _needConnection = !_needConnection && multiConnect ? multiConnect : _needConnection; // a.klychn 25.07.2024 MIK_INT_000001929_01
+        #    //+ derin 15.02.2021 MIK_INT_5_000001395_03
+        #    if (_needConnection)
+        #    {
+        #        //+ a.klychn 25.07.2024 MIK_INT_000001929_01
+        #        if (!outputSettings.RecId) // a.klychn 10.07.2025 MI
+
+--- new ---
+#void new(str _message = "", boolean _sendXmlMessage = true)
+        #{
+        #    super();
+        #
+        #    message         = _message;
+        #    sendXmlMessage  = _sendXmlMessage;
+        #}
+
+--- parmContentType ---
+#public RabbitContentType parmContentType(RabbitContentType _contentType = contentType)
+        #{
+        #    contentType = _contentType;
+        #
+        #    return contentType;
+        #}
+        #
+
+--- parmCorrelationId ---
+#public RabbitCorrelationId parmCorrelationId(RabbitCorrelationId _correlationId = correlationId)
+        #{
+        #    correlationId = _correlationId;
+        #
+        #    return correlationId;
+        #}
+        #
+
+--- parmDeliveryMode ---
+#public RabbitDeliveryMode parmDeliveryMode(RabbitDeliveryMode _deliveryMode = deliveryMode)
+        #{
+        #    DeliveryMode = _deliveryMode;
+        #
+        #    return DeliveryMode;
+        #}
+        #
+
+--- parmEncoding ---
+#public System.Text.Encoding parmEncoding(System.Text.Encoding _encoding = encoding)
+        #{
+        #    encoding = _encoding;
+        #    return encoding;
+        #}
+
+--- parmExchangeName ---
+#
+        #public RabbitExchangeName parmExchangeName(RabbitExchangeName _exchangeName = exchangeName)
+        #{
+        #    ExchangeName = _exchangeName;
+        #
+        #    return ExchangeName;
+        #}
+        #
+
+--- parmHeaders ---
+#public RabbitHeaders parmHeaders(RabbitHeaders _headers = headers)
+        #{
+        #    headers = _headers;
+        #
+        #    return headers;
+        #}
+        #
+
+--- parmMessage ---
+#// derin 18.02.2021 MIK_INT_5_000001395_04
+        #public str parmMessage(str _message = message)
+        #{
+        #    message = _message;
+        #
+        #    return message;
+        #}
+
+--- parmMessageId ---
+#// ashirobo 02.07.2021 MIK_INT_5_000001395_23
+        #public RabbitMessageId parmMessageId(RabbitMessageId _messageId = messageId)
+        #{
+        #    messageId = _messageId;
+        #
+        #    return messageId;
+        #}
+
+--- parmOutputSettingsId ---
+#public RabbitOutputSettingsId parmOutputSettingsId(RabbitOutputSettingsId _outputSettingsId = outputSettings.Id)
+        #{
+        #
+        #    if(outputSettings.Id != _outputSettingsId)
+        #    {
+        #        outputSettings = RabbitOutputSettings::find(_outputSettingsId);
+        #        multiConnect = true;
+        #    }
+        #    return outputSettings.Id;
+        #}
+        #
+
+--- parmRoutingKey ---
+#public RabbitRoutingKey parmRoutingKey(RabbitRoutingKey _routingKey = routingKey)
+        #{
+        #    routingKey = _routingKey;
+        #
+        #    return routingKey;
+        #}
+        #
+
+--- parmSendXmlMessage ---
+#public Boolean parmSendXmlMessage(Boolean _sendXmlMessage = sendXmlMessage)
+        #{
+        #    sendXmlMessage = _sendXmlMessage;
+        #
+        #    return sendXmlMessage;
+        #}
+        #
+
+--- runOperation ---
+#void runOperation()
+        #{
+        #    System.Byte             deliveryModeByte;
+        #    System.Byte[]           xmlBytes;
+        #    System.Object           obj;
+        #
+        #    System.Collections.IDictionary                          dict;
+        #    System.Web.Script.Serialization.JavaScriptSerializer    ser;
+        #
+        #    deliveryModeByte = System.Convert::ToByte(enum2int(deliveryMode));
+        #
+        #    bp.set_ContentType(strfmt("%1", contentType));
+        #    bp.set_DeliveryMode(deliveryModeByte);
+        #    bp.set_CorrelationId(RabbitUtils::conver
+
+--- saveMessageLog ---
+#void saveMessageLog()
+        #{
+        #}
+
+--- validate ---
+#boolean validate()
+        #{
+        #    boolean ret;
+        #
+        #    ret = super();
+        #
+        #    if(ret && !contentType)
+        #    {
+        #        ret = false;
+        #        error(strfmt("�� ������ ��� �����������"));
+        #    }
+        #    if(ret && !deliveryMode)
+        #    {
+        #        ret = false;
+        #        error(strfmt("�� ������ ������ ��������"));
+        #    }
+        #    if(ret && !exchangeName)
+        #    {
+        #        ret = false;
+        #        error(strfmt("�� ������ ������� ������������"));
+        #    }
+        #
+    
+
+======================================================================
+3. RABBITINTENGINEEXPORTBATCH
+======================================================================
+
+������: 40376 ��������
+�������/������ SOURCE: 24
+
+=== �����: addToErrorLogFromInfolog ===
+#protected void addToErrorLogFromInfolog()
+        #{
+        #    if (infologLine() > currentInfoLine)
+        #    {
+        #        logErrorCon += infolog.copy(currentInfoLine + 1, infologLine());
+        #    }
+        #}
+        #
+
+=== �����: canGoBatchJournal ===
+#protected boolean canGoBatchJournal()
+        #{
+        #    return true;
+        #}
+
+=== �����: classDeclaration ===
+#// derin 15.02.2021 MIK_INT_5_000001395_03
+        #public class RabbitIntEngineExportBatch extends RunBaseBatch
+        #{
+        #    RabbitQueueJourId               jourId;
+        #
+        #    container                       logErrorCon;
+        #    integer                         currentInfoLine;
+        #
+        #    // derin 12.04.2021 MIK_INT_5_000001395_08 -->
+        #    //DialogField                     dlgCountLimit;
+        #    //Counter                         countLimit;
+        #    // derin 12.04.2021 MIK_INT_5_000001395_08 <--
+        #    DialogField                     dlgBatchSize;
+        #    DialogField                     dlgSymOperType;     // aand 09.06.2021 SYM_SYM_000000184_01
+        #    DialogField                     dlgDocumentTypeId;  // aand 09.06.2021 SYM_SYM_000000184_01
+        #
+        #    Counter                         batchSize;
+        #    SymOperationType                symOperationType;   // aand 09.06.2021 SYM_SYM_000000184_01
+        #    RabbitOutputDocumentTypeId      documentTypeId;     // aand 09.06.2021 SYM_SYM_000000184_01
+        #
+        #    // derin 12.04.2021 MIK_INT_5_000001395_08 -->
+        #    //#define.CurrentVersion(1)
+        #    #define.CurrentVersion(3)
+        #    // derin 12.04.2021 MIK_INT_5_000001395_08 <--
+        #    #LOCALMACRO.CurrentList
+        #        //countLimit,   // derin 12.04.2021 MIK_INT_5_000001395_08
+        #        batchSize,
+        #        symOperationType,   // aand 09.06.2021 SYM_SYM_000000184_01
+        #        documentTypeId      // aand 09.06.2021 SYM_SYM_000000184_01
+        #    #ENDMACRO
+        #}
+
+=== �����: construct ===
+#static RabbitIntEngineExportBatch construct()
+        #{
+        #    return new RabbitIntEngineExportBatch();
+        #}
+
+=== �����: defaultProductName ===
+#// a.klychn 25.01.2021 MIK_FIX_000001323_02
+        #[SysClientCacheDataMethodAttribute(true)]
+        #public client server display EcoResProductName defaultProductName()
+        #{
+        #    return this.productName(CompanyInfo::languageId());
+        #}
+
+=== �����: description ===
+#static ClassDescription description()
+        #{
+        #    return "Rabbit: �������� �������� ���������";
+        #}
+
+=== �����: dialog ===
+#public Object dialog()
+        #{
+        #    DialogRunbase       dialog = super();
+        #    ;
+        #    // derin 12.04.2021 MIK_INT_5_000001395_08 -->
+        #    //dlgCountLimit               = dialog.addFieldValue(extendedtypeStr(Counter), countLimit, "����� ������������ ���������", "������������ ����� (���������) ����� ������������ ��������� (0: �� �����������).");
+        #    // derin 12.04.2021 MIK_INT_5_000001395_08 <--
+        #    dlgBatchSize      = dialog.addFieldValue(extendedtypeStr(Counter), batchSize, "����� ��������� � ����� �������", "����� ���������, ������������ �� ���� ����� ����� � �������� Rabbit (����� ���������� � �������� ����������).");
+        #    dlgSymOperType    = dialog.addFieldValue(EnumStr(SymOperationType), symOperationType); // aand 09.06.2021 SYM_SYM_000000184_01
+        #    dlgDocumentTypeId = dialog.addFieldValue(extendedtypeStr(RabbitOutputDocumentTypeId), documentTypeId); // aand 09.06.2021 SYM_SYM_000000184_01
+        #
+        #    return dialog;
+        #}
+
+=== �����: exist ===
+#// a.klychn 15.10.2019 MIK_CR_000001079_01
+        #static boolean exist(RecId _RecId)
+        #{
+        #    return (select IO1CProdCustAccount
+        #            index hint RecId
+        #            where IO1CProdCustAccount.RecId     == _RecId
+        #        ).RecId != 0;
+        #}
+
+=== �����: find ===
+#// a.klychn 15.10.2019 MIK_CR_000001079_01
+        #static IO1CProdCustAccount find(CustAccount _custAccount, boolean _ForUpdate = false)
+        #{
+        #    IO1CProdCustAccount IO1CProdCustAccount;
+        #    ;
+        #
+        #    IO1CProdCustAccount.selectForUpdate(_ForUpdate);
+        #
+        #    select firstonly IO1CProdCustAccount
+        #        where IO1CProdCustAccount.CustAccount     == _custAccount;
+        #
+        #    return IO1CProdCustAccount;
+        #}
+
+=== �����: getFromDialog ===
+#public boolean getFromDialog()
+        #{
+        #    boolean ret;
+        #
+        #    ret = super();
+        #
+        #    if(ret)
+        #    {
+        #        // derin 12.04.2021 MIK_INT_5_000001395_08 -->
+        #        //countLimit    = dlgCountLimit.value();
+        #        // derin 12.04.2021 MIK_INT_5_000001395_08 <--
+        #        batchSize         = dlgBatchSize.value();
+        #        symOperationType  = dlgSymOperType.value();     // aand 09.06.2021 SYM_SYM_000000184_01
+        #        documentTypeId    = dlgDocumentTypeId.value();  // aand 09.06.2021 SYM_SYM_000000184_01
+        #    }
+        #
+        #    return ret;
+        #}
+
+=== �����: getOutputDocumentTypeRecId ===
+#private RefRecId getOutputDocumentTypeRecId(RabbitQueueJourId _queueJourId)
+        #{
+        #    return RabbitOutputDocumentType::find(RabbitJour::find(_queueJourId).OutputDocumentTypeId).RecId;
+        #}
+
+=== �����: infologCon2Str ===
+#private str infologCon2Str()
+        #{
+        #    int idx;
+        #    str strMessages;
+        #
+        #    for (idx = 2; idx <= conLen(logErrorCon); idx++)
+        #    {
+        #        strMessages += strFmt('%1\n', conPeek(conPeek(logErrorCon, idx), 2));
+        #    }
+        #    return strMessages;
+        #}
+
+=== �����: initLogData ===
+#public void initLogData()
+        #{
+        #    logErrorCon     = connull();
+        #    currentInfoLine = infologLine();
+        #}
+
+=== �����: loadQueues ===
+#private void loadQueues()
+        #{
+        #    RabbitConn_Input_Mess_Queue             conn_Input_Messages_Queue;
+        #    RabbitInputChannel                      rabbitInputChannel;
+        #    ;
+        #    setPrefix("@GMS10291");
+        #
+        #    while select rabbitInputChannel
+        #        where rabbitInputChannel.Active == noYes::Yes
+        #    {
+        #
+        #        setPrefix(rabbitInputChannel.ChannelId);
+        #
+        #        conn_Input_Messages_Queue = new RabbitConn_Input_Mess_Queue(rabbitInputChannel.ChannelId);
+        #        conn_Input_Messages_Queue.run();
+        #    }
+        #}
+
+=== �����: main ===
+#static void main(Args _args)
+        #{
+        #    RabbitIntEngineExportBatch engine = RabbitIntEngineExportBatch::construct();
+        #    ;
+        #
+        #    if (engine.prompt())
+        #    {
+        #        engine.run();
+        #    }
+        #}
+        #
+
+=== �����: name ===
+#display CustName name()
+        #{
+        #    return CustTable::find(this.CustAccount).name();
+        #}
+
+=== �����: pack ===
+#public container pack()
+        #{
+        #    return [#CurrentVersion, #CurrentList];
+        #}
+
+=== �����: productName ===
+#// a.klychn 25.01.2021 MIK_FIX_000001323_02
+        #public client server EcoResProductName productName(
+        #    LanguageId      _languageId,
+        #    InventDimId     _inventDimId = InventDim::inventDimIdBlank())
+        #{
+        #    EcoResProductRecId  productRecId;
+        #    InventDim           inventDim;
+        #
+        #    //check if a variant
+        #    if (!prmisDefault(_inventDimId))
+        #    {
+        #        inventDim = InventDim::find(_inventDimId);
+        #        productRecId = InventDimCombination::findByInventDim(this.ItemId, inventDim).DistinctProductVariant;
+        #
+        #    }
+        #    //variant not found, get product from this
+        #    if (!productRecId)
+        #    {
+        #        productRecId = InventTable::find(this.ItemId).Product;
+        #    }
+        #
+        #    return EcoResProduct::find(productRecId).productName(_languageId);
+        #}
+
+=== �����: run ===
+#public void run()
+        #{
+        #    #define.DeadlockRetryCount(100)
+        #    Counter     tryCount;
+        #    //+ o.boris1 21.10.2025 MIK_CR_000002282_01
+        #    DeadLockRetryCount  retryCount, maxRetryCount = RabbitParameters::getDeadLockRetryCount(#DeadlockRetryCount);
+        #    //- o.boris1 21.10.2025 MIK_CR_000002282_01
+        #    ;
+        #    setPrefix("@GMS10259");
+        #
+        #    try
+        #    {
+        #        this.initLogData();
+        #        this.runComplexExport(); // aand 11.06.2021 SYM_SYM_000000184_02this.runExport();
+        #    }
+        #    catch (Exception::Deadlock)
+        #    {
+        #        tryCount++;
+        #        //+ o.boris1 21.10.2025 MIK_CR_000002282_01
+        #        //if (tryCount >= #DeadlockRetryCount)
+        #        if (tryCount >= maxRetryCount)
+        #        //- o.boris1 21.10.2025 MIK_CR_000002282_01
+        #        {
+        #            throw error(strFmt("�������� ����� ������� ��������� ���������� %1 � ������ %2", Exception::Deadlock, funcName()));
+        #        }
+        #        else
+        #        {
+        #            retryCount++;       // o.boris1 21.10.2025 MIK_CR_000002282_01
+        #            retry;
+        #        }
+        #    }
+        #    //+ o.boris1 21.10.2025 MIK_CR_000002282_01
+        #    if (RabbitParameters::find().AdvancedLogging)
+        #    {
+        #        info(strFmt('run: RetryCount = %1', retryCount));
+        #    }
+        #    //- o.boris1 21.10.2025 MIK_CR_000002282_01
+        #
+        #}
+        #
+
+=== �����: runComplexExport ===
+#// aand 11.06.2021 SYM_SYM_000000184_02
+        #// ���������� ����� runExport, ������� ��������� �� ����� ���������� � ����� ������ ���
+        #protected void runComplexExport()
+        #{
+        #    #define.DeadlockRetryCount(100)
+        #
+        #    Counter     mainTryCount, queueTryCount, unlockTryCount;
+        #    Counter     limitCounter = 0;
+        #    Counter     batchCounter = 0;
+        #    Counter     batchNum = 0;
+        #    str         s; // $CC27-svaluykin 22.10.2021 SYM_SYM_000000548_01
+        #
+        #    boolean                     existsQuery;
+        #    RabbitJour                  jour;
+        #    RabbitQueue                 queue;
+        #
+        #    RabbitIntEngineExp          engineExp;
+        #
+        #    RabbitOutputSettings        outputSettings;
+        #    RabbitOutputDocumentType    outputDocumentType;
+        #    RabbitOutDocTypeExtends     outDocTypeExtends;
+        #
+        #    RabbitConn_Output           rabbitOutput;
+        #
+        #    System.Exception            netExcepn;
+        #
+        #    //MIK_INT_5_000002157_01, SMironov, 20.06.2025 ->
+        #    RabbitParameters            parameters      = RabbitParameters::find();
+        #    Counter                     repeatTryCount  = 0;
+        #    int                         repeat          = parameters.RabbitConnectTimeoutErrorRepeat;
+        #    int                         delay           = parameters.RabbitConnectTimeoutErrorDelay;
+        #    int                         resize          = parameters.RabbitConnectTimeoutErrorResize;
+        #    RabbitOutputDocumentTypeId  typeId          = parameters.RabbitConnectTimeoutErrorTypeId;
+        #    //MIK_INT_5_000002157_01, SMironov, 20.06.2025 <-
+        #    //+ o.boris1 21.10.2025 MIK_CR_000002282_01
+        #    DeadLockRetryCount          retryCount, retryCount1, retryCount2, delayRetry;
+        #    DeadLockRetryCount          maxRetryCount = RabbitParameters::getDeadLockRetryCount(#DeadlockRetryCount);
+        #    //- o.boris1 21.10.2025 MIK_CR_000002282_01
+        #
+        #    void messagesSend()
+        #    {
+        #        limitCounter++;
+        #        setPrefix(strFmt('������ %1, ������� %2', jour.JourId, queue.QueueJourId));
+        #        existsQuery = false;
+        #        try
+        #        {
+        #            outputSettings          = RabbitOutputSettings::find(queue.OutputSettingsId);
+        #            outputDocumentType      = RabbitOutputDocumentType::find(jour.OutputDocumentTypeId);
+        #
+        #            rabbitOutput.parmOutputSettingsId(outputSettings.Id);
+        #            rabbitOutput.init(false,
+        #                              false); // aand 15.06.2021 SYM_SYM_000000184_03
+        #            rabbitOutput.parmMessage(queue.XML);
+        #            rabbitOutput.parmExchangeName(outputSettings.ExchangeName);
+        #            rabbitOutput.parmCorrelationId(newGuid());
+        #            rabbitOutput.parmMessageId(newGuid());// ashirobo 07.07.2021 MIK_INT_5_000001395_23
+        #            rabbitOutput.runOperation();
+        #            ttsBegin;
+        #            jour.jourStatus = outputDocumentType.waitReply() ? RabbitJourStatus::WaitingAnswer : RabbitJourStatus::SuccessDone;
+        #            jour.OutgoingGuid   = rabbitOutput.parmMessageId(); // ashirobo 06.07.2021 MIK_INT_5_000001395_23
+        #            jour.update();
+        #
+        #            //+ ashirobo 02.07.2021 MIK_INT_5_000001395_23
+        #            queue.Guid      = rabbitOutput.parmMessageId();
+        #            //queue.Guid      = rabbitOutput.parmCorrelationId();
+        #            //- ashirobo 02.07.2021 MIK_INT_5_000001395_23
+        #            queue.QueueStatus = RabbitQueueStatus::Done;
+        #            queue.update();
+        #            ttsCommit;
+        #        }
+        #        catch (Exception::Deadlock)
+        #        {
+        #            queueTryCount++;
+        #            //+ o.boris1 21.10.2025 MIK_CR_000002282_01
+        #            //if (queueTryCount >= #DeadlockRetryCount)
+        #            if (queueTryCount >= maxRetryCount)
+        #            //- o.boris1 21.10.2025 MIK_CR_000002282_01
+        #            {
+        #                throw error(strFmt("�������� ����� ������� ��������� ���������� %1 � ������ %2", Exception::Deadlock, funcName()));
+        #            }
+        #            else
+        #            {
+        #                retryCount++;           // o.boris1 21.10.2025 MIK_CR_000002282_01
+        #                retry;
+        #            }
+        #        }
+        #        //+ $CC27-svaluykin 22.10.2021 SYM_SYM_000000548_01
+        #        catch (Exception::Error) // ������(!) ��������� ������ ��� ���������� ����� ������ ��� �� �������
+        #        {                        // ������� �������� �� ������ ����
+        #            s = Global::infoLogStr(infolog.infologData());
+        #            if (strFind(s, '����� ������', 1, strLen(s)))
+        #            {
+        #                queueTryCount++;
+        #                //+ o.boris1 21.10.2025 MIK_CR_000002282_01
+        #                //if (queueTryCount >= #DeadlockRetryCount)
+        #                if (queueTryCount >= maxRetryCount)
+        #                //- o.boris1 21.10.2025 MIK_CR_000002282_01
+        #                {
+        #                    throw error(strFmt("�������� ����� ������� ��������� ���������� %1 � ������ %2", Exception::Deadlock, funcName()));
+        #                }
+        #                else
+        #                {
+        #                    retryCount1++;          // o.boris1 21.10.2025 MIK_CR_000002282_01
+        #                    retry;
+        #                }
+        #            }
+        #        }
+        #        //- $CC27-svaluykin 22.10.2021 SYM_SYM_000000548_01
+        #    }
+        #
+        #    setPrefix("�������� �������� ��������� � Rabbit");
+        #
+        #    do
+        #    {
+        #        try
+        #        {
+        #            existsQuery = false;
+        #            batchCounter = 0;
+        #            batchNum++;
+        #
+        #            setPrefix(strFmt("������� %1:", batchNum));
+        #
+        #            rabbitOutput = new RabbitConn_Output('', false);
+        #            rabbitOutput.initConnect();
+        #
+        #            if (symOperationType == SymOperationType::None || jourId || documentTypeId)
+        #            {
+        #                while select forUpdate queue order by modifiedDateTime
+        #                    where queue.QueueStatus     == RabbitQueueStatus::Create    &&
+        #                          queue.Direction       == RabbitDirection::Outgoing    &&
+        #                          (!jourId              || queue.jourId  == jourId)     &&
+        #                          queue.Locked          == NoYes::No
+        #                join forupdate jour
+        #                    where  jour.JourId   == queue.JourId
+        #                        && ((!documentTypeId) || (documentTypeId && jour.OutputDocumentTypeId == documentTypeId))
+        #                {
+        #                    if (!queue.XML)
+        #                        continue;
+        #
+        #                    existsQuery = true;
+        #                    batchCounter++;
+        #
+        #                    if (batchCounter > batchSize)
+        #                        break;
+        #                    messagesSend();
+        #                }
+        #            }
+        #            else
+        #            {
+        #                while select forUpdate queue order by modifiedDateTime
+        #                    where queue.QueueStatus     == RabbitQueueStatus::Create    &&
+        #                          queue.Direction       == RabbitDirection::Outgoing    &&
+        #                          queue.Locked          == NoYes::No
+        #                join forupdate jour
+        #                    where  jour.JourId   == queue.JourId
+        #                    exists join outDocTypeExtends
+        #                        where  outDocTypeExtends.OutputDocumentTypeId == jour.OutputDocumentTypeId
+        #                            && outDocTypeExtends.OperationType        == symOperationType
+        #                {
+        #                    if (!queue.XML)
+        #                        continue;
+        #
+        #                    existsQuery = true;
+        #                    batchCounter++;
+        #
+        #                    if (batchCounter > batchSize)
+        #                        break;
+        #
+        #                    messagesSend();
+        #                }
+        #
+        #            }
+        #            rabbitOutput.closeConnect();
+        #        }
+        #        catch (Exception::Deadlock)
+        #        {
+        #            mainTryCount++;
+        #            //+ o.boris1 21.10.2025 MIK_CR_000002282_01
+        #            //if (mainTryCount >= #DeadlockRetryCount)
+        #            if (mainTryCount >= maxRetryCount)
+        #            //- o.boris1 21.10.2025 MIK_CR_000002282_01
+        #            {
+        #                throw error(strFmt("�������� ����� ������� ��������� ���������� %1 � ������ %2", Exception::Deadlock, funcName()));
+        #            }
+        #            else
+        #            {
+        #                retryCount2++;          // o.boris1 21.10.2025 MIK_CR_000002282_01
+        #                retry;
+        #            }
+        #        }
+        #        catch (Exception::CLRError)
+        #        {
+        #            netExcepn = CLRInterop::getLastException();
+        #            error(netExcepn.ToString());
+        #        }
+        #        //MIK_INT_5_000002157_01, SMironov, 20.06.2025 ->
+        #        catch
+        #        {
+        #            if (documentTypeId == typeId)
+        #            {
+        #                repeatTryCount++;
+        #                if (repeatTryCount <= repeat)
+        #                {
+        #                    sleep(delay * 1000);
+        #                    if (resize > 0)
+        #                        batchSize = batchSize / resize;
+        #                    delayRetry++;           // o.boris1 21.10.2025 MIK_CR_000002282_01
+        #                    retry;
+        #                }
+        #                else
+        #                    clrError();
+        #            }
+        #            else
+        #                clrError();
+        #        }
+        #        //MIK_INT_5_000002157_01, SMironov, 20.06.2025 <-
+        #    }
+        #    while(existsQuery);
+        #    info(strFmt('���������� %1 ��������� (%2 ������� �� %3 ���������)', limitCounter, batchNum, batchSize));
+        #    //+ o.boris1 21.10.2025 MIK_CR_000002282_01
+        #    if (RabbitParameters::find().AdvancedLogging)
+        #    {
+        #        info(strFmt('runComplexExport: RetryCount = %1; retryCount1 = %2, retryCount2 = %3, delayRetry = %4',
+        #            retryCount, retryCount1, retryCount2, delayRetry));
+        #    }
+        #    //- o.boris1 21.10.2025 MIK_CR_000002282_01
+        #}
+
+=== �����: runExport ===
+#protected void runExport()
+        #{
+        #    #define.DeadlockRetryCount(100)
+        #
+        #    Counter     mainTryCount, queueTryCount, unlockTryCount;
+        #    Counter     limitCounter = 0;
+        #    Counter     batchCounter = 0;
+        #    Counter     batchNum = 0;
+        #
+        #    boolean                     existsQuery;
+        #    RabbitJour                  jour;
+        #    RabbitQueue                 queue;
+        #
+        #    RabbitIntEngineExp          engineExp;
+        #
+        #    RabbitOutputSettings        outputSettings;
+        #    RabbitOutputDocumentType    outputDocumentType;
+        #
+        #    RabbitConn_Output           rabbitOutput;
+        #
+        #    System.Exception netExcepn; // derin 12.04.2021 MIK_INT_5_000001395_08
+        #    //+ o.boris1 21.10.2025 MIK_CR_000002282_01
+        #    DeadLockRetryCount          retryCount, retryCount1;
+        #    DeadLockRetryCount          maxRetryCount = RabbitParameters::getDeadLockRetryCount(#DeadlockRetryCount);
+        #    //- o.boris1 21.10.2025 MIK_CR_000002282_01
+        #;
+        #    setPrefix("�������� �������� ��������� � Rabbit");
+        #
+        #    do
+        #    {
+        #        try
+        #        {
+        #            existsQuery = false;
+        #            batchCounter = 0;
+        #            batchNum++;
+        #
+        #            setPrefix(strFmt("������� %1:", batchNum));
+        #
+        #            rabbitOutput = new RabbitConn_Output(''
+        #                , false);       // derin 18.02.2021 MIK_INT_5_000001395_04
+        #            rabbitOutput.initConnect();
+        #
+        #            while select forUpdate queue order by modifiedDateTime
+        #                where queue.QueueStatus     == RabbitQueueStatus::Create    &&
+        #                      queue.Direction       == RabbitDirection::Outgoing    &&
+        #                      (!jourId              || queue.jourId  == jourId)     &&
+        #                      queue.Locked          == NoYes::No
+        #            join forupdate jour
+        #                where  jour.JourId   == queue.JourId
+        #                    && ((!documentTypeId) || (documentTypeId && jour.OutputDocumentTypeId == documentTypeId))   // aand 09.06.2021 SYM_SYM_000000184_01
+        #            {
+        #                if (!queue.XML)
+        #                    continue;
+        #
+        #                existsQuery = true;
+        #                //limitCounter++;   // derin 19.02.2021 MIK_INT_5_000001395_04
+        #                batchCounter++;
+        #
+        #                //+ derin 19.02.2021 MIK_INT_5_000001395_04
+        #                //if (limitCounter > countLimit)
+        #                //    break;
+        #                //- derin 19.02.2021 MIK_INT_5_000001395_04
+        #
+        #                if (batchCounter > batchSize)
+        #                    break;
+        #
+        #                //+ derin 19.02.2021 MIK_INT_5_000001395_04
+        #                limitCounter++;
+        #                // derin 12.04.2021 MIK_INT_5_000001395_08 -->
+        #                /*
+        #                if (limitCounter > countLimit
+        #                    && countLimit > 0) //+++
+        #                    break;
+        #                */
+        #                // derin 12.04.2021 MIK_INT_5_000001395_08 <--
+        #                setPrefix(strFmt('������ %1, ������� %2', jour.JourId, queue.QueueJourId));
+        #                existsQuery = false;
+        #                //- derin 19.02.2021 MIK_INT_5_000001395_04
+        #                try
+        #                {
+        #                    outputSettings          = RabbitOutputSettings::find(queue.OutputSettingsId);
+        #                    outputDocumentType      = RabbitOutputDocumentType::find(jour.OutputDocumentTypeId);
+        #
+        #                    rabbitOutput.parmOutputSettingsId(outputSettings.Id);
+        #                    //rabbitOutput.parmSendXmlMessage(true);    // derin 18.02.2021 MIK_INT_5_000001395_04
+        #                    rabbitOutput.init(false);
+        #                    rabbitOutput.parmMessage(queue.XML);        // derin 18.02.2021 MIK_INT_5_000001395_04
+        #                    // derin 12.04.2021 MIK_INT_5_000001395_08 -->
+        #                    rabbitOutput.parmExchangeName(outputSettings.ExchangeName);
+        #                    rabbitOutput.parmCorrelationId(newGuid());
+        #                    rabbitOutput.parmMessageId(newGuid());// ashirobo 07.07.2021 MIK_INT_5_000001395_23
+        #                    // derin 12.04.2021 MIK_INT_5_000001395_08 <--
+        #                    rabbitOutput.runOperation();
+        #                    // derin 12.04.2021 MIK_INT_5_000001395_08 -->
+        #                    /*
+        #                    info(strFmt("��������� ������ %1 �������� ������� ���������� � ������� %2", strlen(queue.XML), outputSettings.ExchangeName)); // derin 19.02.2021 MIK_INT_5_000001395_04
+        #                    */
+        #                    // derin 12.04.2021 MIK_INT_5_000001395_08 <--
+        #
+        #                    ttsBegin;
+        #                    jour.jourStatus = outputDocumentType.waitReply() ? RabbitJourStatus::WaitingAnswer : RabbitJourStatus::SuccessDone;
+        #                    jour.OutgoingGuid   = rabbitOutput.parmMessageId(); // ashirobo 06.07.2021 MIK_INT_5_000001395_23
+        #                    jour.update();
+        #
+        #                    //+ ashirobo 02.07.2021 MIK_INT_5_000001395_23
+        #                    queue.Guid      = rabbitOutput.parmMessageId();
+        #                    //queue.Guid      = rabbitOutput.parmCorrelationId();
+        #                    //- ashirobo 02.07.2021 MIK_INT_5_000001395_23
+        #                    queue.QueueStatus = RabbitQueueStatus::Done;
+        #                    queue.update();
+        #                    ttsCommit;
+        #
+        #                }
+        #                catch (Exception::Deadlock)
+        #                {
+        #                    queueTryCount++;
+        #                    //+ o.boris1 21.10.2025 MIK_CR_000002282_01
+        #                    //if (queueTryCount >= #DeadlockRetryCount)
+        #                    if (queueTryCount >= maxRetryCount)
+        #                    //- o.boris1 21.10.2025 MIK_CR_000002282_01
+        #                    {
+        #                        throw error(strFmt("�������� ����� ������� ��������� ���������� %1 � ������ %2", Exception::Deadlock, funcName()));
+        #                    }
+        #                    else
+        #                    {
+        #                        retryCount++;           // o.boris1 21.10.2025 MIK_CR_000002282_01
+        #                        retry;
+        #                    }
+        #                }
+        #                // derin 12.04.2021 MIK_INT_5_000001395_08 -->
+        #                /*
+        #                catch
+        #                {
+        #                    try
+        #                    {
+        #                        this.addToErrorLogFromInfolog();
+        #                    }
+        #                    catch (Exception::Deadlock)
+        #                    {
+        #                        unlockTryCount++;
+        #                        if (unlockTryCount >= #DeadlockRetryCount)
+        #                        {
+        #                            throw error(strFmt("�������� ����� ������� ��������� ���������� %1 � ������ %2", Exception::Deadlock, funcName()));
+        #                        }
+        #                        else
+        #                        {
+        #                            retry;
+        #                        }
+        #                    }
+        #                    catch
+        #                    {
+        #                        this.addToErrorLogFromInfolog();
+        #                    }
+        #                }
+        #                */
+        #                // derin 12.04.2021 MIK_INT_5_000001395_08 <--
+        #            }
+        #            rabbitOutput.closeConnect();
+        #        }
+        #        catch (Exception::Deadlock)
+        #        {
+        #            mainTryCount++;
+        #            //+ o.boris1 21.10.2025 MIK_CR_000002282_01
+        #            //if (mainTryCount >= #DeadlockRetryCount)
+        #            if (mainTryCount >= maxRetryCount)
+        #            //- o.boris1 21.10.2025 MIK_CR_000002282_01
+        #            {
+        #                throw error(strFmt("�������� ����� ������� ��������� ���������� %1 � ������ %2", Exception::Deadlock, funcName()));
+        #            }
+        #            else
+        #            {
+        #                retryCount1++;              // o.boris1 21.10.2025 MIK_CR_000002282_01
+        #                retry;
+        #            }
+        #        }
+        #        // derin 12.04.2021 MIK_INT_5_000001395_08 -->
+        #        catch (Exception::CLRError)
+        #        {
+        #            netExcepn = CLRInterop::getLastException();
+        #            error(netExcepn.ToString());
+        #        }
+        #        // derin 12.04.2021 MIK_INT_5_000001395_08 <--
+        #    }
+        #    //+ derin 18.02.2021 MIK_INT_5_000001395_04
+        #    //while(existsQuery && (limitCounter <= countLimit || countLimit <= 0));
+        #    // derin 12.04.2021 MIK_INT_5_000001395_08 -->
+        #    /*
+        #    while(existsQuery
+        #        && (    limitCounter < countLimit
+        #            ||  countLimit   <= 0));
+        #    */
+        #    while(existsQuery);
+        #    // derin 12.04.2021 MIK_INT_5_000001395_08 <--
+        #    //- derin 18.02.2021 MIK_INT_5_000001395_04
+        #
+        #    info(strFmt('���������� %1 ��������� (%2 ������� �� %3 ���������)', limitCounter, batchNum
+        #        //+ derin 18.02.2021 MIK_INT_5_000001395_04
+        #        //, batchCounter));
+        #        , batchSize));
+        #        //- derin 18.02.2021 MIK_INT_5_000001395_04
+        #    //+ o.boris1 21.10.2025 MIK_CR_000002282_01
+        #    if (RabbitParameters::find().AdvancedLogging)
+        #    {
+        #        info(strFmt('runExport: RetryCount = %1; retryCount1 = %2', retryCount, retryCount1));
+        #    }
+        #    //- o.boris1 21.10.2025 MIK_CR_000002282_01
+        #}
+
+=== �����: setQueryRefTableJourId ===
+#public void setQueryRefTableJourId(RabbitQueueJourId _jourId)
+        #{
+        #    jourId = _jourId;
+        #}
+
+=== �����: unpack ===
+#public boolean unpack(container packedClass)
+        #{
+        #    Version version = RunBase::getVersion(packedClass);
+        #    ;
+        #
+        #    switch (version)
+        #    {
+        #        case #CurrentVersion:
+        #            [version, #CurrentList] = packedClass;
+        #            break;
+        #
+        #        default:
+        #            return false;
+        #    }
+        #
+        #    return true;
+        #}
+
+=== �����: validate ===
+#public boolean validate(Object calledFrom = null)
+        #{
+        #    boolean ret;
+        #
+        #    ret = super(calledFrom);
+        #
+        #    if(ret && batchSize < 0)
+        #    {
+        #        ret = checkfailed(strfmt("����� ��������� � ����� ������� ������ ���� �� �������������"));
+        #    }
+        #    return ret;
+        #}

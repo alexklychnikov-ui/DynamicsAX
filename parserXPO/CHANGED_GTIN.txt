@@ -1,0 +1,23 @@
+Изменённые/добавленные методы для интеграции GTIN (ToDoList п.15-31)
+======================================================================
+
+Класс RabbitIntEngineImp_Infor (папка RabbitIntEngineImp_Infor/):
+  - readerLinesHonest.xpp    — чтение тега <GTIN> в DropIdDetail, заполнение GTINFromInfor
+  - saveMPCode.xpp           — запись GTINFromInfor, AgregationCount, взаимоисключение с MPCode, агрегация по SKU
+  - createPickInvoices.xpp  — вызов checkBatchOrVolumeGradeAccountin перед циклом по паллетам
+  - checkBatchOrVolumeGradeAccountin.xpp — проверки п.19-30 (без изменений, используется в createPickInvoices)
+
+Класс RabbitIntEngineImp_Infor_Shipped (ordershipped9) — папка RabbitIntEngineImp_Infor_Shipped/:
+  - bodyTagName.xpp          — возврат #ShipmentConfirmation
+  - lineTagName.xpp          — возврат #ShipmentConfirmationDetail
+  - postAfterCreate.xpp      — вызов postSalesPick/postSales/postTransfer
+  - postSalesPick.xpp        — вызов readerLinesHonest(salesTable, setDropId), createPickInvoices(salesTable, setDropId)
+
+Класс RabbitIntEngineImp_Infor_ShippedPart (dropidshipped9) — папка RabbitIntEngineImp_Infor_ShippedPart/:
+  - bodyTagName.xpp          — возврат #DropShipmentConfirmation
+  - lineTagName.xpp          — возврат тега строки
+  - postAfterCreate.xpp      — вызов postSales/postTransfer
+  - postAfterCreate.xpp      — вызов postSales/postTransfer
+  - postSales_readerLinesHonest_snippet.xpp — фрагмент postSales: вызов readerLinesHonest(salesTable, dropIdSet), createPickInvoices(salesTable, dropIdSet, true)
+
+Источник классов _Shipped и _ShippedPart: XPO/SharedProject_X5SHP_INT_1_000002338_01.xpo

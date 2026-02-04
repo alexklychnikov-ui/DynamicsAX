@@ -1,0 +1,108 @@
+private void readerLinesHonestFromXml(XmlDocument _xdoc, SalesTable _salesTable, RefRecId _queueRecId)
+        {
+            XmlNodeList                         nodeListLine, mpList;
+            XmlNode                             xmlNode, nodeDrop;
+            int                                 i, j;
+            ItemId                              itemId;
+            WMSPalletIdInfor                    wmsPalletId;
+            InventBatchId                       inventBatchId;
+            MPCode                              mpCode, mpHighCode, mpMiddleCode;
+            Qty                                 qty;
+            str                                 packingTypeStr;
+            GTINFromInfor                       gtinFromInfor;
+            InforMPPackingType                  packingType;
+            RabbitIntEngineImpInforSalesMPTable salesMPTable;
+            RecordInsertList                    ril;
+            str                                 nodeName;
+            str                                 messageId = strFmt("JOB_%1", DateTimeUtil::time(DateTimeUtil::getSystemDateTime()));
+            ;
+            nodeListLine = _xdoc.getElementsByTagName('DropIDDetails');
+            if (nodeListLine && nodeListLine.length() > 0)
+                nodeListLine = nodeListLine.item(0).childNodes();
+            else
+            {
+                nodeListLine = _xdoc.getElementsByTagName('ShipmentConfirmation');
+                if (nodeListLine && nodeListLine.length() > 0)
+                    nodeListLine = nodeListLine.item(0).childNodes();
+            }
+            if (!nodeListLine || nodeListLine.length() == 0)
+                return;
+            ril = new RecordInsertList(tableNum(RabbitIntEngineImpInforSalesMPTable));
+            for (i = 0; i < nodeListLine.length(); i++)
+            {
+                xmlNode = nodeListLine.item(i);
+                nodeName = xmlNode.name();
+                if (nodeName == 'DropIDDetail' || nodeName == 'DropIdDetail')
+                {
+                    if (!xmlNode.hasChildNodes())
+                        continue;
+                    gtinFromInfor = '';
+                    mpCode = '';
+                    mpHighCode = '';
+                    mpMiddleCode = '';
+                    qty = 0;
+                    packingTypeStr = '';
+                    wmsPalletId = '';
+                    inventBatchId = '';
+                    itemId = '';
+                    mpList = xmlNode.childNodes();
+                    for (j = 0; j < mpList.length(); j++)
+                    {
+                        nodeDrop = mpList.item(j);
+                        switch (nodeDrop.name())
+                        {
+                            case 'Sku':
+                                itemId = InventTable::findItemId_Infor(nodeDrop.innerText()).ItemId;
+                                break;
+                            case 'InventBatchId':
+                                inventBatchId = nodeDrop.innerText();
+                                break;
+                            case 'DropId':
+                            case 'DROPID':
+                                wmsPalletId = nodeDrop.innerText();
+                                break;
+                            case 'mpCode':
+                            case 'MPCode':
+                                mpCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+                                break;
+                            case 'middleMPCode':
+                                mpMiddleCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+                                break;
+                            case 'highMPCode':
+                                mpHighCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+                                break;
+                            case 'Qty':
+                            case 'QTY':
+                                qty = str2num(nodeDrop.innerText());
+                                break;
+                            case 'hs_mark_type':
+                                packingTypeStr = nodeDrop.innerText();
+                                break;
+                            case 'hs_mark':
+                            case 'HS_MARK':
+                                mpCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+                                break;
+                            case 'GTIN':
+                                gtinFromInfor = strLRTrim(SysEmailTable::htmlDecode(nodeDrop.innerText()));
+                                break;
+                        }
+                    }
+                    packingType = this.packingTypeFromStr(packingTypeStr);
+                    salesMPTable.clear();
+                    salesMPTable.SalesId       = _salesTable.SalesId;
+                    salesMPTable.MessageId     = messageId;
+                    salesMPTable.Queue         = _queueRecId;
+                    salesMPTable.ItemId       = itemId;
+                    salesMPTable.InventBatchId = inventBatchId;
+                    salesMPTable.WMSPalletId   = wmsPalletId;
+                    salesMPTable.MPCode        = mpCode;
+                    salesMPTable.Qty           = qty;
+                    salesMPTable.MPPackingType = packingType;
+                    salesMPTable.GTINFromInfor = gtinFromInfor;
+                    salesMPTable.CaseSensitive = NoYes::No;
+                    salesMPTable.CorrectCode   = '';
+                    ril.add(salesMPTable);
+                }
+            }
+            ril.insertDatabase();
+        }

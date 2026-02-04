@@ -1,0 +1,26 @@
+---
+alwaysApply: true
+Проект ориентирован на разработку Microsoft Dynamics AX 2012 языке X++ 
+Дейстуй как 10 высококвалифицированных разработчиков на X++
+Реальная разработка (модификация кода X++) ведется только в папке parserXPO файлах XPP
+Файлы в этой папке parserXPO удаляются только пользователем
+Добавляются только в результате работы модуля @xpo_parser или по запросу пользователя парсингом из сервера MCP dynamics-ax-mcp
+Никогда не добавляй сразу все объекты из AOT (из файла @PrivateProject_CUS_Layer_Export)
+10|Modifications to X++ code should only be performed in the parserXPO directory, in the corresponding .xpp files.
+
+# Поиск и извлечение объектов AOT
+- Всегда, когда нужно найти объект AOT (по запросу пользователя или AI-агента), сначала используй индексированную базу `indexXPO_cus/xpo_index.db` (таблица `elements`) для поиска по `element_name` / `element_type`.
+- Для извлечения конкретного объекта из большого `AOT_cus/PrivateProject_CUS_Layer_Export.xpo` используй вспомогательную функцию `parse_object_from_index(...)` из `xpo_parser.py`, которая:
+  - берет `file_position` и `size` из БД,
+  - вырезает соответствующий chunk XPO,
+  - парсит его через `utils/xpo_utils.parse_xpo_element`,
+  - сохраняет в `parserXPO/<ObjectName>/*.xpp` и `properties.txt`.
+- Не читай и не парсь весь `PrivateProject_CUS_Layer_Export.xpo` целиком, если достаточно точечного извлечения через индекс.
+
+# Синтаксис API форм и контролов X++
+- При использовании методов контролов форм (FormControl, FormDataFieldControl, FormCheckBoxControl и т.п.) — например `value()` / `valueStr()`, `modified()`, `visible()` — всегда проверять применимость и корректный синтаксис по эталонному коду в `AOT_cus/PrivateProject_CUS_Layer_Export.xpo` (через индекс `indexXPO_cus/xpo_index.db` и точечное извлечение) и использовать только подходящий для данного типа контрола вариант.
+
+# Кодировка файлов для AOT
+- Файлы **XPO** (и любой исходный код X++, который будет импортироваться или открываться в AOT Dynamics AX) должны сохраняться в кодировке **Windows-1251 (CP1251)**. Иначе кириллица в AOT отображается как кракозябры.
+- При создании или изменении файлов `.xpo` в папке `parserXPO` (и при записи в папку `XPO`) после записи содержимого пересохраняй файл в CP1251, например: `python -c "path=r'<путь>'; open(path,'w',encoding='cp1251',newline='').write(open(path,'r',encoding='utf-8').read())"` или через отдельный скрипт. Либо сразу записывай через API с `encoding='cp1251'`.
+---

@@ -1,0 +1,10 @@
+protected Object dialog()
+        {
+            ;
+            dialog = super();
+            dfFilePath   = dialog.addFieldValue(extendedTypeStr(String255), filePath, "XML file");
+            dfFilePath.mandatory_RU(true);
+            dfSalesId    = dialog.addFieldValue(extendedTypeStr(SalesId), salesId, "Sales order");
+            dfSalesId.mandatory_RU(true);
+            return dialog;
+        }

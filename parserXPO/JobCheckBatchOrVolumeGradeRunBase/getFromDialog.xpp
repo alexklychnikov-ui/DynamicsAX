@@ -1,0 +1,7 @@
+public boolean getFromDialog()
+        {
+            ;
+            filePath = dfFilePath.value();
+            salesId  = dfSalesId.value();
+            return super();
+        }

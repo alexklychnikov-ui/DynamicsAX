@@ -1,0 +1,97 @@
+public void run()
+    {
+        SalesTable                              salesTable;
+        XmlDocument                             xdoc;
+        str                                     xmlStr;
+        System.IO.StreamReader                  reader;
+        System.Text.Encoding                    encoding;
+        RabbitIntEngineImpInforSalesMPTable     salesMPTable;
+        RabbitIntEngineImp_Infor                engine;
+        MPSalesPurchMarkCodeTable               codeTable;
+        InventTable                             inventTable;
+        RecordInsertList                        ril;
+        ItemId                                  itemId = '';
+        RefRecId                                queueRecId = 0;
+        RabbitQueue                             rabbitQueue;
+        ;
+        salesTable = SalesTable::find(salesId, true);
+        if (!salesTable.RecId)
+        {
+            error(strFmt("Заказ на продажу %1 не найден", salesId));
+            return;
+        }
+        try
+        {
+            encoding = System.Text.Encoding::get_Default();
+            reader = new System.IO.StreamReader(filePath, encoding);
+            xmlStr = reader.ReadToEnd();
+            reader.Close();
+        }
+        catch
+        {
+            error(strFmt("Не удалось прочитать файл: %1", filePath));
+            return;
+        }
+        xdoc = new XmlDocument();
+        if (!xdoc.loadXml(xmlStr))
+        {
+            error("Некорректный XML");
+            return;
+        }
+        select firstOnly rabbitQueue;
+        if (rabbitQueue.RecId)
+            queueRecId = rabbitQueue.RecId;
+        else
+            warning("Очередь RabbitQueue пуста; Queue будет 0. Убедитесь, что RabbitIntEngineImpInforSalesMPTable.Queue допускает 0 или добавьте запись в RabbitQueue.");
+        delete_from salesMPTable where salesMPTable.SalesId == salesId;
+        this.readerLinesHonestFromXml(xdoc, salesTable, queueRecId);
+        engine = new RabbitIntEngineImp_Infor();
+        if (!engine.checkBatchOrVolumeGradeAccountin(salesId, true))
+        {
+            error("Проверка checkBatchOrVolumeGradeAccountin завершилась с ошибкой");
+            return;
+        }
+        ttsBegin;
+        ril = new RecordInsertList(tableNum(MPSalesPurchMarkCodeTable));
+        while select * from salesMPTable
+            order by ItemId
+            where salesMPTable.SalesId == salesId
+        {
+            if (salesMPTable.MPCode || salesMPTable.GTINFromInfor)
+            {
+                if (itemId != salesMPTable.ItemId)
+                    inventTable = InventTable::find(salesMPTable.ItemId);
+                codeTable.clear();
+                codeTable.initValue();
+                codeTable.SalesPurch        = SalesPurch::Sales;
+                codeTable.SalesPurchId      = salesId;
+                codeTable.CustVendAC        = salesTable.CustAccount;
+                codeTable.ItemId           = salesMPTable.ItemId;
+                codeTable.InventLocationId  = salesTable.InventLocationId;
+                codeTable.ProductName      = inventTable.productName(CompanyInfo::languageId());
+                codeTable.UnitId            = inventTable.inventUnitId();
+                codeTable.ProductGroupId    = inventTable.MPGroupId;
+                codeTable.Qty                = salesMPTable.Qty;
+                codeTable.Agregation         = NoYes::No;
+                codeTable.AgregationCount    = salesMPTable.Qty;
+                codeTable.InforPalletteId    = NoYes::No;
+                if (salesMPTable.GTINFromInfor)
+                {
+                    codeTable.GTINFromInfor = salesMPTable.GTINFromInfor;
+                    codeTable.MPCode         = '';
+                }
+                else
+                {
+                    codeTable.GTINFromInfor = '';
+                    codeTable.MPCode         = salesMPTable.MPCode;
+                    codeTable.CorrectCode    = salesMPTable.CorrectCode;
+                    codeTable.CaseSensitive  = salesMPTable.CaseSensitive;
+                }
+                ril.add(codeTable);
+                itemId = salesMPTable.ItemId;
+            }
+        }
+        ril.insertDatabase();
+        ttsCommit;
+        info(strFmt("Готово. Таблица MPSalesPurchMarkCodeTable заполнена для заказа %1", salesId));
+    }

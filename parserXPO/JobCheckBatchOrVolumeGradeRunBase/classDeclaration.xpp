@@ -1,0 +1,13 @@
+class JobCheckBatchOrVolumeGradeRunBase extends RunBase
+        {
+            str                     filePath;
+            SalesId                 salesId;
+            DialogField             dfFilePath;
+            DialogField             dfSalesId;
+            DialogRunBase           dialog;
+            #DEFINE.CurrentVersion(1)
+            #LOCALMACRO.CurrentList
+                filePath,
+                salesId
+            #ENDMACRO
+        }
