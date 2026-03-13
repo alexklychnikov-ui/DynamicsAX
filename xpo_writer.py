@@ -73,12 +73,13 @@ class XPOWriter:
             
             element_name = element_dir.name
             
-            # В каждом каталоге должен быть properties.txt с типом элемента
             props_file = element_dir / "properties.txt"
-            if not props_file.exists():
-                continue
-            
-            element_type = self._get_element_type(props_file)
+            if props_file.exists():
+                element_type = self._get_element_type(props_file)
+            else:
+                element_type = self._infer_element_type_from_xpo(xpo_content, element_name)
+                if not element_type and list(element_dir.glob("*.xpp")):
+                    print("ВНИМАНИЕ: в каталоге {} нет properties.txt и элемент не найден в XPO — пропуск.".format(element_name))
             if not element_type:
                 continue
 
@@ -241,6 +242,13 @@ class XPOWriter:
                         return line.split(':', 1)[1].strip()
         except Exception:
             pass
+        return None
+
+    def _infer_element_type_from_xpo(self, content: str, element_name: str) -> Optional[str]:
+        """Если properties.txt нет — определяет тип по наличию элемента в XPO (TAB/DBT, CLS, FRM, JOB)."""
+        for try_type in ('TAB', 'DBT', 'CLS', 'FRM', 'JOB'):
+            if self._find_element_in_xpo(content, element_name, try_type):
+                return try_type
         return None
     
     def _expected_xpo_for_element(self, element_type: str, element_name: str) -> Optional[Path]:

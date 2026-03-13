@@ -7,9 +7,14 @@
 
 import re
 import os
+import json
 import shutil
+from datetime import date
 from pathlib import Path
 from typing import Dict, List, Tuple
+
+_PROJECT_CHECK_FILE = Path(__file__).parent / ".xpo_parser_project_check"
+_COMMENTMETA_PATH = Path(__file__).parent / "commentmeta.json"
 
 
 class XPOParser:
@@ -306,10 +311,70 @@ class XPOParser:
             print(f"Пропущено объектов (уже существуют): {skipped_count}")
 
 
+def _ensure_project_dialog_once_per_day():
+    """Диалог проверки текущего проекта — один раз в день при первом запуске."""
+    today = date.today().isoformat()
+    if _PROJECT_CHECK_FILE.exists():
+        try:
+            last = _PROJECT_CHECK_FILE.read_text(encoding="utf-8").strip()
+            if last == today:
+                return
+        except Exception:
+            pass
+
+    try:
+        _PROJECT_CHECK_FILE.write_text(today, encoding="utf-8")
+    except Exception:
+        pass
+
+    meta_path = _COMMENTMETA_PATH
+    if not meta_path.exists():
+        return
+
+    try:
+        with open(meta_path, "r", encoding="utf-8") as f:
+            meta = json.load(f)
+    except Exception:
+        return
+
+    project = meta.get("project", "")
+    print(f"\nСейчас текущий проект: {project}")
+    try:
+        ans = input("Правильно? (да/нет): ").strip().lower()
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return
+
+    if ans in ("нет", "no", "n"):
+        try:
+            new_val = input("Введите новое значение проекта: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return
+        if new_val:
+            meta["project"] = new_val
+            try:
+                with open(meta_path, "w", encoding="utf-8") as f:
+                    json.dump(meta, f, ensure_ascii=False, indent=2)
+                print(f"Проект обновлён: {new_val}")
+            except Exception:
+                pass
+
+    try:
+        today_ddmm = date.today().strftime("%d.%m.%Y")
+        meta["date"] = today_ddmm
+        with open(meta_path, "w", encoding="utf-8") as f:
+            json.dump(meta, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+
 def main():
     """Основная функция для запуска парсера"""
     import sys
-    
+
+    _ensure_project_dialog_once_per_day()
+
     def process_file(xpo_file: str, output_dir: str, force: bool):
         parser = XPOParser(xpo_file, output_dir)
         
