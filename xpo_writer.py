@@ -30,6 +30,7 @@ class XPOWriter:
         self.xpo_file_path = Path(xpo_file_path).resolve()
         self.parser_dir = Path(parser_dir).resolve()
         self.xpo_encoding = xpo_encoding
+        self.xpo_newline = "\n"
         self.force = force
         
         if not self.xpo_file_path.exists():
@@ -48,19 +49,9 @@ class XPOWriter:
         # Время модификации исходного XPO
         xpo_mtime = self.xpo_file_path.stat().st_mtime
         
-        # Определяем фактическую кодировку XPO:
-        # сначала пробуем UTF‑8, при ошибке откатываемся на CP1251.
-        try:
-            try:
-                with open(self.xpo_file_path, 'r', encoding='utf-8') as f:
-                    xpo_content = f.read()
-                self.xpo_encoding = 'utf-8'
-            except UnicodeDecodeError:
-                with open(self.xpo_file_path, 'r', encoding='cp1251') as f:
-                    xpo_content = f.read()
-                self.xpo_encoding = 'cp1251'
-        except FileNotFoundError:
-            raise
+        raw = self.xpo_file_path.read_bytes()
+        xpo_content, self.xpo_encoding, self.xpo_newline = self._decode_xpo_content(raw)
+        xpo_content = self._normalize_newlines(xpo_content)
         
         # Здесь будем накапливать новые версии элементов XPO
         element_replacements = {}  # element_key -> (element_info, updated_content)
@@ -211,9 +202,10 @@ class XPOWriter:
         # Имя выходного файла: <оригинал>_WR.xpo в том же каталоге
         output_file = self.xpo_file_path.parent / f"{self.xpo_file_path.stem}_WR.xpo"
         
-        # Сохраняем XPO в той же кодировке, что и исходный
-        with open(output_file, 'w', encoding=self.xpo_encoding, errors='ignore') as f:
-            f.write(xpo_content)
+        # Сохраняем XPO в исходной кодировке и с исходными переносами
+        output_content = self._apply_newline_style(xpo_content, self.xpo_newline)
+        with open(output_file, 'w', encoding=self.xpo_encoding, newline='') as f:
+            f.write(output_content)
         
         # Быстрая валидация структуры XPO
         if self._validate_xpo(output_file):
@@ -236,10 +228,16 @@ class XPOWriter:
     def _get_element_type(self, props_file: Path) -> Optional[str]:
         """Возвращает тип элемента (CLS/TAB/JOB/FRM) из properties.txt."""
         try:
-            with open(props_file, 'r', encoding='utf-8') as f:
-                for line in f:
-                    if line.startswith('Type:'):
-                        return line.split(':', 1)[1].strip()
+            try:
+                with open(props_file, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        if line.startswith('Type:'):
+                            return line.split(':', 1)[1].strip()
+            except UnicodeDecodeError:
+                with open(props_file, 'r', encoding='cp1251') as f:
+                    for line in f:
+                        if line.startswith('Type:'):
+                            return line.split(':', 1)[1].strip()
         except Exception:
             pass
         return None
@@ -377,12 +375,41 @@ class XPOWriter:
         try:
             try:
                 with open(xpp_file, 'r', encoding='utf-8') as f:
-                    return f.read()
+                    return self._normalize_newlines(f.read())
             except UnicodeDecodeError:
                 with open(xpp_file, 'r', encoding='cp1251') as f:
-                    return f.read()
+                    return self._normalize_newlines(f.read())
         except Exception:
             return ''
+
+    def _decode_xpo_content(self, raw: bytes) -> Tuple[str, str, str]:
+        """Декодирует XPO и возвращает (text, encoding, newline_style)."""
+        newline_style = '\r\n' if b'\r\n' in raw else ('\r' if b'\r' in raw else '\n')
+
+        if raw.startswith(b'\xef\xbb\xbf'):
+            return raw.decode('utf-8-sig'), 'utf-8-sig', newline_style
+        if raw.startswith(b'\xff\xfe'):
+            return raw.decode('utf-16-le'), 'utf-16-le', newline_style
+        if raw.startswith(b'\xfe\xff'):
+            return raw.decode('utf-16-be'), 'utf-16-be', newline_style
+
+        try:
+            return raw.decode('utf-8'), 'utf-8', newline_style
+        except UnicodeDecodeError:
+            pass
+
+        try:
+            return raw.decode('cp1251'), 'cp1251', newline_style
+        except UnicodeDecodeError:
+            return raw.decode('utf-8', errors='replace'), 'utf-8', newline_style
+
+    def _normalize_newlines(self, text: str) -> str:
+        return text.replace('\r\n', '\n').replace('\r', '\n')
+
+    def _apply_newline_style(self, text: str, newline_style: str) -> str:
+        if newline_style == '\n':
+            return text
+        return text.replace('\n', newline_style)
 
     def _build_new_element_block(self, template_content: str, element_type: str,
                                   element_name: str, element_dir: Path) -> Optional[str]:

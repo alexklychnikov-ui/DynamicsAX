@@ -11,7 +11,7 @@ import json
 import shutil
 from datetime import date
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 _PROJECT_CHECK_FILE = Path(__file__).parent / ".xpo_parser_project_check"
 _COMMENTMETA_PATH = Path(__file__).parent / "commentmeta.json"
@@ -22,6 +22,8 @@ class XPOParser:
         self.xpo_file_path = Path(xpo_file_path)
         self.output_dir = Path(output_dir)
         self.objects = {}  # Хранит все объекты (классы, таблицы, формы)
+        self.source_encoding = "utf-8"
+        self.output_encoding = "utf-8"
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
     def is_object_parsed(self, object_name: str) -> bool:
@@ -43,15 +45,9 @@ class XPOParser:
     
     def parse(self):
         """Парсит XPO файл и извлекает все элементы. При сохранении новые методы добавляются в папки объектов."""
-        # XPO из русской AX обычно в CP1251, поэтому сначала пробуем её,
-        # а при неудаче откатываемся на UTF‑8.
+        # Читаем XPO с безопасным выбором кодировки, чтобы избежать mojibake.
         try:
-            try:
-                with open(self.xpo_file_path, 'r', encoding='cp1251') as f:
-                    content = f.read()
-            except UnicodeDecodeError:
-                with open(self.xpo_file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    content = f.read()
+            content = self._read_xpo_content()
         except FileNotFoundError:
             raise
         
@@ -83,6 +79,39 @@ class XPOParser:
         
         if parsed_count > 0:
             print(f"Распарсено объектов: {parsed_count}")
+
+    def _read_xpo_content(self) -> str:
+        """Читает XPO в корректной кодировке и нормализует переносы строк."""
+        raw = self.xpo_file_path.read_bytes()
+        text, encoding = self._decode_xpo_bytes(raw)
+        self.source_encoding = encoding
+        # Для parserXPO всегда используем единый UTF-8,
+        # чтобы не смешивать кодировки между файлами.
+        self.output_encoding = "utf-8"
+        return self._normalize_newlines(text)
+
+    def _decode_xpo_bytes(self, raw: bytes) -> Tuple[str, str]:
+        """Декодирует байты XPO: UTF-8(BOM)/UTF-16/CP1251."""
+        if raw.startswith(b'\xef\xbb\xbf'):
+            return raw.decode('utf-8-sig'), 'utf-8-sig'
+        if raw.startswith(b'\xff\xfe'):
+            return raw.decode('utf-16-le'), 'utf-16-le'
+        if raw.startswith(b'\xfe\xff'):
+            return raw.decode('utf-16-be'), 'utf-16-be'
+
+        try:
+            return raw.decode('utf-8'), 'utf-8'
+        except UnicodeDecodeError:
+            pass
+
+        try:
+            return raw.decode('cp1251'), 'cp1251'
+        except UnicodeDecodeError:
+            return raw.decode('utf-8', errors='replace'), 'utf-8'
+
+    def _normalize_newlines(self, text: str) -> str:
+        """Приводит переносы к LF во внутреннем представлении."""
+        return text.replace('\r\n', '\n').replace('\r', '\n')
     
     def _parse_class(self, content: str):
         """Парсит класс из XPO"""
@@ -225,7 +254,7 @@ class XPOParser:
         Делает так, чтобы первая непустая строка метода начиналась с колонки 0,
         а относительная вложенность остальных строк сохранялась.
         """
-        lines = code.split('\n')
+        lines = self._normalize_newlines(code).split('\n')
         cleaned_lines = []
         
         for line in lines:
@@ -277,7 +306,7 @@ class XPOParser:
             if object_data['properties']:
                 props_file = object_dir / "properties.txt"
                 # Перезаписываем properties.txt всегда, так как они могут измениться
-                with open(props_file, 'w', encoding='utf-8') as f:
+                with open(props_file, 'w', encoding=self.output_encoding, newline='\n') as f:
                     f.write(f"Type: {object_data['type']}\n")
                     for key, value in object_data['properties'].items():
                         f.write(f"{key}: {value}\n")
@@ -296,7 +325,7 @@ class XPOParser:
                         methods_skipped += 1
                         continue
                     
-                    with open(method_file, 'w', encoding='utf-8') as f:
+                    with open(method_file, 'w', encoding=self.output_encoding, newline='\n') as f:
                         f.write(method_code)
                     methods_saved += 1
             
