@@ -10,6 +10,10 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+_project_root = Path(__file__).resolve().parent.parent
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent

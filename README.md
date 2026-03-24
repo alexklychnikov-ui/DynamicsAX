@@ -39,17 +39,20 @@ DynamicsAX/
 │
 ├── XPO/                              # Исходные XPO файлы
 ├── templates/                        # Шаблоны XPO
-├── RabbitAnalysis/                   # Анализ RabbitMQ интеграции
-│   ├── analyze_rabbit.py
-│   ├── analyze_rabbit_detailed.py
-│   └── full_analysis.py
-│
 ├── NewProject/                       # Тестовые XML файлы
+│
+├── Projects/                         # Информация по проектам (завершённым и текущим)
+│   └── <ProjectName>/                # Подпапка = наименование проекта
+│       ├── Documentation/            # ТЗ, ТС, описания, версионные логи
+│       ├── XML/                      # Примеры XML для разработки
+│       └── ...                       # Всё, что используется в разработке
 │
 ├── xpo_parser.py                     # Парсер XPO → parserXPO
 ├── xpo_writer.py                     # Обратная запись parserXPO → XPO
-├── fix_mojibake.py                   # Исправление кодировки
-├── test_refactoring.py               # Рефакторинг тестов
+├── UtilsParserWriter/                # Утилиты парсера и писателя
+│   ├── fix_mojibake.py               # Исправление кодировки
+│   ├── normalize_xpp_indent.py       # Нормализация отступов в .xpp
+│   └── test_refactoring.py           # Рефакторинг тестов
 │
 ├── pyproject.toml                    # Конфигурация Poetry
 ├── requirements.txt                  # Зависимости Python
@@ -71,6 +74,7 @@ DynamicsAX/
 - Для каждого объекта создает директорию в `parserXPO/`
 - Сохраняет методы в отдельные `.xpp` файлы
 - Очищает код от префиксов `#` и лишних табуляций
+- Нормализует отступы в методах при генерации `.xpp` (первая непустая строка метода всегда начинается с колонки 0)
 - Поддерживает инкрементальный парсинг (пропуск уже распарсенных объектов)
 - Использует модуль `utils/xpo_utils.py` для общих операций с XPO
 
@@ -83,14 +87,17 @@ parserXPO/<ElementName>/
 
 **Использование:**
 ```bash
-# Автоматический поиск XPO в папке XPO
+# Автоматический поиск XPO в папке XPO с интерактивным выбором
 python xpo_parser.py
+  # при нескольких файлах:
+  #  1..N — выбрать конкретный файл
+  #  0    — обработать все найденные XPO
 
-# Указание конкретного файла
+# Указание конкретного файла (без интерактива)
 python xpo_parser.py XPO/PrivateProject_CUS_Layer_Export.xpo
 
-# Перезапись существующих объектов
-python xpo_parser.py --force
+# Перезапись существующих объектов при парсинге
+python xpo_parser.py XPO/PrivateProject_CUS_Layer_Export.xpo --force
 ```
 
 **Особенности:**
@@ -152,6 +159,26 @@ python xpo_writer.py XPO/PrivateProject_CUS_Layer_Export.xpo
 - Сохраняет оригинальное форматирование XPO
 - Валидирует структуру созданного XPO файла
 - Выводит список обновленных методов
+
+---
+
+### 3.1. `UtilsParserWriter/normalize_xpp_indent.py` - Нормализация отступов в `.xpp`
+
+**Назначение:** Массово выравнивает отступы в методах X++ уже после парсинга, непосредственно в `parserXPO/`.
+
+**Функциональность:**
+- Обходит `.xpp` файлы в указанной папке (по умолчанию `parserXPO/`)
+- Находит минимальный общий ведущий отступ среди непустых строк
+- Сдвигает код влево так, чтобы первая непустая строка начиналась с колонки 0, сохраняя относительную вложенность
+
+**Использование:**
+```bash
+# Нормализовать все .xpp в parserXPO
+python UtilsParserWriter/normalize_xpp_indent.py
+
+# Нормализовать только один объект / подпапку
+python UtilsParserWriter/normalize_xpp_indent.py parserXPO/SalesFormletterParmDataInvoice
+```
 
 ---
 
@@ -299,7 +326,7 @@ python xpo_writer.py XPO/PrivateProject_CUS_Layer_Export.xpo
 | `xpo_writer.py` | Компилирует `parserXPO` обратно в XPO |
 | `indexXPO_cus/xpo_indexer_sqlite.py` | SQLite индекс для поиска |
 | `context7/__main__.py` | Генерация документации для LLM |
-| `fix_mojibake.py` | Исправление кодировки |
+| `UtilsParserWriter/fix_mojibake.py` | Исправление кодировки |
 
 ---
 
@@ -316,7 +343,8 @@ python xpo_writer.py XPO/PrivateProject_CUS_Layer_Export.xpo
 
 ## 📋 Текущий проект: Интеграция GTIN из Infor
 
-**Статус:** Активная разработка
+**Статус:** Активная разработка  
+**Материалы:** `Projects/X5SHP_INT_1_000002338_01/`
 
 **Задачи (из ToDoList.md):**
 - Интеграция GTIN из Infor в Dynamics AX 2012
@@ -326,17 +354,30 @@ python xpo_writer.py XPO/PrivateProject_CUS_Layer_Export.xpo
 - Обновление статусов маркировки
 
 **Документация:**
-- `quality_review.md` - контрольная проверка ТЗ
-- `ToDoList.md` - список задач с статусом выполнения
+- `Projects/X5SHP_INT_1_000002338_01/Documentation/` — ТЗ, ТС, work.md, InvoiceModify
+- `quality_review.md` — контрольная проверка ТЗ
+- `ToDoList.md` — список задач с статусом выполнения
+
+---
+
+## 📁 Папка `Projects/`
+
+**Назначение:** Хранение информации по проектам — завершённым и текущим. Подпапки с наименованиями проектов содержат всё, что используется в разработке: описания, документация, XML, скрипты и прочие артефакты.
+
+Каждая подпапка `Projects/<ProjectName>/` соответствует отдельному проекту и содержит:
+- **Documentation/** — ТЗ, ТС, описания, версионные логи, ToDoList
+- **XML/** — примеры XML-сообщений, используемые в разработке
+- **Прочие артефакты** — скрипты анализа, планы, всё необходимое для разработки
+
+**Примеры:**
+- `Projects/X5SHP_INT_1_000002338_01/` — интеграция GTIN из Infor (текущий)
+- `Projects/Rabbit/` — интеграция RabbitMQ (документация, RabbitAnalysis)
 
 ---
 
 ## 🧩 Интеграция RabbitMQ
 
-Папка `RabbitAnalysis/` содержит аналитические скрипты для:
-- Анализа RabbitMQ интеграции
-- Обработки событий `ordershipped9`, `dropidshipped9`
-- Поиска связей между XPO и Rabbit сообщениями
+Материалы по RabbitMQ: `Projects/Rabbit/` — документация, скрипты анализа (`RabbitAnalysis/`), планы подключений.
 
 ---
 
