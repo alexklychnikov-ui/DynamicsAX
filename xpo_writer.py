@@ -16,22 +16,39 @@ from typing import Dict, List, Optional, Tuple
 from datetime import datetime
 
 
+def _no_input_env() -> bool:
+    ci = os.environ.get("CI", "").strip().lower()
+    if ci in ("1", "true", "yes"):
+        return True
+    v = os.environ.get("XPO_NO_INPUT", "").strip().lower()
+    return v in ("1", "true", "yes")
+
+
 class XPOWriter:
     """Записывает изменения из XPP‑файлов обратно в XPO."""
 
-    def __init__(self, xpo_file_path: str, parser_dir: str = "parserXPO", xpo_encoding: str = "cp1251", force: bool = False):
+    def __init__(
+        self,
+        xpo_file_path: str,
+        parser_dir: str = "parserXPO",
+        xpo_encoding: str = "cp1251",
+        force: bool = False,
+        no_input: bool = False,
+    ):
         """
         Args:
             xpo_file_path: путь к исходному XPO‑файлу.
             parser_dir: каталог `parserXPO` с разобранными XPP‑файлами.
             xpo_encoding: кодировка XPO (обычно cp1251 для русской AX).
             force: если True, не проверять даты — считать все XPP новее XPO.
+            no_input: без интерактивных запросов (пропуск добавления элемента по шаблону).
         """
         self.xpo_file_path = Path(xpo_file_path).resolve()
         self.parser_dir = Path(parser_dir).resolve()
         self.xpo_encoding = xpo_encoding
         self.xpo_newline = "\n"
         self.force = force
+        self.no_input = no_input
         
         if not self.xpo_file_path.exists():
             raise FileNotFoundError(f"XPO file not found: {xpo_file_path}")
@@ -84,6 +101,9 @@ class XPOWriter:
             element_info = self._find_element_in_xpo(xpo_content, element_name, element_type)
             if not element_info:
                 print("ВНИМАНИЕ: элемент {}:{} не найден в XPO.".format(element_type, element_name))
+                if self.no_input:
+                    print("no-input: пропуск добавления по шаблону.")
+                    continue
                 try:
                     ans = input("Найден элемент {}:{}. Добавить его в шаблон? (0 = нет, иначе да): ".format(element_type, element_name)).strip()
                 except (EOFError, KeyboardInterrupt):
@@ -198,6 +218,8 @@ class XPOWriter:
                 xpo_content = xpo_content[:pos] + new_block + '\n\n' + end_marker + xpo_content[pos + len(end_marker):]
             else:
                 xpo_content = xpo_content.rstrip() + '\n\n' + new_block + '\n'
+
+        xpo_content = self._ensure_cls_endclass(xpo_content)
 
         # Имя выходного файла: <оригинал>_WR.xpo в том же каталоге
         output_file = self.xpo_file_path.parent / f"{self.xpo_file_path.stem}_WR.xpo"
@@ -402,6 +424,37 @@ class XPOWriter:
             return raw.decode('cp1251'), 'cp1251', newline_style
         except UnicodeDecodeError:
             return raw.decode('utf-8', errors='replace'), 'utf-8', newline_style
+
+    def _ensure_cls_endclass(self, content: str) -> str:
+        """В элементе CLS после ENDMETHODS AX ожидает ENDCLASS до следующего ***Element:"""
+        pos = 0
+        chunks = []
+        while True:
+            m = re.search(r'\*\*\*Element:\s*CLS\s', content[pos:])
+            if not m:
+                chunks.append(content[pos:])
+                return ''.join(chunks)
+            abs_start = pos + m.start()
+            chunks.append(content[pos:abs_start])
+            tail = content[abs_start:]
+            next_el = re.search(r'\n\*\*\*Element:\s*', tail)
+            if not next_el:
+                block = tail
+                pos = len(content)
+            else:
+                block = tail[: next_el.start() + 1]
+                pos = abs_start + next_el.start() + 1
+            if re.search(r'^\s*ENDMETHODS\s*$', block, re.MULTILINE) and not re.search(
+                r'^\s*ENDCLASS\s*$', block, re.MULTILINE
+            ):
+                block = re.sub(
+                    r'^(\s*ENDMETHODS)(\s*\n)',
+                    r'\1\2  ENDCLASS\2',
+                    block,
+                    count=1,
+                    flags=re.MULTILINE,
+                )
+            chunks.append(block)
 
     def _normalize_newlines(self, text: str) -> str:
         return text.replace('\r\n', '\n').replace('\r', '\n')
@@ -711,14 +764,20 @@ def main():
     """CLI‑обёртка для запуска XPOWriter из консоли."""
     import sys
 
-    args = [a for a in sys.argv[1:] if a != "--force"]
-    force = len(args) < len(sys.argv) - 1
+    raw_argv = sys.argv[1:]
+    force = "--force" in raw_argv
+    no_input = "--no-input" in raw_argv or _no_input_env()
+    args = [a for a in raw_argv if a not in ("--force", "--no-input")]
 
-    def process_one(xpo_file: str, parser_dir: str, force: bool) -> None:
+    def process_one(xpo_file: str, parser_dir: str, force: bool, no_input: bool) -> None:
         try:
-            writer = XPOWriter(xpo_file, parser_dir, force=force)
+            writer = XPOWriter(xpo_file, parser_dir, force=force, no_input=no_input)
 
-            print("Запуск записи изменений XPP обратно в XPO." + (" (--force: проверка дат отключена)" if force else ""))
+            print(
+                "Запуск записи изменений XPP обратно в XPO."
+                + (" (--force: проверка дат отключена)" if force else "")
+                + (" (--no-input)" if no_input else "")
+            )
             print(f"Исходный XPO: {xpo_file}")
             print(f"Каталог parserXPO: {parser_dir}")
             print("-" * 60)
@@ -753,6 +812,9 @@ def main():
                     xpo_file = str(xpo_files[0])
                     print("Используется XPO-файл: {}".format(xpo_file))
                     selected_files = [xpo_file]
+                elif no_input:
+                    selected_files = [str(p) for p in xpo_files]
+                    print("\n--no-input / CI: обрабатываются все XPO-файлы.")
                 else:
                     print("\n0. Все файлы")
                     while True:
@@ -782,12 +844,12 @@ def main():
                         selected_files = [xpo_file]
             else:
                 print("В каталоге XPO не найдено файлов с расширением .xpo.")
-                print("Использование: python xpo_writer.py <имя_файла.xpo> [каталог_parserXPO]")
+                print("Использование: python xpo_writer.py <имя_файла.xpo> [каталог_parserXPO] [--force] [--no-input]")
                 print("Текущий каталог XPO: {}".format(xpo_dir.resolve()))
                 sys.exit(1)
         else:
             print("Каталог XPO не найден.")
-            print("Использование: python xpo_writer.py <имя_файла.xpo> [каталог_parserXPO]")
+            print("Использование: python xpo_writer.py <имя_файла.xpo> [каталог_parserXPO] [--force] [--no-input]")
             sys.exit(1)
     else:
         xpo_file = args[0]
@@ -796,7 +858,7 @@ def main():
     parser_dir = args[1] if len(args) > 1 else "parserXPO"
 
     for xpo_file in selected_files:
-        process_one(xpo_file, parser_dir, force)
+        process_one(xpo_file, parser_dir, force, no_input)
 
 
 if __name__ == "__main__":

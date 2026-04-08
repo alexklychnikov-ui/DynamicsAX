@@ -9,12 +9,90 @@ import re
 import os
 import json
 import shutil
+import sqlite3
 from datetime import date
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
+from utils.xpo_utils import parse_xpo_element
+
 _PROJECT_CHECK_FILE = Path(__file__).parent / ".xpo_parser_project_check"
 _COMMENTMETA_PATH = Path(__file__).parent / "commentmeta.json"
+
+
+def _no_input_env() -> bool:
+    ci = os.environ.get("CI", "").strip().lower()
+    if ci in ("1", "true", "yes"):
+        return True
+    v = os.environ.get("XPO_NO_INPUT", "").strip().lower()
+    return v in ("1", "true", "yes")
+
+
+def parse_object_from_index(
+    element_name: str,
+    xpo_path: str,
+    *,
+    db_path: Optional[str] = None,
+    element_type: Optional[str] = None,
+    output_dir: str = "parserXPO",
+    overwrite: bool = False,
+) -> bool:
+    """
+    Извлекает один элемент из большого XPO по смещению из SQLite (indexXPO_cus/xpo_index.db).
+    file_position/size считаются байтовыми смещениями в файле XPO (как при индексации в бинарном режиме).
+    """
+    root = Path(__file__).resolve().parent
+    db = Path(db_path) if db_path else root / "indexXPO_cus" / "xpo_index.db"
+    xpo = Path(xpo_path).resolve()
+    if not db.is_file():
+        raise FileNotFoundError(f"SQLite индекс не найден: {db}")
+    if not xpo.is_file():
+        raise FileNotFoundError(f"XPO не найден: {xpo}")
+
+    conn = sqlite3.connect(str(db))
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    if element_type:
+        cur.execute(
+            "SELECT element_type, element_name, file_position, size FROM elements "
+            "WHERE element_name = ? AND element_type = ?",
+            (element_name, element_type),
+        )
+    else:
+        cur.execute(
+            "SELECT element_type, element_name, file_position, size FROM elements "
+            "WHERE element_name = ? LIMIT 1",
+            (element_name,),
+        )
+    row = cur.fetchone()
+    conn.close()
+    if not row:
+        return False
+
+    etype = row["element_type"]
+    pos = int(row["file_position"])
+    size = int(row["size"])
+    with open(xpo, "rb") as f:
+        f.seek(pos)
+        raw = f.read(size)
+
+    parser_stub = XPOParser(str(xpo), output_dir)
+    text, _ = parser_stub._decode_xpo_bytes(raw)
+    text = parser_stub._normalize_newlines(text)
+
+    parsed = parse_xpo_element(text, etype)
+    if not parsed and etype == "DBT":
+        parsed = parse_xpo_element(text, "TAB")
+    if not parsed:
+        return False
+
+    parser_stub.objects[parsed["name"]] = {
+        "type": parsed["type"],
+        "properties": parsed["properties"],
+        "methods": parsed["methods"],
+    }
+    parser_stub.save_structured(overwrite=overwrite)
+    return True
 
 
 class XPOParser:
@@ -340,8 +418,10 @@ class XPOParser:
             print(f"Пропущено объектов (уже существуют): {skipped_count}")
 
 
-def _ensure_project_dialog_once_per_day():
+def _ensure_project_dialog_once_per_day(skip: bool = False):
     """Диалог проверки текущего проекта — один раз в день при первом запуске."""
+    if skip:
+        return
     today = date.today().isoformat()
     if _PROJECT_CHECK_FILE.exists():
         try:
@@ -402,7 +482,9 @@ def main():
     """Основная функция для запуска парсера"""
     import sys
 
-    _ensure_project_dialog_once_per_day()
+    argv_flags = [a for a in sys.argv[1:] if a.startswith("--")]
+    no_input = "--no-input" in argv_flags or _no_input_env()
+    _ensure_project_dialog_once_per_day(skip=no_input)
 
     def process_file(xpo_file: str, output_dir: str, force: bool):
         parser = XPOParser(xpo_file, output_dir)
@@ -426,9 +508,8 @@ def main():
         
         print("\nПарсинг завершен!")
     
-    # Извлекаем флаги из аргументов
-    force = '--force' in sys.argv
-    args_without_flags = [arg for arg in sys.argv[1:] if not arg.startswith('--')]
+    force = "--force" in sys.argv
+    args_without_flags = [arg for arg in sys.argv[1:] if not arg.startswith("--")]
     
     # Если аргументы не указаны, ищем XPO файлы в папке XPO
     if len(args_without_flags) == 0:
@@ -444,6 +525,9 @@ def main():
                     xpo_file = str(xpo_files[0])
                     print(f"\nИспользуется файл: {xpo_file}")
                     selected_files = [xpo_file]
+                elif no_input:
+                    selected_files = [str(p) for p in xpo_files]
+                    print("\n--no-input / CI: обрабатываются все файлы из XPO.")
                 else:
                     print("\n0. Все файлы")
                     while True:
@@ -472,17 +556,21 @@ def main():
                         print(f"\nИспользуется файл: {xpo_file}")
                         selected_files = [xpo_file]
             else:
-                print("Использование: python xpo_parser.py <путь_к_xpo_файлу> [папка_вывода] [--force]")
+                print("Использование: python xpo_parser.py <путь_к_xpo_файлу> [папка_вывода] [--force] [--no-input]")
                 print("По умолчанию используется папка: parserXPO")
                 print("Опции:")
-                print("  --force  Перезаписывает существующие объекты")
+                print("  --force      Перезаписывает существующие объекты")
+                print("  --no-input   Без диалогов; несколько .xpo в XPO — обработать все (или задайте путь явно)")
+                print("  CI=1 или XPO_NO_INPUT=1 — то же, что --no-input")
                 print(f"\nВ папке XPO не найдено .xpo файлов")
                 sys.exit(1)
         else:
-            print("Использование: python xpo_parser.py <путь_к_xpo_файлу> [папка_вывода] [--force]")
+            print("Использование: python xpo_parser.py <путь_к_xpo_файлу> [папка_вывода] [--force] [--no-input]")
             print("По умолчанию используется папка: parserXPO")
             print("Опции:")
-            print("  --force  Перезаписывает существующие объекты")
+            print("  --force      Перезаписывает существующие объекты")
+            print("  --no-input   Без диалогов проверки проекта")
+            print("  CI=1 или XPO_NO_INPUT=1 — то же, что --no-input")
             sys.exit(1)
     else:
         xpo_file = args_without_flags[0]

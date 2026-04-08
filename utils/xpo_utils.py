@@ -12,6 +12,7 @@ from typing import Dict, List, Optional, Tuple
 ELEMENT_PATTERNS = {
     'CLS': r'CLASS\s+#(\w+)',
     'TAB': r'TABLE\s+#(\w+)',
+    'DBT': r'TABLE\s+#(\w+)',
     'FRM': r'FORM\s+#(\w+)',
     'MCR': r'MACRO\s+#(\w+)',
     'ENU': r'ENUM\s+#(\w+)',
@@ -30,6 +31,8 @@ SOURCE_PATTERN = re.compile(r'SOURCE\s+#(\w+)(.*?)ENDSOURCE', re.DOTALL)
 
 # Паттерн для извлечения свойств
 PROPERTIES_PATTERN = re.compile(r'PROPERTIES(.*?)ENDPROPERTIES', re.DOTALL)
+
+METHODS_BLOCK_PATTERN = re.compile(r'METHODS(.*?)ENDMETHODS', re.DOTALL)
 
 # Паттерн для извлечения Extends
 EXTENDS_PATTERN = re.compile(r'Extends\s+#(\w+)')
@@ -108,8 +111,7 @@ def extract_methods(content: str) -> Dict[str, str]:
     """
     methods = {}
     
-    # Сначала ищем в блоке METHODS...ENDMETHODS
-    methods_block_match = PROPERTIES_PATTERN.search(content)
+    methods_block_match = METHODS_BLOCK_PATTERN.search(content)
     if methods_block_match:
         methods_content = methods_block_match.group(1)
         for method_match in SOURCE_PATTERN.finditer(methods_content):

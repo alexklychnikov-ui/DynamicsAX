@@ -1,4 +1,0 @@
-public container pack()
-        {
-            return [#CurrentVersion,#CurrentList];
-        }
