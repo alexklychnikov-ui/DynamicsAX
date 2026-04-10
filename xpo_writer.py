@@ -15,6 +15,9 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime
 
+from xpo_parser import AOT_CATEGORY_DIRS
+from utils.xpo_form_sources import find_frm_source_block, frm_xpo_method_name, parse_frm_xpp_stem
+
 
 def _no_input_env() -> bool:
     ci = os.environ.get("CI", "").strip().lower()
@@ -55,6 +58,21 @@ class XPOWriter:
         
         if not self.parser_dir.exists():
             raise FileNotFoundError(f"Parser directory not found: {parser_dir}")
+
+    def _iter_parser_element_dirs(self):
+        """Каталоги объектов: parserXPO/<AOT>/<Object> или устаревший parserXPO/<Object>."""
+        subdirs = [p for p in self.parser_dir.iterdir() if p.is_dir()]
+        if any(p.name in AOT_CATEGORY_DIRS for p in subdirs):
+            for cat in sorted(subdirs, key=lambda p: p.name):
+                if cat.name not in AOT_CATEGORY_DIRS:
+                    continue
+                for el in sorted(cat.iterdir(), key=lambda p: p.name):
+                    if el.is_dir():
+                        yield el
+        else:
+            for el in sorted(subdirs, key=lambda p: p.name):
+                if el.is_dir():
+                    yield el
     
     def write_back(self) -> Optional[Path]:
         """
@@ -74,13 +92,11 @@ class XPOWriter:
         element_replacements = {}  # element_key -> (element_info, updated_content)
         new_elements_to_add = []  # блоки новых элементов для вставки в шаблон
 
-        # Обходим подкаталоги в parserXPO (по одному на элемент)
-        for element_dir in self.parser_dir.iterdir():
-            if not element_dir.is_dir():
-                continue
-            
+        for element_dir in self._iter_parser_element_dirs():
             element_name = element_dir.name
-            
+            if not list(element_dir.glob("*.xpp")):
+                continue
+
             props_file = element_dir / "properties.txt"
             if props_file.exists():
                 element_type = self._get_element_type(props_file)
@@ -159,14 +175,18 @@ class XPOWriter:
                     continue
                 
                 existing_block = self._get_existing_source_block(
-                    element_replacements[element_key]['content'], method_name)
+                    element_replacements[element_key]['content'],
+                    method_name,
+                    element_type,
+                )
                 if existing_block and self._method_codes_equal(existing_block, method_code):
                     continue
                 
                 new_content = self._replace_source_in_content(
                     element_replacements[element_key]['content'],
                     method_name,
-                    method_code
+                    method_code,
+                    element_type,
                 )
                 if not new_content and element_type in ('CLS', 'TAB', 'DBT'):
                     new_content = self._insert_new_source_block(
@@ -337,6 +357,15 @@ class XPOWriter:
                     }
             elif element_type == 'FRM':
                 if re.search(rf'FORM\s+#{re.escape(element_name)}', element_content):
+                    return {
+                        'start': start_pos,
+                        'end': end_pos,
+                        'content': element_content,
+                        'type': element_type,
+                        'name': element_name
+                    }
+            elif element_type == 'MCR':
+                if re.search(rf'SOURCE\s+#{re.escape(element_name)}', element_content):
                     return {
                         'start': start_pos,
                         'end': end_pos,
@@ -594,8 +623,14 @@ class XPOWriter:
                 formatted_lines.append(f'{line_prefix}{line}')
         return '\n'.join(formatted_lines)
     
-    def _get_existing_source_block(self, element_content: str, method_name: str) -> Optional[str]:
+    def _get_existing_source_block(
+        self, element_content: str, method_name: str, element_type: Optional[str] = None
+    ) -> Optional[str]:
         """Возвращает блок SOURCE #methodName ... ENDSOURCE из элемента или None."""
+        if element_type == "FRM" and "." in method_name:
+            block = find_frm_source_block(element_content, method_name)
+            if block:
+                return block
         source_pattern = rf'^\s*SOURCE\s+#{re.escape(method_name)}\s*(?:\r?\n)(.*?)^\s*ENDSOURCE'
         match = re.search(source_pattern, element_content, re.DOTALL | re.IGNORECASE | re.MULTILINE)
         if match:
@@ -631,32 +666,38 @@ class XPOWriter:
         xpp_normalized = xpp_code.replace('\r\n', '\n').replace('\r', '\n').rstrip('\n')
         return xpo_code == xpp_normalized
 
-    def _replace_source_in_content(self, element_content: str, 
-                                   method_name: str, method_code: str) -> Optional[str]:
+    def _replace_source_in_content(
+        self,
+        element_content: str,
+        method_name: str,
+        method_code: str,
+        element_type: Optional[str] = None,
+    ) -> Optional[str]:
         """
         Заменяет содержимое блока SOURCE/ENDSOURCE для указанного метода.
-        
-        Args:
-            element_content: текст элемента XPO.
-            method_name: имя метода (имя XPP‑файла без расширения).
-            method_code: исходный код метода из XPP.
-            
-        Returns:
-            Обновлённый текст элемента или None, если блок SOURCE не найден.
+        Для форм method_name может быть stem файла вида ds.RabbitQueue.executeQuery.
         """
-        old_source_content = self._get_existing_source_block(element_content, method_name)
+        old_source_content = self._get_existing_source_block(
+            element_content, method_name, element_type
+        )
         if not old_source_content:
             return None
         
-        # Отступ строк кода в XPO берём из исходного блока (чтобы не плодить лишние табы)
+        xpo_source_name = (
+            frm_xpo_method_name(parse_frm_xpp_stem(method_name))
+            if element_type == "FRM" and "." in method_name
+            else method_name
+        )
+        
         code_line_indent = self._get_code_line_indent(old_source_content)
         line_prefix = code_line_indent + '#'
         formatted_code = self._format_code_for_xpo(method_code, line_prefix)
         
-        # Сохраняем исходные отступы перед SOURCE/ENDSOURCE
         source_indent = self._get_indent_before(old_source_content, 'SOURCE')
         endsource_indent = self._get_indent_before(old_source_content, 'ENDSOURCE')
-        new_source_content = f'{source_indent}SOURCE #{method_name}\n{formatted_code}\n{endsource_indent}ENDSOURCE'
+        new_source_content = (
+            f'{source_indent}SOURCE #{xpo_source_name}\n{formatted_code}\n{endsource_indent}ENDSOURCE'
+        )
         
         # Подменяем старый блок SOURCE на новый
         new_element_content = element_content.replace(old_source_content, new_source_content)

@@ -1,7 +1,7 @@
 ---
 name: xpo-tools
+model: inherit
 description: Запуск xpo_parser.py и xpo_writer.py из корня репозитория DynamicsAX (Windows), разбор вывода.
-model: fast
 ---
 
 Ты помогаешь только с утилитами XPO в этом проекте.

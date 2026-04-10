@@ -251,6 +251,899 @@ Formatversion: 1
 
 ***Element: DBT
 
+; Microsoft Dynamics AX Table : RabbitQueue unloaded
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #RabbitQueue
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #RabbitQueue
+      Label               #@MIK9859
+      FormRef             #RabbitQueue
+      TitleField1         #QueueJourId
+      TitleField2         #QueueStatus
+      ConfigurationKey    #RabbitMQ
+      CreateRecIdIndex    #Yes
+      TableGroup          #Transaction
+      ModifiedDateTime    #Yes
+      DEL_modifiedTime    #Yes
+      ModifiedBy          #Yes
+      CreatedDateTime     #Yes
+      DEL_createdTime     #Yes
+      CreatedBy           #Yes
+      DeveloperDocumentation  #@MIK9859
+      Origin              #{94410BE4-ADF0-4CB4-8928-233F57202630}
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #Action
+        ENUM
+        PROPERTIES
+          Name                #Action
+          Table               #RabbitQueue
+          Origin              #{5704E55D-3535-4E9C-ACCB-89D94E81C044}
+          ExtendedDataType    #RabbitActionType
+          EnumType            #EventLogType
+        ENDPROPERTIES
+        
+      FIELD #AppId
+        STRING
+        PROPERTIES
+          Name                #AppId
+          Table               #RabbitQueue
+          Origin              #{F7973BF8-D0E1-4C81-9342-E1BF7F7636B6}
+          ExtendedDataType    #RabbitAppId
+          StringSize          #100
+        ENDPROPERTIES
+        
+      FIELD #ContentType
+        ENUM
+        PROPERTIES
+          Name                #ContentType
+          Table               #RabbitQueue
+          Origin              #{9D511883-2DBD-476D-A3A4-6CC9F552360F}
+          EnumType            #RabbitContentType
+        ENDPROPERTIES
+        
+      FIELD #DeliveryTag
+        INT64
+        PROPERTIES
+          Name                #DeliveryTag
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #RabbitQueue
+          Origin              #{08E68E2D-5164-43BB-8827-1FEF5C567EF4}
+        ENDPROPERTIES
+        
+      FIELD #Direction
+        ENUM
+        PROPERTIES
+          Name                #Direction
+          Table               #RabbitQueue
+          Origin              #{7CD796E2-F54B-4286-8314-229D5A26D85F}
+          EnumType            #RabbitDirection
+        ENDPROPERTIES
+        
+      FIELD #DocTypeRefRecId
+        INT64
+        PROPERTIES
+          Name                #DocTypeRefRecId
+          Label               #@SYS81228
+          HelpText            #@MIK13209
+          Table               #RabbitQueue
+          Origin              #{91F71C18-2025-4419-AB7F-69D2106FA9D4}
+          ExtendedDataType    #RefRecId
+        ENDPROPERTIES
+        
+      FIELD #DocumentNum
+        STRING
+        PROPERTIES
+          Name                #DocumentNum
+          Table               #RabbitQueue
+          Origin              #{403695CE-D16B-4E08-B43A-C163EFD733BB}
+          ExtendedDataType    #RabbitDocumentNum
+          StringSize          #60
+        ENDPROPERTIES
+        
+      FIELD #Event
+        STRING
+        PROPERTIES
+          Name                #Event
+          Label               #@SYS80093
+          HelpText            #@GMS10616
+          Table               #RabbitQueue
+          Origin              #{4FA7A045-CF8B-4491-8506-3E1166A10EEE}
+          ExtendedDataType    #String255
+          StringSize          #255
+        ENDPROPERTIES
+        
+      FIELD #Guid
+        GUID
+        PROPERTIES
+          Name                #Guid
+          Table               #RabbitQueue
+          Origin              #{365E2942-320B-448B-A813-81C1D2796DCB}
+          ExtendedDataType    #RabbitGuid
+        ENDPROPERTIES
+        
+      FIELD #InputChannelId
+        STRING
+        PROPERTIES
+          Name                #InputChannelId
+          Label               #@MIK11433
+          Table               #RabbitQueue
+          Origin              #{9DC144CA-E3B9-4F1A-B7BC-0CAC185FA8D4}
+          ExtendedDataType    #RabbitChannelId
+          StringSize          #100
+        ENDPROPERTIES
+        
+      FIELD #JourId
+        STRING
+        PROPERTIES
+          Name                #JourId
+          Table               #RabbitQueue
+          Origin              #{DF76DFD7-EB0F-4A4A-A20A-246BD8CA7D43}
+          ExtendedDataType    #RabbitJourId
+        ENDPROPERTIES
+        
+      FIELD #Locked
+        ENUM
+        PROPERTIES
+          Name                #Locked
+          Table               #RabbitQueue
+          Origin              #{257F0E16-A851-489E-B488-E3E1B43F2B8D}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #OutputSettingsId
+        STRING
+        PROPERTIES
+          Name                #OutputSettingsId
+          Label               #@MIK11434
+          Table               #RabbitQueue
+          Origin              #{D706047C-5B82-4E11-9D70-9DFE3A338540}
+          ExtendedDataType    #RabbitOutputSettingsId
+        ENDPROPERTIES
+        
+      FIELD #ProcessorId
+        GUID
+        PROPERTIES
+          Name                #ProcessorId
+          Table               #RabbitQueue
+          Origin              #{62296019-97BF-493C-A52B-BC36569B84ED}
+          ExtendedDataType    #InforProcessorId
+        ENDPROPERTIES
+        
+      FIELD #QueueJourId
+        STRING
+        PROPERTIES
+          Name                #QueueJourId
+          Table               #RabbitQueue
+          Origin              #{B96C7098-D498-44CE-BBCC-2F3B2F7B5548}
+          ExtendedDataType    #RabbitQueueJourId
+        ENDPROPERTIES
+        
+      FIELD #QueueStatus
+        ENUM
+        PROPERTIES
+          Name                #QueueStatus
+          Table               #RabbitQueue
+          Origin              #{BE78080D-00D1-4854-A3C3-F763B7D24E2E}
+          EnumType            #RabbitQueueStatus
+        ENDPROPERTIES
+        
+      FIELD #Sequence
+        INT
+        PROPERTIES
+          Name                #Sequence
+          Table               #RabbitQueue
+          Origin              #{FD878BA8-411E-47EB-94D5-070E5D1FC19C}
+          ExtendedDataType    #RabbitExportDocumentSequence
+        ENDPROPERTIES
+        
+      FIELD #SessionId
+        INT
+        PROPERTIES
+          Name                #SessionId
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #RabbitQueue
+          Origin              #{D1724A86-45F7-40E1-B38A-209FF6AEB16F}
+          ExtendedDataType    #SessionId
+        ENDPROPERTIES
+        
+      FIELD #SessionLoginDateTime
+        DATETIME
+        PROPERTIES
+          Name                #SessionLoginDateTime
+          AllowEditOnCreate   #No
+          AllowEdit           #No
+          Table               #RabbitQueue
+          Origin              #{59C3BA03-C8B5-4F88-B8A9-93A42C1A9403}
+          ExtendedDataType    #SysSessionLoginDateTime
+        ENDPROPERTIES
+        
+      FIELD #WMSPalletId
+        STRING
+        PROPERTIES
+          Name                #WMSPalletId
+          Table               #RabbitQueue
+          Origin              #{24284DF9-AD85-4532-8308-59B3B12EE9FD}
+          ExtendedDataType    #WMSPalletIdInfor
+          StringSize          #18
+        ENDPROPERTIES
+        
+      FIELD #XML
+        STRING
+        PROPERTIES
+          Name                #XML
+          Table               #RabbitQueue
+          Origin              #{C2FC2DB4-B31B-41B7-A556-BBBDDD8D89DA}
+          ExtendedDataType    #XML
+          StringSize          #(Memo)
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #JourId
+          #RecId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Overview
+        PROPERTIES
+          Name                #Overview
+          Label               #@SYS9039
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #QueueJourId
+          #JourId
+          #DocumentNum
+          #DocTypeRefRecId
+          #createdDateTime
+          #Locked
+          #Direction
+          #QueueStatus
+          #WMSPalletId
+          #DeliveryTag
+          #Event
+          #Guid
+          #InputChannelId
+          #OutputSettingsId
+          #AppId
+          #Sequence
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #RabbitSettings
+        PROPERTIES
+          Name                #RabbitSettings
+          Label               #@MIK11435
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #ContentType
+          #AppId
+          #Action
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #QueueJourIdx
+      PROPERTIES
+        Name                #QueueJourIdx
+        AllowDuplicates     #No
+        Origin              #{A6A5304D-EE1D-4537-8204-06C7550B88C2}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #QueueJourId
+      ENDINDEXFIELDS
+      
+      #JourIdQueueJourIdIdx_R002345
+      PROPERTIES
+        Name                #JourIdQueueJourIdIdx_R002345
+        Origin              #{0893AFAC-E09E-4CDB-BC17-B797AA94C6ED}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #JourId
+        #QueueJourId
+      ENDINDEXFIELDS
+      
+      #QueueStatusDirIdx
+      PROPERTIES
+        Name                #QueueStatusDirIdx
+        Origin              #{CFC66C7D-9DF4-44FF-B57A-EA75FB695535}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #QueueStatus
+        #Direction
+        #Locked
+        #modifiedDateTime
+      ENDINDEXFIELDS
+      
+      #QueueJourStatusDirIdx
+      PROPERTIES
+        Name                #QueueJourStatusDirIdx
+        Origin              #{3B8A1291-D8FC-484F-ABC6-EB5D89DF5040}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #JourId
+        #QueueStatus
+        #Direction
+        #Locked
+        #modifiedDateTime
+        #QueueJourId
+        #Sequence
+      ENDINDEXFIELDS
+      
+      #CreatedDateTimeIdx
+      PROPERTIES
+        Name                #CreatedDateTimeIdx
+        Origin              #{D7D049EE-780C-420E-9395-1C2E377D3385}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #createdDateTime
+      ENDINDEXFIELDS
+      
+      #DocumentNumIdx
+      PROPERTIES
+        Name                #DocumentNumIdx
+        Origin              #{F24BBDFC-CE9A-4BB9-B383-5AFD9D5799B6}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #DocumentNum
+      ENDINDEXFIELDS
+      
+      #EventDataAreaIdPartitionIdx
+      PROPERTIES
+        Name                #EventDataAreaIdPartitionIdx
+        Origin              #{77954E14-586D-411C-8AD4-F777E9E6865F}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #Event
+        #dataAreaId
+        #Partition
+      ENDINDEXFIELDS
+      
+      #DocNumInputChannelIdx
+      PROPERTIES
+        Name                #DocNumInputChannelIdx
+        Origin              #{E3C2B6A4-BC78-4B1D-B12B-8B8A96EE080C}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #InputChannelId
+        #DocumentNum
+      ENDINDEXFIELDS
+      
+      #DocumentEventStatusIdx
+      PROPERTIES
+        Name                #DocumentEventStatusIdx
+        Origin              #{55D71977-AD76-4BBF-8D55-92CEF7804103}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #DocumentNum
+        #Event
+        #QueueStatus
+      ENDINDEXFIELDS
+      
+      #DBA_QUEUESTATUSDIRLOCKMOD
+      PROPERTIES
+        Name                #DBA_QUEUESTATUSDIRLOCKMOD
+        Origin              #{B4C23C3B-5F35-47BE-B201-AF357B7655A1}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #Partition
+        #dataAreaId
+        #QueueStatus
+        #Direction
+        #Locked
+        #modifiedDateTime
+      ENDINDEXFIELDS
+      
+      #DBA_QUEUESTATUSDIRLOCK
+      PROPERTIES
+        Name                #DBA_QUEUESTATUSDIRLOCK
+        Origin              #{2CC37462-679E-486D-BF61-2732E2CCFEC3}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #Partition
+        #dataAreaId
+        #QueueStatus
+        #Direction
+        #Locked
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+      REFERENCE #RabbitJour_R002345
+        PROPERTIES
+          Name                #RabbitJour_R002345
+          Table               #RabbitJour
+          RelatedTableCardinality   #ZeroOne
+          Cardinality         #ZeroMore
+          RelationshipType    #Association
+          UseDefaultRoleNames #Yes
+        ENDPROPERTIES
+        
+        FIELDREFERENCES
+          REFERENCETYPE PKFK
+          PROPERTIES
+            Field               #JourId
+            RelatedField        #JourId
+          ENDPROPERTIES
+          
+        ENDFIELDREFERENCES
+      ENDREFERENCE
+    ENDREFERENCES
+    
+    DELETEACTIONS
+      #RabbitJour
+      PROPERTIES
+        Table               #RabbitJour
+        DeleteAction        #Cascade
+      ENDPROPERTIES
+      
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #getTypeDeliveryDate
+        #// o.alekse 28.11.2023 MIK_CR_000001807_01
+        #container getTypeDeliveryDate()
+        #{
+        #    XmlDocument     xmlDocument;
+        #    XmlNodeList     xmlNodeListType;
+        #    XmlNodeList     xmlNodeListCloseDate;
+        #
+        #    XmlNode         XmlNodeType;
+        #    XmlNode         XmlNodeCloseDate;
+        #
+        #    container       retCon;
+        #    ;
+        #
+        #    xmlDocument             = XmlDocument::newXml(this.XML);
+        #
+        #    xmlNodeListType         = xmlDocument.getElementsByTagName("Type");
+        #    XmlNodeType             = xmlNodeListType.nextNode();
+        #
+        #    //xmlNodeListCloseDate    = xmlDocument.getElementsByTagName("ClosedDate");
+        #    xmlNodeListCloseDate    = xmlDocument.getElementsByTagName("ReceiptDate");
+        #    XmlNodeCloseDate        = xmlNodeListCloseDate.nextNode();
+        #
+        #    retCon = [XmlNodeType.innerText(), XmlNodeCloseDate.innerText()];
+        #
+        #    return retCon;
+        #}
+      ENDSOURCE
+      SOURCE #HNSSalesType
+        #//X5SHP_HNS_000002054_01, SMironov, 13.03.2025
+        #public boolean HNSSalesType()
+        #{
+        #    #define.ordershipped9('ordershipped9')
+        #    #define.dropidshipped9('dropidshipped9')
+        #    boolean ret = false;
+        #    ;
+        #
+        #    if ((this.Event == #ordershipped9
+        #            || this.Event == #dropidshipped9)
+        #        && SalesTable::exist(this.DocumentNum) //HNS_HNS_000002198_01, SMironov, 01.08.2025
+        #        )
+        #        ret = true;
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #HNSTransferType
+        #//HNS_HNS_000002198_01, SMironov, 01.08.2025
+        #public boolean HNSTransferType()
+        #{
+        #    #define.ordershipped9('ordershipped9')
+        #    #define.dropidshipped9('dropidshipped9')
+        #    boolean ret = false;
+        #    ;
+        #
+        #    if ((this.Event == #ordershipped9
+        #            || this.Event == #dropidshipped9)
+        #        && InventTransferTable::exist(this.DocumentNum)
+        #        )
+        #        ret = true;
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #HNSType
+        #//HNS_HNS_000001127_01, SMironov, 26.05.2022
+        #public boolean HNSType()
+        #{
+        #    #define.asnverified9('asnverified9')
+        #    #define.asnverifiedcontrol9('asnverifiedcontrol9')
+        #    boolean ret = false;
+        #    ;
+        #
+        #    if (this.Event == #asnverified9
+        #        || this.Event == #asnverifiedcontrol9)
+        #        ret = true;
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #initValue
+        #public void initValue()
+        #{
+        #    super();
+        #
+        #    this.QueueJourId = NumberSeq::newGetNum(RabbitQueue::numRefRabbitQueueJourId(), true).num();
+        #}
+      ENDSOURCE
+      SOURCE #insert
+        #//SYM_SYM_000000842_01, SMironov, 14.02.2022
+        #public void insert()
+        #{
+        #    if (!this.Sequence)
+        #        this.Sequence = RabbitOutputDocumentType::find(RabbitJour::find(this.JourId).OutputDocumentTypeId).Sequence;
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #isInputInfor
+        #//X5SHP_INT_1_000002056_01, SMironov, 04.03.2025
+        #public boolean isInputInfor()
+        #{
+        #    boolean ret = false;
+        #    ;
+        #    if (this.InputChannelId
+        #        && RabbitInputChannel::find(this.InputChannelId).ExchangeType == RabbitExchangeType::Infor)
+        #        ret = true;
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #update
+        #//SYM_SYM_000000842_01, SMironov, 14.02.2022
+        #public void update()
+        #{
+        #    if (!this.Sequence)
+        #        this.Sequence = RabbitOutputDocumentType::find(RabbitJour::find(this.JourId).OutputDocumentTypeId).Sequence;
+        #    super();
+        #}
+      ENDSOURCE
+      SOURCE #updateFromSourceChangeLog
+        #public void updateFromSourceChangeLog(RabbitOutputDocumentTypeRecId _documentTypeId, Common _record)
+        #{
+        #    RabbitTableChangeLog    log;
+        #
+        #    if (_record.RecId)
+        #    {
+        #        ttsBegin;
+        #
+        #        log = RabbitTableChangeLog::find(_documentTypeId, _record.RecId, _record.TableId);
+        #        if (log)
+        #        {
+        #            this.Action     = log.Action;
+        #            this.Event      = log.Event;
+        #
+        #            this.update();
+        #        }
+        #
+        #        ttsCommit;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #createOutgoingExp
+        #//Создание стандартной записи очереди, не ответной
+        #public static RabbitQueue createOutgoingExp(RabbitJour _jour, RabbitOutputSettingsId _outputSettingsId
+        #                                            //SYM_SYM_000000842_01, SMironov, 15.02.2022 ->
+        #                                            , RabbitExportDocumentSequence _sequence = 0
+        #                                            //SYM_SYM_000000842_01, SMironov, 15.02.2022 <-
+        #                                            )
+        #{
+        #    RabbitQueue queue;
+        #    RabbitOutputSettings    outputSettings      = RabbitOutputSettings::find(_outputSettingsId);
+        #    RabbitParameters        rabbitParameters    = rabbitParameters::find();
+        #    ;
+        #    queue.clear();
+        #    queue.initValue();
+        #    queue.JourId        = _jour.JourId;
+        #    queue.Direction     = RabbitDirection::Outgoing;
+        #    queue.QueueStatus   = RabbitQueueStatus::Create;
+        #
+        #    if(outputSettings)
+        #    {
+        #        queue.OutputSettingsId    = outputSettings.Id;
+        #        queue.contentType         = (outputSettings.contentType)  ? outputSettings.contentType  : rabbitParameters.DefaultContentType;
+        #    }
+        #    //SYM_SYM_000000842_01, SMironov, 15.02.2022 ->
+        #    queue.Sequence      = _sequence;
+        #    //SYM_SYM_000000842_01, SMironov, 15.02.2022 <-
+        #
+        #    queue.insert();
+        #    return queue;
+        #}
+      ENDSOURCE
+      SOURCE #exist
+        #//HNS_HNS_000001127_01, SMironov, 26.05.2022
+        #public static boolean exist(RefRecId _refRecId)
+        #{
+        #    RabbitQueue RabbitQueue;
+        #    boolean     ret;
+        #    ;
+        #
+        #    select firstonly RecId from RabbitQueue
+        #        where RabbitQueue.RecId == _refRecId;
+        #
+        #    if (rabbitQueue.RecId != 0)
+        #        ret = true;
+        #
+        #    return ret;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #find
+        #static RabbitQueue find(RabbitQueueJourId _queueJourId,
+        #                        boolean           _forUpdate = false)
+        #{
+        #    RabbitQueue RabbitQueue;
+        #
+        #    if (_queueJourId)
+        #    {
+        #        RabbitQueue.selectForUpdate(_forUpdate);
+        #
+        #        select firstonly RabbitQueue
+        #          where RabbitQueue.QueueJourId == _queueJourId;
+        #    }
+        #    return RabbitQueue;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #findGuid
+        #static RabbitQueue findGuid(RabbitDirection   _direction,
+        #                            RabbitGuid        _guid,
+        #                            boolean           _forUpdate = false)
+        #{
+        #    RabbitQueue RabbitQueue;
+        #
+        #    if (_guid && _direction != RabbitDirection::None)
+        #    {
+        #        RabbitQueue.selectForUpdate(_forUpdate);
+        #
+        #        select firstonly RabbitQueue
+        #          where RabbitQueue.Guid        == _guid
+        #             && RabbitQueue.Direction   == _direction;
+        #    }
+        #    return RabbitQueue;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #findJourId
+        #// $CC27-svaluykin 28.05.2021 SYM_SYM_000000149_01
+        #static RabbitQueue findJourId(RabbitJourId _JourId,
+        #                              boolean           _forUpdate = false)
+        #{
+        #    RabbitQueue RabbitQueue;
+        #
+        #    if (_JourId)
+        #    {
+        #        RabbitQueue.selectForUpdate(_forUpdate);
+        #
+        #        select firstonly RabbitQueue
+        #          where RabbitQueue.JourId == _JourId;
+        #    }
+        #    return RabbitQueue;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #findRecId
+        #public static RabbitQueue findRecId(RefRecId  _recId, boolean _forUpdate = false
+        #                                  , ConcurrencyModel _concurrencyModel = ConcurrencyModel::Auto) // a.klychn 05.04.2022 INF_INT_1_000000982_01
+        #{
+        #    RabbitQueue    RabbitQueue;
+        #    ;
+        #    if(_recId)
+        #    {
+        #        //+ a.klychn 05.04.2022 INF_INT_1_000000982_01
+        #        /*
+        #        RabbitQueue.selectForUpdate(_forUpdate);
+        #
+        #        select firstonly RabbitQueue
+        #            where RabbitQueue.RecId == _recId;
+        #        */
+        #        if (_forupdate)
+        #        {
+        #            rabbitQueue.selectForUpdate(_forupdate);
+        #            if (_concurrencyModel != ConcurrencyModel::Auto)
+        #                rabbitQueue.concurrencyModel(_concurrencyModel);
+        #
+        #            select firstonly forupdate rabbitQueue
+        #                index hint RecId
+        #                where rabbitQueue.RecId == _RecId;
+        #        }
+        #        else
+        #        {
+        #            select firstonly rabbitQueue
+        #                index hint RecId
+        #                where rabbitQueue.RecId == _RecId;
+        #        }
+        #        //- a.klychn 05.04.2022 INF_INT_1_000000982_01
+        #
+        #    }
+        #    return RabbitQueue;
+        #}
+      ENDSOURCE
+      SOURCE #GetInventBathId
+        #//dkovlovt 15.10.2021 MRC_MERK_000000156_01
+        #static InventBatchId GetInventBathId(InventTransferId _TransferId, ItemId _ItemId
+        #                                    , WMSPalletId _wmsPalletId = '' //MIK_MERK_000001225_01, SMironov, 28.07.2022
+        #                                    )
+        #{
+        #    InventBatchId   ret;
+        #    RabbitQueue     RabbitQueue;
+        #    XmlDocument     xmlDocument;
+        #    XmlNodeList     xmlNodeList;
+        #    XmlNodeList     xmlCustomerOrderDetail;
+        #    XmlNode         XmlNode;
+        #    XmlElement      xmlDetail;
+        #    ;
+        #    //MIK_MERK_000001225_01, SMironov, 28.07.2022 ->
+        #    //_ItemId = '10024839';
+        #    //_wmsPalletId = 'DRTO189728201';
+        #    select xml from RabbitQueue
+        #        index hint DocNumInputChannelIdx
+        #        where RabbitQueue.DocumentNum == _TransferId
+        #            && RabbitQueue.InputChannelId == 'InfoToAX'
+        #            && RabbitQueue.Event == 'customerorderpacked9';
+        #            //&& RabbitQueue.JourId == '223544';
+        #    /*select xml from RabbitQueue
+        #        index hint DocNumInputChannelIdx
+        #        where RabbitQueue.DocumentNum == _TransferId
+        #            && RabbitQueue.InputChannelId == 'InfoToAX'
+        #            //&& RabbitQueue.RecId == 5659088842;
+        #    */
+        #    //MIK_MERK_000001225_01, SMironov, 28.07.2022 <-
+        #    if(RabbitQueue)
+        #    {
+        #        xmlDocument  = XmlDocument::newXml(RabbitQueue.XML);
+        #        xmlCustomerOrderDetail = xmlDocument.getElementsByTagName("CustomerOrderDetail");
+        #        xmlDetail     = xmlCustomerOrderDetail.nextNode();
+        #        while(xmlDetail && !ret)
+        #        {
+        #            xmlNodeList = xmlDetail.getElementsByTagName("Sku");
+        #            XmlNode     = xmlNodeList.nextNode();
+        #            //MIK_MERK_000001225_01, SMironov, 28.07.2022 ->
+        #            //if(XmlNode.innerText() == _ItemId)
+        #            if (XmlNode && XmlNode.innerText() == _ItemId)
+        #            //MIK_MERK_000001225_01, SMironov, 28.07.2022 <-
+        #            {
+        #                //MIK_MERK_000001225_01, SMironov, 28.07.2022 ->
+        #                if (_wmsPalletId)
+        #                {
+        #                    xmlNodeList = xmlDetail.getElementsByTagName("DROPID");
+        #                    XmlNode     = xmlNodeList.nextNode();
+        #                    if (XmlNode && XmlNode.innerText() == _wmsPalletId)
+        #                    {
+        #                        xmlNodeList = xmlDetail.getElementsByTagName("InventBatchId");
+        #                        XmlNode     = xmlNodeList.nextNode();
+        #                        if (XmlNode)
+        #                            ret         = XmlNode.innerText();
+        #                    }
+        #                }
+        #                else
+        #                //MIK_MERK_000001225_01, SMironov, 28.07.2022 <-
+        #                {
+        #                    xmlNodeList = xmlDetail.getElementsByTagName("InventBatchId");
+        #                    XmlNode     = xmlNodeList.nextNode();
+        #                    if (XmlNode) //MIK_MERK_000001225_01, SMironov, 28.07.2022
+        #                        ret         = XmlNode.innerText();
+        #                }
+        #            }
+        #            xmlDetail     = xmlCustomerOrderDetail.nextNode();
+        #        }
+        #    }
+        #
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #GetItemId
+        #// fmikov_g 12.11.2021 MRC_MERK_000000156_01
+        #static ItemId GetItemId(InventTransferId _TransferId, VetisGuid           _stockEntryId)
+        #{
+        #    InventBatchId   inventBatchId;
+        #    RabbitQueue     RabbitQueue;
+        #    XmlDocument     xmlDocument;
+        #    XmlNodeList     xmlNodeList;
+        #    XmlNodeList     xmlCustomerOrderDetail;
+        #    XmlNode         XmlNode;
+        #    XmlElement      xmlDetail;
+        #
+        #    InventBatch     inventBatch;
+        #    VetisStockBatch vetisStockBatch;
+        #
+        #    ItemId          ret;
+        #    ;
+        #    select xml from RabbitQueue index hint DocNumInputChannelIdx where RabbitQueue.DocumentNum == _TransferId
+        #            && RabbitQueue.InputChannelId == 'InfoToAX';
+        #
+        #    if(RabbitQueue)
+        #    {
+        #        xmlDocument  = XmlDocument::newXml(RabbitQueue.XML);
+        #        xmlCustomerOrderDetail = xmlDocument.getElementsByTagName("CustomerOrderDetail");
+        #        xmlDetail     = xmlCustomerOrderDetail.nextNode();
+        #
+        #        while(xmlDetail && !ret)
+        #        {
+        #            xmlNodeList     = xmlDetail.getElementsByTagName("Sku");
+        #            XmlNode         = xmlNodeList.nextNode();
+        #
+        #            xmlNodeList     = xmlDetail.getElementsByTagName("InventBatchId");
+        #            XmlNode         = xmlNodeList.nextNode();
+        #            inventBatchId   = XmlNode.innerText();
+        #
+        #            select firstOnly inventBatch
+        #                where inventBatch.inventBatchId == inventBatchId
+        #            join VetisStockBatch
+        #                index ParamsIdx
+        #                where VetisStockBatch.BatchId       == inventBatch.VetisStockBatchId    &&
+        #                      VetisStockBatch.StockEntryId  == _stockEntryId;
+        #
+        #            if(inventBatch)
+        #            {
+        #                ret = inventBatch.itemId;
+        #            }
+        #
+        #            xmlDetail     = xmlCustomerOrderDetail.nextNode();
+        #        }
+        #    }
+        #
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #jumpRef
+        #//HNS_HNS_000001127_01, SMironov, 26.05.2022
+        #client static void jumpRef(RefRecId _refRecId)
+        #{
+        #    Args            args;
+        #    MenuFunction    mf;
+        #    ;
+        #    if (RabbitQueue::exist(_refRecId))
+        #    {
+        #        args = new Args();
+        #        args.record(RabbitQueue::findRecId(_RefRecId));
+        #        mf = new MenuFunction(menuitemDisplayStr(RabbitQueue), MenuItemType::Display);
+        #        mf.run(args);
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #numRefRabbitQueueJourId
+        #client server static NumberSequenceReference numRefRabbitQueueJourId()
+        #{
+        #    return NumberSeqReference::findReference(extendedtypenum(RabbitQueueJourId));
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: DBT
+
 ; Microsoft Dynamics AX Table : RabbitTableChangeLog unloaded
 ; --------------------------------------------------------------------------------
   TABLEVERSION 1
@@ -975,6 +1868,687 @@ Formatversion: 1
         #    Global::endLengthyOperation();
         #
         #    return RabbitTableChangeLog.RecId;
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDTABLE
+  
+
+***Element: DBT
+
+; Microsoft Dynamics AX Table : RabbitOutputDocumentType unloaded
+; --------------------------------------------------------------------------------
+  TABLEVERSION 1
+  
+  TABLE #RabbitOutputDocumentType
+    EnforceFKRelation 0
+    PROPERTIES
+      Name                #RabbitOutputDocumentType
+      Label               #Настройки типов документов для выгрузки в RabbitMQ
+      TitleField1         #OutputDocumentTypeId
+      TitleField2         #TableIdSource
+      ConfigurationKey    #RabbitMQ
+      CreateRecIdIndex    #Yes
+      PrimaryIndex        #Unique
+      ClusterIndex        #Unique
+      ReplacementKey      #Unique
+      ModifiedDateTime    #Yes
+      DEL_modifiedTime    #Yes
+      ModifiedBy          #Yes
+      CreatedDateTime     #Yes
+      DEL_createdTime     #Yes
+      CreatedBy           #Yes
+      Origin              #{4B69CAE9-0CB8-4B31-B4D5-D0BBB8F646F0}
+    ENDPROPERTIES
+    
+    FIELDS
+      FIELD #AutoSend
+        ENUM
+        PROPERTIES
+          Name                #AutoSend
+          Label               #@MIK10724
+          HelpText            #@MIK10725
+          Table               #RabbitOutputDocumentType
+          Origin              #{9E16220E-4190-473A-A6FE-70BAE1001079}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #DocumentKind
+        ENUM
+        PROPERTIES
+          Name                #DocumentKind
+          Label               #@MIK964
+          HelpText            #@MIK964
+          Table               #RabbitOutputDocumentType
+          Origin              #{ECA18FE7-CD8A-44CA-8BCB-17E69E6D188C}
+          EnumType            #SymExchangeType
+        ENDPROPERTIES
+        
+      FIELD #ExchangeType
+        ENUM
+        PROPERTIES
+          Name                #ExchangeType
+          Table               #RabbitOutputDocumentType
+          Origin              #{41E2C7CC-FF6D-4683-B876-76633F0E4AAC}
+          EnumType            #RabbitExchangeType
+        ENDPROPERTIES
+        
+      FIELD #OrActive
+        ENUM
+        PROPERTIES
+          Name                #OrActive
+          Label               #@SYS26363
+          Table               #RabbitOutputDocumentType
+          Origin              #{FDBFEB2A-15AB-4CDE-8185-5F1C1F8CD1C5}
+          ExtendedDataType    #NoYesId
+          EnumType            #NoYes
+        ENDPROPERTIES
+        
+      FIELD #OutputDocumentTypeId
+        STRING
+        PROPERTIES
+          Name                #OutputDocumentTypeId
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #RabbitOutputDocumentType
+          Origin              #{A66F1EC2-F40B-45F9-9837-6EC3B044BB02}
+          ExtendedDataType    #RabbitOutputDocumentTypeId
+        ENDPROPERTIES
+        
+      FIELD #OutputSettingsId
+        STRING
+        PROPERTIES
+          Name                #OutputSettingsId
+          Mandatory           #Yes
+          Table               #RabbitOutputDocumentType
+          Origin              #{D9AB5741-B51D-4D9D-9445-482A39D705DD}
+          ExtendedDataType    #RabbitOutputSettingsId
+        ENDPROPERTIES
+        
+      FIELD #Query
+        QUEUE
+        PROPERTIES
+          Name                #Query
+          Table               #RabbitOutputDocumentType
+          Origin              #{90D7CD77-CCA2-4440-B6D0-29010438AC89}
+          ExtendedDataType    #PackedQueryRun
+        ENDPROPERTIES
+        
+      FIELD #SendDelay
+        INT
+        PROPERTIES
+          Name                #SendDelay
+          Label               #@MIK11361
+          HelpText            #@MIK11361
+          Table               #RabbitOutputDocumentType
+          Origin              #{BB3EAAC2-5D9D-4B76-BF89-38E8C40BA042}
+        ENDPROPERTIES
+        
+      FIELD #Sequence
+        INT
+        PROPERTIES
+          Name                #Sequence
+          Table               #RabbitOutputDocumentType
+          Origin              #{AE7C0D11-EB4E-434C-8ACF-E1F6309187AA}
+          ExtendedDataType    #RabbitExportDocumentSequence
+        ENDPROPERTIES
+        
+      FIELD #TableIdSource
+        INT
+        PROPERTIES
+          Name                #TableIdSource
+          Label               #@MIK10487
+          Mandatory           #Yes
+          Table               #RabbitOutputDocumentType
+          Origin              #{5E3A96DC-D385-493D-979E-DC31DA52CB77}
+          ExtendedDataType    #RefTableId
+        ENDPROPERTIES
+        
+      FIELD #TableMethodGetDocName
+        STRING
+        PROPERTIES
+          Name                #TableMethodGetDocName
+          Label               #@MIK10726
+          HelpText            #@MIK10727
+          Table               #RabbitOutputDocumentType
+          Origin              #{27C6579C-25C8-4106-BBDC-EC9A728AE239}
+          ExtendedDataType    #IdentifierName
+          StringSize          #40
+        ENDPROPERTIES
+        
+      FIELD #TypeMessageExpClassHandler
+        STRING
+        PROPERTIES
+          Name                #TypeMessageExpClassHandler
+          Mandatory           #Yes
+          AllowEdit           #No
+          Table               #RabbitOutputDocumentType
+          Origin              #{1365AB94-C99E-4CFE-AA72-FFAD094FABDC}
+          ExtendedDataType    #RabbitTypeMessageExpClassHandler
+          StringSize          #40
+        ENDPROPERTIES
+        
+      FIELD #TypeMessageExpClassHandlerDesc
+        STRING
+        PROPERTIES
+          Name                #TypeMessageExpClassHandlerDesc
+          Table               #RabbitOutputDocumentType
+          Origin              #{B796795C-E227-404E-B6C3-0043B1834E08}
+          ExtendedDataType    #RabbitTypeMessageClassHandlerDesc
+          StringSize          #60
+        ENDPROPERTIES
+        
+    ENDFIELDS
+    GROUPS
+      GROUP #AutoReport
+        PROPERTIES
+          Name                #AutoReport
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #OutputDocumentTypeId
+          #OrActive
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #AutoIdentification
+        PROPERTIES
+          Name                #AutoIdentification
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #OutputDocumentTypeId
+        ENDGROUPFIELDS
+      ENDGROUP
+      GROUP #Overview
+        PROPERTIES
+          Name                #Overview
+          Label               #@SYS9039
+        ENDPROPERTIES
+        
+        GROUPFIELDS
+          #OutputDocumentTypeId
+          #AutoSend
+          #OrActive
+          #TableIdSource
+          #getTableNameSource
+          #TypeMessageExpClassHandler
+          #TypeMessageExpClassHandlerDesc
+          #OutputSettingsId
+          #getOutputSettings
+          #DocumentKind
+          #ExchangeType
+          #Sequence
+          #SendDelay
+        ENDGROUPFIELDS
+      ENDGROUP
+    ENDGROUPS
+    
+    INDICES
+      #Unique
+      PROPERTIES
+        Name                #Unique
+        AllowDuplicates     #No
+        AlternateKey        #Yes
+        Origin              #{B886222C-A613-4907-949F-7C360BD6D718}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #OutputDocumentTypeId
+      ENDINDEXFIELDS
+      
+      #TableIdSourceIdx
+      PROPERTIES
+        Name                #TableIdSourceIdx
+        Origin              #{00A3A8E6-9A6A-4EFA-8307-3D4A1F30F7EC}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TableIdSource
+        #OrActive
+      ENDINDEXFIELDS
+      
+      #ClassHandlerIdx
+      PROPERTIES
+        Name                #ClassHandlerIdx
+        Origin              #{72A30D81-C111-4FDB-8078-185C70B3FA98}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #TypeMessageExpClassHandler
+      ENDINDEXFIELDS
+      
+      #OutputSettingsIdIdx
+      PROPERTIES
+        Name                #OutputSettingsIdIdx
+        Origin              #{6390473C-AB7F-4441-B970-CCCFDD86D593}
+      ENDPROPERTIES
+      
+      INDEXFIELDS
+        #OutputSettingsId
+      ENDINDEXFIELDS
+      
+    ENDINDICES
+    FULLTEXTINDICES
+    ENDFULLTEXTINDICES
+    REFERENCES
+    ENDREFERENCES
+    
+    DELETEACTIONS
+      #RabbitOutDocTypeExtends(RabbitOutputDocumentType)
+      PROPERTIES
+        Table               #RabbitOutDocTypeExtends
+        DeleteAction        #Restricted
+        Relation            #RabbitOutputDocumentType
+      ENDPROPERTIES
+      
+      #RabbitTableChangeLog(RabbitOutputDocumentType)
+      PROPERTIES
+        Table               #RabbitTableChangeLog
+        DeleteAction        #Cascade
+        Relation            #RabbitOutputDocumentType
+      ENDPROPERTIES
+      
+      #RabbitOutDocTypeEvents(RabbitOutputDocumentType)
+      PROPERTIES
+        Table               #RabbitOutDocTypeEvents
+        DeleteAction        #Restricted
+        Relation            #RabbitOutputDocumentType
+      ENDPROPERTIES
+      
+    ENDDELETEACTIONS
+    
+    METHODS
+      SOURCE #getOutputSettings
+        #display RabbitOutputSettingsName getOutputSettings()
+        #{
+        #    return RabbitOutputSettings::find(this.OutputSettingsId).Name;
+        #}
+      ENDSOURCE
+      SOURCE #getTableDocNameFieldIdDefault
+        #public fieldId getTableDocNameFieldIdDefault()
+        #{
+        #    SysDictTable            sysDictTable;
+        #    DictIndex               dictIndex;
+        #    DictField               dictField;
+        #    int                     i;
+        #    IndexId                 indexId;
+        #    fieldId                 fieldIdKeyUniq;
+        #
+        #    if (this.TableIdSource)
+        #    {
+        #        sysDictTable = new SysDictTable(this.TableIdSource);
+        #
+        #        indexId = sysDictTable.indexNext(0);
+        #        while (indexId)
+        #        {
+        #            dictIndex = sysDictTable.indexObject(indexId);
+        #            if (!dictIndex.allowDuplicates() && dictIndex.numberOfFields() == 1)
+        #            {
+        #                dictField = new DictField(this.TableIdSource, dictIndex.field(1));
+        #                if (dictField && dictField.baseType() == Types::String)
+        #                {
+        #                    fieldIdKeyUniq = dictField.id();
+        #                    break;
+        #                }
+        #            }
+        #            indexId = sysDictTable.indexNext(indexId);
+        #        }
+        #    }
+        #    return fieldIdKeyUniq;
+        #}
+      ENDSOURCE
+      SOURCE #getTableNameSource
+        #display description getTableNameSource()
+        #{
+        #    return strfmt('%1 (%2)', tableid2pname(this.TableIdSource), tableid2name(this.TableIdSource));
+        #}
+      ENDSOURCE
+      SOURCE #initBaseQuery
+        #void initBaseQuery()
+        #{
+        #    Query                   q;
+        #    ;
+        #
+        #    q = new Query();
+        #    q.addDataSource(this.TableIdSource);
+        #    this.Query = q.pack();
+        #}
+      ENDSOURCE
+      SOURCE #initValue
+        #public void initValue()
+        #{
+        #    super();
+        #
+        #    this.OutputDocumentTypeId = NumberSeq::newGetNum(RabbitOutputDocumentType::numRefRabbitOutputDocumentTypeId(), true).num();
+        #    //+ a.klychn 17.06.2021 INF_EXP_000000175_01
+        #    this.ExchangeType         = RabbitExchangeType::None;
+        #    //- a.klychn 17.06.2021 INF_EXP_000000175_01
+        #}
+      ENDSOURCE
+      SOURCE #lookupTableMethodGetDocId
+        ##ResAppl
+        #void lookupTableMethodGetDocId(FormStringControl _ctrl, TableId _tableId, Types _returnType = Types::AnyType)
+        #{
+        #    SysDictTable    table;
+        #    Set             methodSet;
+        #    SysDictMethod   method;
+        #    SetEnumerator   methodEnum;
+        #    int             i;
+        #    int             paramCount;
+        #    Types           returnType;
+        #    boolean         allowAdd;
+        #    Object          formRun;
+        #    container       names;
+        #
+        #
+        #    boolean allParametersOptional()
+        #    {
+        #        for(paramCount = 1; paramCount <= method.parameterCnt(); paramCount++)
+        #        {
+        #            if(!method.parameterOptional(paramCount))
+        #                return false;
+        #        }
+        #        return true;
+        #    }
+        #
+        #    Types typeofext()
+        #    {
+        #        Types           result;
+        #        SysDictType     dictType;
+        #
+        #        ;
+        #
+        #        dictType = new SysDictType(method.returnId());
+        #        result = dictType.baseType();
+        #
+        #        return result;
+        #    }
+        #
+        #    ;
+        #
+        #    if(!_tableId)
+        #        throw error('Не указана таблица!');
+        #
+        #    table = new SysDictTable(_tableId);
+        #    methodSet = table.methods(true, false, false);
+        #
+        #    formRun = classFactory.createPicklist();
+        #    formRun.init();
+        #
+        #    methodEnum = methodSet.getEnumerator();
+        #    while(methodEnum.moveNext())
+        #    {
+        #        method = methodEnum.current();
+        #
+        #        //Статические методы игнорируем
+        #        if(method.isStatic())
+        #            continue;
+        #
+        #        //Методы только без параметров или с опциональными параметрами
+        #        if(!allParametersOptional())
+        #            continue;
+        #
+        #        //Проверяем возвращаемый параметр
+        #        returnType = method.returnType();
+        #
+        #        //всякое непотребное пропускаем
+        #        if(returnType == Types::void || returnType == Types::BLOB || returnType == Types::Class || returnType == Types::Container || returnType == Types::Record)
+        #            continue;
+        #
+        #        //Если тип расширенный, то копаем в сторону базового
+        #        if(returnType == Types::UserType)
+        #            returnType = typeOfExt();
+        #
+        #        //Нам не важно какой строчный подтип - главное что строка
+        #        if(returnType == Types::VarString || returnType == Types::RString)
+        #            returnType = Types::String;
+        #
+        #        //Добавляем только если у совпадают требуемый и исследуемый типы возвращаемого параметра или тип возвращаемого не важен
+        #        allowAdd =  returnType ==  _returnType || _returnType == Types::AnyType;
+        #
+        #        if(allowAdd)
+        #            names += method.name();
+        #    }
+        #
+        #    formRun.choices(names, #ImageEDT);
+        #    formRun.caption(strfmt('Методы %1(%2)', tableid2name(_tableId), tableid2pname(_tableId)));
+        #
+        #    _ctrl.performFormLookup(formRun);
+        #
+        #}
+        #
+      ENDSOURCE
+      SOURCE #modifiedField
+        #// пдс FD_M1127_SP1_Queue_RabbitMQ_fix_PDS 15.01.2019 [METHOD]
+        #public void modifiedField(fieldId _fieldId)
+        #{
+        #    DictClass           dictClassHandler;
+        #    RabbitIntEngineExp  objectHandler;
+        #    ;
+        #    super(_fieldId);
+        #
+        #    switch(_fieldId)
+        #    {
+        #        case fieldNum(RabbitOutputDocumentType, TypeMessageExpClassHandler):
+        #            if(this.TypeMessageExpClassHandler && SysDictClass::isSuperclass(className2Id(this.TypeMessageExpClassHandler), classNum(RabbitIntEngineExp)))
+        #            {
+        #                dictClassHandler                    = new DictClass(className2Id(this.TypeMessageExpClassHandler));
+        #                objectHandler                       = dictClassHandler.makeObject();
+        #                this.TypeMessageExpClassHandlerDesc = objectHandler.description();
+        #                this.TableIdSource                  = objectHandler.getTableIdSource();
+        #                this.TableMethodGetDocName          = "";
+        #            }
+        #            else
+        #            {
+        #                this.TypeMessageExpClassHandlerDesc = '';
+        #                this.TableIdSource                  = 0;
+        #                this.TableMethodGetDocName          = "";
+        #            }
+        #            break;
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #validateField
+        #public boolean validateField(fieldId _fieldIdToCheck)
+        #{
+        #    boolean ret;
+        #    DictTable dictTable;
+        #
+        #    ret = super(_fieldIdToCheck);
+        #
+        #    if(ret)
+        #    {
+        #        switch(_fieldIdToCheck)
+        #        {
+        #            case fieldNum(RabbitOutputDocumentType, TableMethodGetDocName):
+        #                if (this.TableMethodGetDocName)
+        #                {
+        #                    dictTable = new DictTable(this.TableIdSource);
+        #                    if(this.TableIdSource && dictTable)
+        #                    {
+        #                        if(!tableHasMethod(dictTable, this.TableMethodGetDocName))
+        #                        {
+        #                            ret = checkFailed(strfmt("В таблице %1 не найден метод %2", this.TableIdSource, this.TableMethodGetDocName));
+        #                        }
+        #                    }
+        #                    else
+        #                    {
+        #                        ret = checkFailed(strfmt("Таблица %1 %2 либо не выбрана, либо не найдена", this.TableIdSource, this.getTableNameSource()));
+        #                    }
+        #                }
+        #                else
+        #                {
+        #                    if (!this.getTableDocNameFieldIdDefault())
+        #                    {
+        #                        ret = checkFailed(strfmt("В таблице %1 %2 не найдено уникальное строковое поле. Указание Метода Наименования документа обязательно", this.TableIdSource, this.getTableNameSource()));
+        #                    }
+        #                }
+        #                break;
+        #        }
+        #    }
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #validateWrite
+        #public boolean validateWrite()
+        #{
+        #    boolean ret;
+        #
+        #    ret = super();
+        #    ret = this.validateField(fieldNum(RabbitOutputDocumentType,TableMethodGetDocName)) && ret;
+        #
+        #    return ret;
+        #}
+      ENDSOURCE
+      SOURCE #waitReply
+        #// Ищем входящий канал с таким же кодом класса обработчика
+        #// Если нашли, то это документ по ответу.
+        #boolean waitReply()
+        #{
+        #    RabbitInputChannel  rabbitInputChannel;
+        #    ;
+        #    //+ $CC27-svaluykin 22.06.2021 SYM_SYM_000000249_01
+        #    if (this.DocumentKind == SymExchangeType::Symphony)
+        #    {
+        #        return false;
+        #    }
+        #    //- $CC27-svaluykin 22.06.2021 SYM_SYM_000000249_01
+        #
+        #    select firstonly rabbitInputChannel
+        #        where rabbitInputChannel.OutputDocumentTypeId == this.OutputDocumentTypeId;
+        #    return !rabbitInputChannel;
+        #}
+      ENDSOURCE
+      SOURCE #find
+        #static RabbitOutputDocumentType find(RabbitOutputDocumentTypeId _outputDocumentTypeId,
+        #                       boolean      _forUpdate = false)
+        #{
+        #    RabbitOutputDocumentType rabbitOutputDocumentType;
+        #
+        #    if (_outputDocumentTypeId)
+        #    {
+        #        rabbitOutputDocumentType.selectForUpdate(_forUpdate);
+        #
+        #        select firstonly rabbitOutputDocumentType
+        #          where rabbitOutputDocumentType.OutputDocumentTypeId == _outputDocumentTypeId;
+        #    }
+        #    return rabbitOutputDocumentType;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #findByClassHandler
+        #//X5SHP_MERK_000002225_01, SMironov, 16.10.2025
+        #public static RabbitOutputDocumentType findByClassHandler(RabbitTypeMessageExpClassHandler _classHandler, boolean _selectForUpdate = false)
+        #{
+        #    RabbitOutputDocumentType    rabbitOutputDocumentType;
+        #    ;
+        #    if (_classHandler)
+        #    {
+        #        rabbitOutputDocumentType.selectForUpdate(_selectForUpdate);
+        #        select firstonly rabbitOutputDocumentType
+        #            where rabbitOutputDocumentType.TypeMessageExpClassHandler == _classHandler;
+        #    }
+        #    return rabbitOutputDocumentType;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #findByOperationType
+        #// $CC27-svaluykin 25.02.2022 SYM_SYM_000000876_01
+        #static RabbitOutputDocumentType findByOperationType(RefTableId _tableId, SymOperationType _symOperationType)
+        #{
+        #    RabbitOutputDocumentType  outputDocumentType;
+        #    RabbitOutDocTypeExtends   rabbitOutDocTypeExtends;
+        #    RabbitOutDocTypeEvents    rabbitOutDocTypeEvents;
+        #
+        #    select firstOnly outputDocumentType
+        #        where outputDocumentType.TableIdSource == _tableId
+        #    join rabbitOutDocTypeExtends
+        #        where  rabbitOutDocTypeExtends.OutputDocumentTypeId == outputDocumentType.OutputDocumentTypeId
+        #            && rabbitOutDocTypeExtends.OperationType        == _symOperationType
+        #    join rabbitOutDocTypeEvents
+        #        where  rabbitOutDocTypeEvents.OutputDocumentTypeId == rabbitOutDocTypeExtends.OutputDocumentTypeId
+        #            && (rabbitOutDocTypeEvents.OnPeriodic || rabbitOutDocTypeEvents.OnPost);
+        #
+        #    return outputDocumentType;
+        #}
+      ENDSOURCE
+      SOURCE #findByTableId
+        #// $CC27-svaluykin 18.02.2021 SYM_SYM_000000081_01
+        #static RabbitOutputDocumentType findByTableId(RefTableId _tableId,
+        #                                              SymExchangeType _documentKind = SymExchangeType::Symphony) // $CC27-svaluykin 26.11.2021 SYM_SYM_000000669_01
+        #{
+        #    RabbitOutputDocumentType rabbitOutputDocumentType;
+        #
+        #    select firstonly rabbitOutputDocumentType
+        #        where rabbitOutputDocumentType.TableIdSource == _tableId
+        #           && rabbitOutputDocumentType.OrActive
+        #           && rabbitOutputDocumentType.DocumentKind == _documentKind; // $CC27-svaluykin 26.11.2021 SYM_SYM_000000669_01
+        #
+        #    return rabbitOutputDocumentType;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #findRecId
+        #// $CC27-svaluykin 11.06.2021 SYM_SYM_000000201_01
+        #static RabbitOutputDocumentType findRecId(refrecId _refrecid,  boolean _forUpdate = false)
+        #{
+        #    RabbitOutputDocumentType rabbitOutputDocumentType;
+        #
+        #    if (_refrecid)
+        #    {
+        #        rabbitOutputDocumentType.selectForUpdate(_forUpdate);
+        #
+        #        select firstonly rabbitOutputDocumentType
+        #          where rabbitOutputDocumentType.recId == _refrecid;
+        #    }
+        #    return rabbitOutputDocumentType;
+        #}
+        #
+      ENDSOURCE
+      SOURCE #lookup
+        #//HNS_SYM_000000483_01, SMironov, 30.09.2021
+        #public static void lookup(FormStringControl       _formStringControl)
+        #{
+        #    SysTableLookup                  sysTableLookup = SysTableLookup::newParameters(tablenum(RabbitOutputDocumentType), _formStringControl);
+        #    Query                           query = new Query();
+        #    QueryBuildDataSource            qbds;
+        #
+        #    qbds = query.addDataSource(tablenum(RabbitOutputDocumentType));
+        #
+        #    sysTableLookup.addLookupfield(fieldnum(RabbitOutputDocumentType, OutputDocumentTypeId), true);
+        #    sysTableLookup.addLookupfield(fieldnum(RabbitOutputDocumentType, TypeMessageExpClassHandlerDesc));
+        #
+        #    sysTableLookup.parmQuery(query);
+        #    sysTableLookup.performFormLookup();
+        #}
+      ENDSOURCE
+      SOURCE #lookupForGroup
+        #//SYM_SYM_000000842_01, SMironov, 15.02.2022
+        #public static void lookupForGroup(FormStringControl       _formStringControl)
+        #{
+        #    Query                           query = new Query();
+        #    QueryBuildDataSource            qbds;
+        #    MPTableLookup                   lookkup;
+        #    #define.width(50)
+        #
+        #    lookkup = MPTableLookup::newParameters(tableNum(RabbitOutputDocumentType), _formStringControl, true, #width * 15);
+        #
+        #    qbds = query.addDataSource(tablenum(RabbitOutputDocumentType));
+        #
+        #    lookkup.addLookupWidthField(fieldnum(RabbitOutputDocumentType, OutputDocumentTypeId), true, #width);
+        #    lookkup.setLabel("@SYS301347");
+        #    lookkup.addLookupWidthField(fieldnum(RabbitOutputDocumentType, TypeMessageExpClassHandler), false, #width * 5);
+        #    lookkup.addLookupWidthField(fieldnum(RabbitOutputDocumentType, TypeMessageExpClassHandlerDesc), false, #width * 6);
+        #
+        #    lookkup.parmquery(query);
+        #    lookkup.performFormLookup();
+        #}
+      ENDSOURCE
+      SOURCE #numRefRabbitOutputDocumentTypeId
+        #client server static NumberSequenceReference numRefRabbitOutputDocumentTypeId()
+        #{
+        #    return NumberSeqReference::findReference(extendedtypenum(RabbitOutputDocumentTypeId));
         #}
       ENDSOURCE
     ENDMETHODS
@@ -2208,6 +3782,15 @@ Formatversion: 1
           EnumType            #NoYes
         ENDPROPERTIES
         
+      FIELD #MPEStatusEDC
+        ENUM
+        PROPERTIES
+          Name                #MPEStatusEDC
+          Table               #PurchTable
+          Origin              #{34DDB2C0-181A-47C4-BF2B-32AD694FDA4E}
+          EnumType            #MPEStatusEDC
+        ENDPROPERTIES
+        
       FIELD #MPMarkingStatus
         ENUM
         PROPERTIES
@@ -2215,6 +3798,16 @@ Formatversion: 1
           Table               #PurchTable
           Origin              #{A34FCBEF-6DBA-4255-9CC9-EA5174A36124}
           EnumType            #MPMarkingStatus
+        ENDPROPERTIES
+        
+      FIELD #MPVendDataLoad
+        ENUM
+        PROPERTIES
+          Name                #MPVendDataLoad
+          Table               #PurchTable
+          Origin              #{A867D569-A068-4701-9046-987CBA99A489}
+          ExtendedDataType    #MPVendDataLoad
+          EnumType            #NoYes
         ENDPROPERTIES
         
       FIELD #MultiLineDisc
@@ -3793,6 +5386,7 @@ Formatversion: 1
         
         GROUPFIELDS
           #MPMarkingStatus
+          #MPVendDataLoad
         ENDGROUPFIELDS
       ENDGROUP
       GROUP #NotificationToTheCentralBank
@@ -9889,6 +11483,7 @@ Formatversion: 1
         #            this.Payment = paymTerm.PaymTermId;
         #        }
         #    }
+        #    this.MPVendDataLoad = _vendTable.MPVendDataLoad; //HNS_HNS_000002390_01, 8.4.2026, el.kono
         #}
       ENDSOURCE
       SOURCE #initFromVendTableMandatoryFields
@@ -13029,10 +14624,10 @@ Formatversion: 1
         #}
       ENDSOURCE
       SOURCE #updateFinalDisc
-        #server void  updateFinalDisc()
+        # server void  updateFinalDisc()
         #{
         #    PurchLine purchLine;
-#
+        #
         #    // In case the document state differs from confirmed: Final discount should be updated to get the totals right.
         #    // In case the document state is confirmed: Final discount is already updated and shouldn't be called again, as it'll reset the document state.
         #    if (this.DocumentState != VersioningDocumentState::Confirmed
@@ -14299,7 +15894,7 @@ Formatversion: 1
         #}
       ENDSOURCE
       SOURCE #findSourceDocumentLine
-        #/// <summary>
+        # /// <summary>
         #/// Finds a <c>PurchTable</c> record by <c>SourceDocumentLine</c>.
         #/// </summary>
         #/// <param name="_sourceDocumentLine">
@@ -14314,17 +15909,20 @@ Formatversion: 1
         #public static PurchTable findSourceDocumentLine(RefRecId _sourceDocumentLine,boolean _forUpdate = false)
         #{
         #    PurchTable    purchTable;
-#
+        #
         #    purchTable.selectForUpdate(_forUpdate);
-#
+        #
         #    if (_sourceDocumentLine)
         #    {
         #        select firstonly purchTable
         #        where purchTable.SourceDocumentLine == _sourceDocumentLine;
         #    }
-#
+        #
         #    return purchTable;
         #}
+        #
+        #
+        #
       ENDSOURCE
       SOURCE #findSymPurchCode
         #// asush 12.06.2021 SYM_SYM_000000205_01
@@ -20734,7 +22332,7 @@ Formatversion: 1
         #    FKActionType        fkActionType; // a.klychn 08.04.2026 MIK_INT_000002316_01
         #    ;
         #    //- a.klychn 25.08.2021 INF_INT_000000396_01
-#
+        #
         #    IOOutgoingRunableCreate::processServer(_common,
         #                                           _outgoingEvent,
         #                                           _commonOrig,
@@ -20750,12 +22348,12 @@ Formatversion: 1
         #                                           _commonRelated,
         #                                           _commonRelatedOrig);
         #                                           //- korus1 29.01.2018 MIK_INT_2_01_01
-#
+        #
         #    if (!(_common.tableId == tableNum(CustInvoiceJour) || _common.tableId == tableNum(VendInvoiceJour)))  // aand 13.07.2021 MIK_INT_5_000001395_25
         #    {
         #        SymExport::postDocument(_common); // $CC27-svaluykin 04.06.2021 SYM_SYM_000000129_01
         #    }
-#
+        #
         #    //+ a.klychn 25.08.2021 INF_INT_000000396_01
         #    if (className2Id('InforExport'))
         #    {
@@ -20780,11 +22378,11 @@ Formatversion: 1
         #                inforActionType = InforActionType::Empty;
         #                break;
         #        }
-#
+        #
         #        InforExport::exportTable(inforActionType, _common, _commonOrig);
         #    }
         #    //- a.klychn 25.08.2021 INF_INT_000000396_01
-        #    //+ a.klychn 08.04.2026 MIK_INT_000002316_01  Projects/Rabbit/Documentation/AX2Rabbit.md §3: IOOutgoingEvent → FKActionType → FKExport::exportTable.
+        #    //+ a.klychn 08.04.2026 MIK_INT_000002316_01
         #    if (className2Id('FKExport'))
         #    {
         #        switch (_outgoingEvent)
@@ -20808,11 +22406,11 @@ Formatversion: 1
         #                fkActionType = FKActionType::Empty;
         #                break;
         #        }
-#
+        #
         #        FKExport::exportTable(fkActionType, _common, _commonOrig);
         #    }
         #    //- a.klychn 08.04.2026 MIK_INT_000002316_01
-#
+        #
         #}
       ENDSOURCE
       SOURCE #isAllowedToStartEventTracing
@@ -29433,64 +31031,63 @@ Formatversion: 1
         #protected void runExport()
         #{
         #    #define.DeadlockRetryCount(100)
-#
+        #
         #    Counter     queueTryCount, unlockTryCount;
-#
+        #
         #    RabbitQueue                             queue;
         #    RabbitQueue                             queueSingle;
         #    RabbitIntEngineExp                      engineExp
         #    ;
-#
+        #
         #    setPrefix("@SYS26056");
-#
+        #
         #    progressLocal = new SysOperationProgress();
         #    progressLocal = SysOperationProgress::newGeneral(#AviUpdate, "@MIK9366", countQueryExport);
         #    counterDoWhile = 0;
-#
+        #
         #    setPrefix("@GMS10292");
-#
+        #
         #    queryRun = new QueryRun(this.addExportRange());
         #    while (queryRun.next())
         #    {
         #        try
         #        {
-#
+        #
         #            queue = queryRun.get(tableNum(RabbitQueue));
         #            try
         #            {
-#
+        #
         #                queueSingle = this.setLocked(queue);
         #                if (!queueSingle)
         #                {
         #                    continue;
         #                }
-#
+        #
         #                counterDoWhile++;
-#
+        #
         #                setPrefix(queueSingle.QueueJourId);
-#
-        #                // a.klychn 08.04.2026 MIK_INT_000002316_01  AX2Rabbit §4: фаза B — newFromQueueJourId → run(); initFromRabbitTableChangeLog здесь не вызывается, isCreateQueue по умолчанию false.
+        #
         #                engineExp = RabbitIntEngineExp::newFromQueueJourId(queueSingle.QueueJourId);
         #                engineExp.parmIsInBatch(this.isInBatch());
         #                engineExp.parmSend(this.parmSend());    // derin 15.02.2021 MIK_INT_5_000001395_03
         #                engineExp.run();
         #                errorFound = engineExp.errorFound();
-#
+        #
         #                if (errorFound)
         #                {
         #                    this.addToErrorLogFromInfolog();
         #                }
         #                else
         #                    info("@GMS10293");
-#
-#
+        #
+        #
         #                this.setUnLocked(queueSingle);
-#
+        #
         #                progressLocal.setText(strfmt("@MIK9367",
         #                    progressLocal.getCount_RU(), progressLocal.getTotal(), queueSingle.JourId));
         #                progressLocal.incCount();
         #                progressLocal.update(false);
-#
+        #
         #                if (counterDoWhile > countQueryExport)
         #                    break;
         #            }
@@ -30937,7 +32534,6 @@ Formatversion: 1
         #                                           FKActionType       _actionType = FKActionType::Post,
         #                                           boolean            _silentMode = true)
         #{
-        #    // a.klychn 08.04.2026 MIK_INT_000002316_01  AX2Rabbit §3: RabbitOutputDocumentType (FK) + RabbitOutDocTypeEvents OnPost/OnPeriodic → validaterRecord → add2Queue.
         #    Map                         mapDocType = new Map(types::String, Types::Record);
         #    RabbitOutDocTypeEvents      rabbitOutDocTypeEvents;
         #    RabbitOutputDocumentType    rabbitOutputDocumentType;
@@ -30955,14 +32551,14 @@ Formatversion: 1
         #        return ret;
         #    }
         #    ;
-#
+        #
         #    if (_common.RecId == 0)
         #    {
         #        if (!_silentMode)
         #            error("@MIK7969");
         #        return;
         #    }
-#
+        #
         #    try
         #    {
         #        ttsBegin;
@@ -31065,28 +32661,27 @@ Formatversion: 1
         #                        FKActionType             _action,
         #                        boolean                  _silentMode)
         #{
-        #    // a.klychn 08.04.2026 MIK_INT_000002316_01  AX2Rabbit §3 п.3–4: движок из TypeMessageExpClassHandler → initFromRabbitTableChangeLog + validateXmlCreate.
         #    boolean                  ret;
         #    RabbitIntEngineExp_FK engine;
         #    DictClass                dictClassIntEngineExp;
         #    ;
-#
+        #
         #    if (_rabbitOutputDocumentType.TypeMessageExpClassHandler
         #     && SysDictClass::isSuperclass(className2Id(_rabbitOutputDocumentType.TypeMessageExpClassHandler), classNum(RabbitIntEngineExp)))
         #    {
         #        dictClassIntEngineExp = new DictClass(className2Id(_rabbitOutputDocumentType.TypeMessageExpClassHandler));
         #        engine = dictClassIntEngineExp.makeObject();
-#
+        #
         #        if (classHasMethod(className2Id(_rabbitOutputDocumentType.TypeMessageExpClassHandler),  identifierStr(initFromRabbitTableChangeLog)))
         #        {
         #            engine.initFromRabbitTableChangeLog(_common, _action);
         #            ret = engine.validateXmlCreate();
         #        }
-#
+        #
         #        if (!_silentMode && !ret)
         #            error("@MIK9432");
         #    }
-#
+        #
         #    return ret;
         #}
       ENDSOURCE
@@ -31123,10 +32718,9 @@ Formatversion: 1
         #                                       , RabbitOutputDocumentTypeId     _docTypeId  = ''
         #                                       )
         #{
-        #    // a.klychn 08.04.2026 MIK_INT_000002316_01  AX2Rabbit §3: обёртка над postOrPeriodicDocumentInQueue (см. Global::ioExportProcessRun → FKExport::exportTable).
         #    FKExport   fkExport = new FKExport();
         #    ;
-#
+        #
         #    fkExport.postOrPeriodicDocumentInQueue(_common, _actionType, _silentMode);
         #}
       ENDSOURCE
@@ -31294,24 +32888,23 @@ Formatversion: 1
       SOURCE #CreateXMLFromSTR_I
         #void CreateXMLFromSTR_I()
         #{
-        #    // a.klychn 08.04.2026 MIK_INT_000002316_01  MIK_INT_000002316_01ФК/Documentation/finish.md §1 — протокол вложенного XML (#addNewGroup/#Open/#Close, insideNestedGroup).
         #    container               value      = Global::str2con_RU(stQuery, #FieldDelimiter);
         #    container               valueLines;
         #    int                     i = 1;
         #    str                     itemTagName;
         #    str                     itemTagValue;
         #    boolean                 insideNestedGroup;
-#
+        #
         #    if (value == conNull())
         #        return;
-#
+        #
         #    this.initXMLWriter();
-#
+        #
         #    this.startXML_I();
-#
+        #
         #    xmlWriter.writeStartElement(this.addPrefixSufix(massageTypeHeader));
         #    xmlWriter.writeStartElement(this.addPrefixSufix(massageTypeLine));
-#
+        #
         #    if (stQuery)
         #    {
         #        while (conLen(value) > i)
@@ -31325,7 +32918,7 @@ Formatversion: 1
         #        valueLines = Global::str2con_RU(stQueryLines, #FieldDelimiter);
         #        i = 1;
         #        insideNestedGroup = false;
-#
+        #
         #        while (conLen(valueLines) > i)
         #        {
         #            // + a.klychn 07.04.2026 MIK_INT_000002316_01
@@ -31376,11 +32969,11 @@ Formatversion: 1
         #        if (i != 1)
         #            xmlWriter.writeEndElement(); //#line
         #    }
-#
+        #
         #    xmlWriter.writeEndElement(); //#massageTypeLine
         #    xmlWriter.writeEndElement(); //#massageTypeHeader
         #    xmlWriter.writeEndElement(); //#message
-#
+        #
         #    this.endXML();
         #}
       ENDSOURCE
@@ -31542,7 +33135,7 @@ Formatversion: 1
         #void saveXmlMessage(str _xmlMessage)
         #{
         #    ;
-#
+        #
         #    try
         #    {
         #        ttsbegin;
@@ -31557,7 +33150,7 @@ Formatversion: 1
         #    {
         #        retry;
         #    }
-#
+        #
         #    try
         #    {
         #        ttsbegin;
@@ -31571,8 +33164,7 @@ Formatversion: 1
         #    {
         #        retry;
         #    }
-#
-        #    // a.klychn 08.04.2026 MIK_INT_000002316_01  AX2Rabbit §4: после записи XML — updateSource(Exported) у движка (ReceiptList — см. parserXPO).
+        #
         #    this.updateSource(IOExportedExternal::Exported);
         #}
       ENDSOURCE
@@ -31711,7 +33303,6 @@ Formatversion: 1
       SOURCE #generateSTR
         #public str generateSTR()
         #{
-        #    // a.klychn 08.04.2026 MIK_INT_000002316_01  MIK_INT_000002316_01ФК/Documentation/finish.md §3 — AddCount по развороту строк как в generateSTRLines.
         #    str                     ret;
         #    PurchTable              purchTable;
         #    VendReceiptsListTrans   vrt;
@@ -31722,12 +33313,12 @@ Formatversion: 1
         #    InventDim               inventDimTrans;
         #    InventBatch             inventBatch;
         #    int                     addCount;
-#
+        #
         #    if (!VendReceiptsListJour)
         #        return ret;
-#
+        #
         #    purchTable = VendReceiptsListJour.purchTable();
-#
+        #
         #    ret += this.AddStr(#PurchId,            purchTable.PurchId);
         #    ret += this.AddStr(#ListId,             VendReceiptsListJour.ReceiptsListId);
         #    ret += this.AddStr(#ListDate,           VendReceiptsListJour.ReceiptsListDate);
@@ -31743,7 +33334,7 @@ Formatversion: 1
         #    ret += this.AddStr(#TORG12Num,          PurchTable.VendTORG12Num);
         #    ret += this.AddStr(#UTDDate,            PurchTable.VendUTDDate);
         #    ret += this.AddStr(#UTDNum,             PurchTable.VendUTDNum);
-#
+        #
         #    // + a.klychn 07.04.2026 MIK_INT_000002316_01
         #    addCount = 0;
         #    while select vrt
@@ -31778,14 +33369,14 @@ Formatversion: 1
         #    }
         #    ret += this.AddStr(#AddCount, addCount);
         #    // - a.klychn 07.04.2026 MIK_INT_000002316_01
-#
+        #
         #    return ret;
         #}
+        #
       ENDSOURCE
       SOURCE #generateSTRLines
         #str generateSTRLines()
         #{
-        #    // a.klychn 08.04.2026 MIK_INT_000002316_01  MIK_INT_000002316_01ФК/Documentation/finish.md §2 — порядок полей строки и блок ШК в конце.
         #    str                     ret;
         #    InventTable             InventTable;
         #    InventDim               InventDim;
@@ -31798,7 +33389,7 @@ Formatversion: 1
         #    InventDim               inventDimTrans;
         #    InventBatch             inventBatch;
         #    ;
-#
+        #
         #    while select VendReceiptsListTrans
         #        where VendReceiptsListTrans.PurchId == VendReceiptsListJour.PurchId
         #           && VendReceiptsListTrans.ReceiptsListId == VendReceiptsListJour.ReceiptsListId
@@ -31810,14 +33401,14 @@ Formatversion: 1
         #        {
         #            throw error(strFmt("@MIK11616", VendReceiptsListJour.ReceiptsListId, VendReceiptsListJour.PurchId, VendReceiptsListTrans.ItemId));
         #        }
-#
+        #
         #        TmpInventBatch.InventBatchId = inventDim.inventBatchId;
         #        TmpInventBatch.ItemId        = VendReceiptsListTrans.ItemId;
         #        TmpInventBatch.DocNum        = VendReceiptsListJour.ReceiptsListId;
         #        TmpInventBatch.DocNum2       = VendReceiptsListJour.PurchId;
         #        TmpInventBatch.DocDate       = VendReceiptsListJour.ReceiptsListDate;
         #        TmpInventBatch.insert();
-#
+        #
         #        inventTable = InventTable::find(VendReceiptsListTrans.ItemId);
         #        PurchLine   =  VendReceiptsListTrans.purchLine();
         #        if ( SYM_Parameters::find().ReceiptByShelfLife == NoYes::Yes &&
@@ -31852,7 +33443,7 @@ Formatversion: 1
         #                            && vetisCertSettlement.InventTransId == inventTransOrigin.InventTransId
         #                            && vetisCertSettlement.InventBatchId == inventBatch.inventBatchId;
         #                    }
-#
+        #
         #                    ret += this.AddStr('', '');
         #                    ret += this.AddStr(#ItemName,      inventTable.NameAlias);
         #                    ret += this.AddStr(#ItemId,        InventTable.ItemId);
@@ -31898,7 +33489,7 @@ Formatversion: 1
         #                    && vetisCertSettlement.InventTransId == VendReceiptsListTrans.InventTransId
         #                    && vetisCertSettlement.InventBatchId == inventDim.inventBatchId;
         #            }
-#
+        #
         #            ret += this.AddStr('', '');
         #            ret += this.AddStr(#ItemName,      inventTable.NameAlias);
         #            ret += this.AddStr(#ItemId,        InventTable.ItemId);
@@ -31933,9 +33524,10 @@ Formatversion: 1
         #            ret += this.AddStr(#addNewGroup, #Close);
         #        }
         #    }
-#
+        #
         #    return ret;
         #}
+        #
       ENDSOURCE
       SOURCE #init
         #void init()
@@ -31951,28 +33543,26 @@ Formatversion: 1
       SOURCE #initFromRabbitTableChangeLog
         #public void initFromRabbitTableChangeLog(Common _common, FKActionType    _actionType)
         #{
-        #    // a.klychn 08.04.2026 MIK_INT_000002316_01  AX2Rabbit §3: фаза A (FKExport → validaterRecord) — перед validateXmlCreate.
         #    isCreateQueue = true;
-#
+        #
         #    vendReceiptsListJour = vendReceiptsListJour::findRecId(_common.RecId);
-#
-#
+        #
+        #
         #    fkActionType =  _actionType;
         #}
       ENDSOURCE
       SOURCE #updateSource
         #public void updateSource(IOExportedExternal _exportedExternal = IOExportedExternal::None)
         #{
-        #    // a.klychn 08.04.2026 MIK_INT_000002316_01  AX2Rabbit §5: IOIsExported; PurchTable.IsExport2FK только при Exported (см. также validateXmlCreate).
         #    PurchTable           purchTable;
         #    IOExportedExternal   ioExportedExternal;
         #    ;
-#
+        #
         #    if (isCreateQueue)
         #        ioExportedExternal = IOExportedExternal::IOOutgoing;
         #    else
         #        ioExportedExternal = IOExportedExternal::Exported;
-#
+        #
         #    try
         #    {
         #        ttsBegin;
@@ -31980,7 +33570,7 @@ Formatversion: 1
         #        vendReceiptsListJour.selectForUpdate(true);
         #        vendReceiptsListJour.IOIsExported = ioExportedExternal;
         #        vendReceiptsListJour.update();
-#
+        #
         #        purchTable = vendReceiptsListJour.purchTable(true);
         #        purchTable.IOIsExported = ioExportedExternal;
         #        purchTable.IsExport2FK  = ioExportedExternal == IOExportedExternal::Exported ? NoYes::Yes : NoYes::No;
@@ -31992,6 +33582,7 @@ Formatversion: 1
         #        retry;
         #    }
         #}
+        #
       ENDSOURCE
       SOURCE #validate
         #protected boolean validate()
@@ -32026,21 +33617,20 @@ Formatversion: 1
       SOURCE #validateXmlCreate
         #public boolean validateXmlCreate()
         #{
-        #    // a.klychn 08.04.2026 MIK_INT_000002316_01  Projects/Rabbit/Documentation/AX2Rabbit.md §3–4 и табл. §6: ветка isCreateQueue задаёт ожидаемый IOIsExported (None — фаза A, IOOutgoing — фаза B).
         #    boolean             ret;
         #    PurchTable          purchTable;
         #    IOExportedExternal  ioExportedExternal;
         #    ;
-#
+        #
         #    if (vendReceiptsListJour)
         #    {
         #        if (isCreateQueue)
         #            ioExportedExternal = IOExportedExternal::None;
         #        else
         #            ioExportedExternal = IOExportedExternal::IOOutgoing;
-#
+        #
         #        purchTable = vendReceiptsListJour.purchTable();
-#
+        #
         #        if (vendReceiptsListJour.IOIsExported == ioExportedExternal
         #            && (purchTable.IOSystemType == IOSystemType::FK || purchTable.InventLocation().IOSystemType == IOSystemType::FK)
         #            && purchTable.PurchaseType == PurchaseType::Purch
@@ -32048,7 +33638,7 @@ Formatversion: 1
         #        {
         #            ret = true;
         #        }
-#
+        #
         #        if (ret)
         #        {
         #            this.generateSTRLines();
@@ -32082,19 +33672,21 @@ FORM #RabbitQueue
       #// a.klychn 20.10.2021 INF_INT_1_000000538_01
       #public class FormRun extends ObjectRun
       #{
-      #    QueryBuildRange             qbrIsInforFiter;
-      #    QueryBuildRange             qbrRabbitDirectionFilter;
-      #
-      #    boolean                     isImportInfor;
-      #    NoYes                       isInforFiter;
+      #    //boolean                     isImportInfor; // a.klychn 10.04.2026 MIK_INT_000002316_01
       #    RabbitDirection             rabbitDirectionFilter;
+      #    //+ a.klychn 10.04.2026 MIK_INT_000002316_01
+      #    RabbitExchangeType          rabbitType;
+      #    FromDate                    fromDateView;
+      #    ToDate                      toDateView;
+      #    //- a.klychn 10.04.2026 MIK_INT_000002316_01
+      #
       #
       #    RefRecId                    refRecid; //HNS_HNS_000001127_01, SMironov, 26.05.2022
       #
-      #    #define.CurrentVersion(1)
+      #    #define.CurrentVersion(2)
       #    #localmacro.CurrentList
-      #        isInforFiter,
-      #        rabbitDirectionFilter
+      #        rabbitDirectionFilter,
+      #        rabbitType
       #    #endmacro
       #}
     ENDSOURCE
@@ -32104,8 +33696,8 @@ FORM #RabbitQueue
       #{
       #    super();
       #
-      #    isInforFiter          = isInforDocCheckBox.value();
       #    rabbitDirectionFilter = DirectionComboBox.selection();
+      #    rabbitType            = IntegrationTypeEnum.selection();
       #
       #    xSysLastValue::saveLast(this);
       #}
@@ -32122,21 +33714,23 @@ FORM #RabbitQueue
       #        refRecId = element.args().record().RecId;
       #    //HNS_HNS_000001127_01, SMironov, 26.05.2022 <-
       #    super();
-      #
+#
       #    xSysLastValue::getLast(this);
-      #
-      #    isInforDocCheckBox.value(isInforFiter);
+#
+      #    // + a.klychn 10.04.2026 MIK_INT_000002316_01
+      #    toDateView   = today();
+      #    fromDateView = toDateView - 30;
+      #    // - a.klychn 10.04.2026 MIK_INT_000002316_01
+#
+      #    IntegrationTypeEnum.selection(rabbitType);
       #    DirectionComboBox.selection(rabbitDirectionFilter);
-      #
+      #    // + a.klychn 10.04.2026 MIK_INT_000002316_01
+      #    FromDate.dateValue(fromDateView);
+      #    ToDate.dateValue(toDateView);
+      #    // - a.klychn 10.04.2026 MIK_INT_000002316_01
+#
       #    rabbitQueue_ds.executeQuery();
-      #
-      #}
-    ENDSOURCE
-    SOURCE #initParmDefault
-      #// a.klychn 20.10.2021 INF_INT_1_000000538_01
-      #void initParmDefault()
-      #{
-      #    isImportInfor = false;
+#
       #}
     ENDSOURCE
     SOURCE #lastValueDataAreaId
@@ -32361,52 +33955,98 @@ FORM #RabbitQueue
       ENDOBJECTPOOL
       METHODS
         SOURCE #executeQuery
+          #// a.klychn 09.04.2026 MIK_INT_000002316_01 переписан
           #// a.klychn 20.10.2021 INF_INT_1_000000538_01
           #public void executeQuery()
           #{
+          #    str                  integrationTypeEnumStr;
+          #    Query                query = new Query();
+          #    utcDateTime          startDateTime;
+          #    utcDateTime          edDateTime;
+#
+          #    QueryBuildDataSource qbds;
+          #    QueryBuildDataSource qbdsRabbitInputChannel;
+          #    QueryBuildDataSource qbdsRabbitOutputDocumentType;
+          #    QueryBuildRange      qbr;
           #    ;
-          #
-          #    if (isInforDocCheckBox.value() == false)
+#
+          #    //+ a.klychn 08.04.2026 MIK_INT_000002316_01
+          #    qbds = query.addDataSource(this.table());
+          #    // + a.klychn 10.04.2026 MIK_INT_000002316_01
+          #    fromDateView = FromDate.dateValue();
+          #    toDateView   = ToDate.dateValue();
+          #    if (fromDateView == dateNull())
+          #        fromDateView = today() - 30;
+          #    if (toDateView == dateNull())
+          #        toDateView = today();
+          #    if (toDateView < fromDateView)
+          #        toDateView = fromDateView;
+          #    FromDate.dateValue(fromDateView);
+          #    ToDate.dateValue(toDateView);
+          #    startDateTime = dateToBeginUtcDateTime(fromDateView, DateTimeUtil::getCompanyTimeZone());
+          #    edDateTime    = dateToEndUtcDateTime(toDateView, DateTimeUtil::getCompanyTimeZone());
+          #    qbds.addRange(fieldNum(RabbitQueue, CreatedDateTime)).value(SysQuery::range(startDateTime, edDateTime));
+          #    // - a.klychn 10.04.2026 MIK_INT_000002316_01
+#
+          #    switch (IntegrationTypeEnum.selection())
           #    {
-          #        qbrIsInforFiter.value(SysQuery::valueUnlimited());
+          #        case RabbitExchangeType::None :
+          #            integrationTypeEnumStr = SysQuery::valueUnlimited();
+          #            break;
+          #        case RabbitExchangeType::Symphony :
+          #            integrationTypeEnumStr = SysQuery::value(RabbitExchangeType::None);
+          #            break;
+          #        default :
+          #            integrationTypeEnumStr = IntegrationTypeEnum.valueStr();
+          #            break;
           #    }
-          #    else
+#
+          #    switch (DirectionComboBox.selection())
           #    {
-          #        qbrIsInforFiter.value(SysQuery::valueNotEmptyString());
+          #        case 0 :   //Входящий + Исходящий поток
+          #            qbds.addRange(fieldNum(RabbitQueue, Direction)).value(SysQuery::valueUnlimited());
+          #            break;
+          #        case 1 :   //Входящий поток
+          #            qbdsRabbitInputChannel = qbds.addDataSource(tableNum(RabbitInputChannel));
+          #            qbdsRabbitInputChannel.addlink(
+          #                fieldNum(RabbitQueue, InputChannelId),
+          #                fieldNum(RabbitInputChannel, ChannelId));
+          #            qbdsRabbitInputChannel.joinMode(JoinMode::ExistsJoin);
+#
+          #            qbr = qbdsRabbitInputChannel.addRange(fieldNum(RabbitInputChannel, ExchangeType));
+          #            qbr.value(integrationTypeEnumStr);
+          #            qbr.status(RangeStatus::Hidden);
+#
+          #            qbds.addRange(fieldNum(RabbitQueue, Direction)).value(queryValue(DirectionComboBox.valueStr()));
+          #            break;
+          #        case 2 :   //Исходящий
+          #            qbdsRabbitOutputDocumentType = qbds.addDataSource(tableNum(RabbitOutputDocumentType));
+          #            qbdsRabbitOutputDocumentType.addLink(
+          #                fieldNum(RabbitQueue, OutputSettingsId),
+          #                fieldNum(RabbitOutputDocumentType, OutputSettingsId));
+          #            qbdsRabbitOutputDocumentType.joinMode(JoinMode::ExistsJoin);
+#
+          #            qbr = qbdsRabbitOutputDocumentType.addRange(fieldNum(RabbitOutputDocumentType, ExchangeType));
+          #            qbr.value(integrationTypeEnumStr);
+          #            qbr.status(RangeStatus::Hidden);
+#
+          #            qbds.addRange(fieldNum(RabbitQueue, Direction)).value(queryValue(DirectionComboBox.valueStr()));
+          #            // - a.klychn 10.04.2026 MIK_INT_000002316_01
+          #            break;
           #    }
-          #
-          #    if (DirectionComboBox.selection() == 0)
-          #    {
-          #        qbrRabbitDirectionFilter.value(SysQuery::valueUnlimited());
-          #    }
-          #    else
-          #    {
-          #        qbrRabbitDirectionFilter.value(queryValue(DirectionComboBox.valueStr()));
-          #    }
-          #
+#
+          #    info(strFmt('%1 %2', IntegrationTypeEnum.valueStr(), query.toString()));
+          #    this.query(query);
+          #    //- a.klychn 08.04.2026 MIK_INT_000002316_01
+#
           #    //HNS_HNS_000001127_01, SMironov, 26.05.2022 ->
           #    if (refRecid)
           #        this.query().dataSourceTable(tableNum(RabbitQueue))
           #            .addRange(fieldNum(RabbitQueue, RecId))
           #                .value(queryValue(refRecid));
           #    //HNS_HNS_000001127_01, SMironov, 26.05.2022 <-
-          #
+#
           #    super();
-          #}
-        ENDSOURCE
-        SOURCE #init
-          #// a.klychn 20.10.2021 INF_INT_1_000000538_01
-          #public void init()
-          #{
-          #    QueryBuildDataSource    qbdsRabbitQueue;
-          #    ;
-          #
-          #    super();
-          #
-          #    qbdsRabbitQueue = rabbitQueue_ds.query().dataSourceTable(tableNum(RabbitQueue));
-          #
-          #    qbrIsInforFiter          = qbdsRabbitQueue.addRange(fieldNum(RabbitQueue, Event));
-          #    qbrRabbitDirectionFilter = qbdsRabbitQueue.addRange(fieldNum(RabbitQueue, Direction));
           #}
         ENDSOURCE
         SOURCE #active
@@ -32419,12 +34059,14 @@ FORM #RabbitQueue
           #
           #    ret = super();
           #
-          #    if (RabbitQueue.Event)
+          #    //+ a.klychn 10.04.2026 MIK_INT_000002316_01
+          #    /*if (RabbitQueue.Event)
           #    {
           #        isImportInfor = true;
           #    }
           #    else
-          #        isImportInfor = false;
+          #        isImportInfor = false;*/
+          #    //- a.klychn 10.04.2026 MIK_INT_000002316_01
           #    //MIK_INT_1_000001604_01, SMironov, 14.02.2023 ->
           #    InforTest.enabled(rabbitQueue.Event
           #                        && InforInputDocumentType::find(rabbitQueue.Event).RecId
@@ -32436,8 +34078,6 @@ FORM #RabbitQueue
           #    RabbitIntEngineImpInforMPForm.enabled(RabbitQueue.HNSType());
           #    RabbitIntEngineImpInforSalesMPForm.enabled(RabbitQueue.HNSSalesType()); //X5SHP_HNS_000002054_01, SMironov, 13.03.2025
           #    RabbitIntEngineImpInforTransferMPForm.enabled(RabbitQueue.HNSTransferType()); //HNS_HNS_000002198_01, SMironov, 01.08.2025
-          #    if (curUserId() == '$7ADF')
-          #        return ret;
           #    //HNS_HNS_000001127_01, SMironov, 25.05.2022 <-
           #    //+ a.klychn 27.04.2022 INF_CR_000001054_01
           #    rabbitQueue_ds.allowDelete(!(rabbitQueue.Direction == RabbitDirection::Incoming && rabbitQueue.QueueStatus == RabbitQueueStatus::Done));
@@ -32607,9 +34247,26 @@ FORM #RabbitQueue
       
       CONTROL GROUP
         PROPERTIES
-          Name                #InforGroup
-          ElementPosition     #536870911
+          Name                #IntegrationTypeGroup
+          ElementPosition     #894784852
           HierarchyParent     #CustomFilterGroup
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #PeriodVeiwGroup
+          ElementPosition     #1610612733
+          HierarchyParent     #IntegrationTypeGroup
+          Columns             #2
+          ArrangeGuide        
+            ARRAY INDEX Columns 
+              #0
+              #0
+            ENDARRAY
         ENDPROPERTIES
         
         METHODS
@@ -32624,6 +34281,17 @@ FORM #RabbitQueue
           Caption             #Настройки Rabbit
           DataSource          #RabbitQueue
           DataGroup           #RabbitSettings
+        ENDPROPERTIES
+        
+        METHODS
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL GROUP
+        PROPERTIES
+          Name                #RabbitTypeGroup
+          ElementPosition     #1073741822
+          HierarchyParent     #IntegrationTypeGroup
         ENDPROPERTIES
         
         METHODS
@@ -32757,13 +34425,13 @@ FORM #RabbitQueue
         ENDMETHODS
       ENDCONTROL 
       
-      CONTROL CHECKBOX
+      CONTROL COMBOBOX
         PROPERTIES
-          Name                #IsInforDocCheckBox
+          Name                #DirectionComboBox
           AutoDeclaration     #Yes
-          ElementPosition     #1431655764
-          HierarchyParent     #InforGroup
-          Label               #@MIK9938
+          ElementPosition     #1521134249
+          HierarchyParent     #CustomFilterGroup
+          EnumType            #RabbitDirection
         ENDPROPERTIES
         
         METHODS
@@ -32786,16 +34454,15 @@ FORM #RabbitQueue
       
       CONTROL COMBOBOX
         PROPERTIES
-          Name                #DirectionComboBox
+          Name                #IntegrationTypeEnum
           AutoDeclaration     #Yes
-          ElementPosition     #1342177278
-          HierarchyParent     #CustomFilterGroup
-          EnumType            #RabbitDirection
+          ElementPosition     #1431655764
+          HierarchyParent     #RabbitTypeGroup
+          EnumType            #RabbitExchangeType
         ENDPROPERTIES
         
         METHODS
           SOURCE #modified
-            #// a.klychn 20.10.2021 INF_INT_1_000000538_01
             #public boolean modified()
             #{
             #    boolean ret;
@@ -32808,6 +34475,62 @@ FORM #RabbitQueue
             #    return ret;
             #}
           ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL DATEEDIT
+        PROPERTIES
+          Name                #FromDate
+          AutoDeclaration     #Yes
+          ElementPosition     #1073741822
+          HierarchyParent     #PeriodVeiwGroup
+          ExtendedDataType    
+            ARRAY 
+              #FromDate
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #modified
+            #public boolean modified()
+            #{
+            #    boolean ret;
+#
+            #    ret = super();
+            #    // + a.klychn 10.04.2026 MIK_INT_000002316_01
+            #    if (ret)
+            #    {
+            #        fromDateView = FromDate.dateValue();
+            #        toDateView   = fromDateView + 30;
+            #        if (toDateView > today())
+            #            toDateView = today();
+#
+            #        ToDate.dateValue(toDateView);
+            #        rabbitQueue_ds.executeQuery();
+            #    }
+            #    // - a.klychn 10.04.2026 MIK_INT_000002316_01
+#
+            #    return ret;
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+      CONTROL DATEEDIT
+        PROPERTIES
+          Name                #ToDate
+          AutoDeclaration     #Yes
+          ElementPosition     #1610612733
+          HierarchyParent     #PeriodVeiwGroup
+          ExtendedDataType    
+            ARRAY 
+              #ToDate
+              #
+            ENDARRAY
+        ENDPROPERTIES
+        
+        METHODS
         ENDMETHODS
       ENDCONTROL 
       
@@ -32848,7 +34571,7 @@ FORM #RabbitQueue
             #    ;
             #
             #
-            #    if (isImportInfor)
+            #    if (IntegrationTypeEnum.selection() == RabbitExchangeType::Infor) // a.klychn 10.04.2026 MIK_INT_000002316_01
             #    {
             #        select firstonly RecId, Infolog from rabbitErrorLog order by rabbitErrorLog.modifiedDateTime desc
             #            where rabbitErrorLog.QueueJourId == rabbitQueue.QueueJourId;
@@ -34320,6 +36043,21 @@ ENDFORM
           
         ENDMENUITEM
       ENDMENU
+      MENU #@MIK14833
+        PROPERTIES
+          Name                #FKPeriodic
+          Label               #@MIK14833
+        ENDPROPERTIES
+        
+        MENUITEM
+          PROPERTIES
+            Name                #Экспорт документов ФК в очередь RabbitMQ
+            MenuItemType        #Action
+            MenuItemName        #RabbitProcessing_FK
+          ENDPROPERTIES
+          
+        ENDMENUITEM
+      ENDMENU
       MENU #@SYS30351
         PROPERTIES
           Name                #History
@@ -34653,6 +36391,73 @@ ENDPERMISSIONSET
 ENDPRIVILEGE
 
 
+***Element: JOB
+
+; Microsoft Dynamics AX Job: RabbitQueueFormTest выгружен
+; --------------------------------------------------------------------------------
+  JOBVERSION 1
+  
+  SOURCE #RabbitQueueFormTest
+    #// a.klychn 09.04.2026 MIK_INT_000002316_01
+    #static void RabbitQueueFormTest(Args _args)
+    #{
+    #    str                  integrationTypeEnumStr;
+    #    Query                query = new Query();
+    #    QueryRun             queryRun;
+    #    FromDate             fromDate;
+    #    ToDate               toDate;
+    #    date                 begingDate = str2DateDMY('14.02.2022');
+    #    utcDateTime          startDateTime;
+    #    utcDateTime          edDateTime;
+    #
+    #    QueryBuildDataSource qbds;
+    #    QueryBuildDataSource qbdsRabbitInputChannel;
+    #    QueryBuildDataSource qbdsRabbitOutputSettings;
+    #    QueryBuildDataSource qbdsRabbitOutputDocumentType;
+    #    QueryBuildRange      qbr;
+    #    int                  timeBegin;
+    #    ;
+    #
+    #    //fromDate = today() - 3;
+    #    //toDate   = today();
+    #    fromDate = begingDate;
+    #    toDate   = begingDate + 3;
+    #
+    #    startDateTime = dateToBeginUtcDateTime(fromDate, DateTimeUtil::getCompanyTimeZone());
+    #    edDateTime    = dateToEndUtcDateTime(toDate, DateTimeUtil::getCompanyTimeZone());
+    #
+    #    timeBegin=timenow();
+    #    qbds = query.addDataSource(tableNum(RabbitQueue));
+    #
+    #    qbdsRabbitOutputDocumentType = qbds.addDataSource(tableNum(RabbitOutputDocumentType));
+    #    qbdsRabbitOutputDocumentType.addLink(
+    #        fieldNum(RabbitQueue, OutputSettingsId),
+    #        fieldNum(RabbitOutputDocumentType, OutputSettingsId));
+    #    qbdsRabbitOutputDocumentType.joinMode(JoinMode::ExistsJoin);
+    #
+    #    qbr = qbdsRabbitOutputDocumentType.addRange(fieldNum(RabbitOutputDocumentType, ExchangeType));
+    #    qbr.value(SysQuery::value(RabbitExchangeType::None));
+    #    //qbr.value(queryValue(RabbitExchangeType::Infor));
+    #    qbr.status(RangeStatus::Hidden);
+    #
+    #    qbds.addRange(fieldNum(RabbitQueue, Direction)).value(queryValue('2'));
+    #    qbds.addRange(fieldNum(RabbitQueue, CreatedDateTime )).value(SysQuery::range(startDateTime, edDateTime));
+    #
+    #    info(strFmt('%1 %2', RabbitExchangeType::Infor, query.toString()));
+    #
+    #    queryRun = new QueryRun(query);
+    #
+    #    queryRun.next();
+    #
+    #    info(strfmt("@MIK7363",time2str(timenow()-timeBegin,0,0)));
+    #
+    #}
+  ENDSOURCE
+  PROPERTIES
+    Origin              #{68DA1409-ACA5-4D2E-A1B9-92863AD3FEE1}
+  ENDPROPERTIES
+  
+
 ***Element: PRN
 
 ; Microsoft Dynamics AX Project : MIK_INT_000002316_01 unloaded
@@ -34736,9 +36541,23 @@ ENDPRIVILEGE
       BEGINNODE
         FILETYPE 0
         UTILTYPE 44
+        UTILOBJECTID 106844
+        NODETYPE 204
+        NAME #RabbitQueue
+      ENDNODE
+      BEGINNODE
+        FILETYPE 0
+        UTILTYPE 44
         UTILOBJECTID 106845
         NODETYPE 204
         NAME #RabbitTableChangeLog
+      ENDNODE
+      BEGINNODE
+        FILETYPE 0
+        UTILTYPE 44
+        UTILOBJECTID 106842
+        NODETYPE 204
+        NAME #RabbitOutputDocumentType
       ENDNODE
       BEGINNODE
         FILETYPE 0
@@ -34904,6 +36723,13 @@ ENDPRIVILEGE
         PreventEditProperties #No
       ENDPROPERTIES
       
+      BEGINNODE
+        FILETYPE 0
+        UTILTYPE 5
+        UTILOBJECTID 0
+        NODETYPE 215
+        NAME #RabbitQueueFormTest
+      ENDNODE
       ENDGROUP
       
     GROUP #Misc

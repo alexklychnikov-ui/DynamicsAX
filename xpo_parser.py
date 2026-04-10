@@ -3,6 +3,7 @@
 """
 Утилита для парсинга XPO файлов Microsoft Dynamics AX
 Создает структурированное представление объектов AOT в папке parserXPO
+(подкаталоги как в AOT: Tables, Classes, Forms, Jobs, Macros, BaseEnums, …).
 """
 
 import re
@@ -15,8 +16,69 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
 from utils.xpo_utils import parse_xpo_element
+from utils.xpo_form_sources import extract_form_all_sources
 
 _PROJECT_CHECK_FILE = Path(__file__).parent / ".xpo_parser_project_check"
+
+# Подпапки parserXPO по узлам AOT (как в дереве проекта AX)
+AOT_CATEGORY_DIRS = frozenset(
+    {
+        "Macros",
+        "BaseEnums",
+        "ExtendedDataTypes",
+        "Tables",
+        "Classes",
+        "Forms",
+        "MenuItem_Display",
+        "MenuItem_Output",
+        "MenuItem_Action",
+        "Menus",
+        "Privileges",
+        "Jobs",
+        "Misc",
+    }
+)
+
+
+def aot_folder_for_xpo_element(element_type: str, element_content: str) -> str:
+    """Имя подкаталога в parserXPO для типа элемента XPO."""
+    et = element_type.upper()
+    if et in ("TAB", "DBT"):
+        return "Tables"
+    if et == "CLS":
+        return "Classes"
+    if et == "FRM":
+        return "Forms"
+    if et == "JOB":
+        return "Jobs"
+    if et == "MCR":
+        return "Macros"
+    if et in ("DBE", "ENU"):
+        return "BaseEnums"
+    if et == "EDT":
+        return "ExtendedDataTypes"
+    if et == "MNU":
+        return "Menus"
+    if et == "SPV":
+        return "Privileges"
+    if et in ("PRN", "MAP", "QTY"):
+        return "Misc"
+    if et == "FTM":
+        m = re.search(r"^\s*Type:\s*(\d+)\s*$", element_content, re.MULTILINE)
+        if m:
+            t = int(m.group(1))
+            # В выгрузке XPO часто 1=Display, 2=Output, 3=Action
+            if t == 2:
+                return "MenuItem_Output"
+            if t == 3:
+                return "MenuItem_Action"
+            if t == 1:
+                return "MenuItem_Display"
+            # Значения enum MenuItemType (0,1,2) = Display, Output, Action
+            if t == 0:
+                return "MenuItem_Display"
+        return "MenuItem_Display"
+    return "Misc"
 _COMMENTMETA_PATH = Path(__file__).parent / "commentmeta.json"
 
 
@@ -86,7 +148,8 @@ def parse_object_from_index(
     if not parsed:
         return False
 
-    parser_stub.objects[parsed["name"]] = {
+    folder = aot_folder_for_xpo_element(etype, text)
+    parser_stub.objects[(folder, parsed["name"])] = {
         "type": parsed["type"],
         "properties": parsed["properties"],
         "methods": parsed["methods"],
@@ -106,13 +169,12 @@ class XPOParser:
         
     def is_object_parsed(self, object_name: str) -> bool:
         """Проверяет, распарсен ли уже объект (существует ли его директория)"""
-        object_dir = self.output_dir / object_name
-        if not object_dir.exists():
-            return False
-        
-        # Проверяем, что в директории есть хотя бы один файл метода
-        method_files = list(object_dir.glob("*.xpp"))
-        return len(method_files) > 0
+        for cat in AOT_CATEGORY_DIRS:
+            object_dir = self.output_dir / cat / object_name
+            if object_dir.is_dir() and list(object_dir.glob("*.xpp")):
+                return True
+        legacy = self.output_dir / object_name
+        return legacy.is_dir() and len(list(legacy.glob("*.xpp"))) > 0
     
     def clear_output_dir(self):
         """Очищает папку parserXPO перед парсингом (используется только при явном вызове)"""
@@ -154,6 +216,20 @@ class XPOParser:
             elif element_type == 'JOB':
                 self._parse_job(element_content)
                 parsed_count += 1
+            elif element_type in (
+                'MCR',
+                'DBE',
+                'FTM',
+                'MNU',
+                'SPV',
+                'PRN',
+                'EDT',
+                'ENU',
+                'MAP',
+                'QTY',
+            ):
+                if self._parse_generic_element(element_content, element_type):
+                    parsed_count += 1
         
         if parsed_count > 0:
             print(f"Распарсено объектов: {parsed_count}")
@@ -190,6 +266,19 @@ class XPOParser:
     def _normalize_newlines(self, text: str) -> str:
         """Приводит переносы к LF во внутреннем представлении."""
         return text.replace('\r\n', '\n').replace('\r', '\n')
+
+    def _parse_generic_element(self, content: str, element_type: str) -> bool:
+        """Парсинг элементов через utils.parse_xpo_element (макросы, перечисления, меню и т.д.)."""
+        parsed = parse_xpo_element(content, element_type)
+        if not parsed:
+            return False
+        folder = aot_folder_for_xpo_element(element_type, content)
+        self.objects[(folder, parsed["name"])] = {
+            "type": element_type,
+            "properties": parsed["properties"],
+            "methods": parsed["methods"],
+        }
+        return True
     
     def _parse_class(self, content: str):
         """Парсит класс из XPO"""
@@ -223,7 +312,7 @@ class XPOParser:
                 cleaned_code = self._clean_code(method_code)
                 methods[method_name] = cleaned_code
         
-        self.objects[object_name] = {
+        self.objects[("Classes", object_name)] = {
             'type': 'CLS',
             'properties': properties,
             'methods': methods
@@ -253,40 +342,28 @@ class XPOParser:
                 cleaned_code = self._clean_code(method_code)
                 methods[method_name] = cleaned_code
         
-        self.objects[object_name] = {
+        self.objects[("Tables", object_name)] = {
             'type': element_type,
             'properties': properties,
             'methods': methods
         }
     
     def _parse_form(self, content: str):
-        """Парсит форму из XPO"""
-        # Извлекаем имя формы
+        """Парсит форму из XPO (корень + datasource + поля + контролы)."""
         form_match = re.search(r'FORM\s+#(\w+)', content)
         if not form_match:
             return
         
         object_name = form_match.group(1)
         
-        # Извлекаем свойства формы
         properties = {}
         props_match = re.search(r'PROPERTIES(.*?)ENDPROPERTIES', content, re.DOTALL)
         if props_match:
             props_text = props_match.group(1)
         
-        # Извлекаем все методы только из блока METHODS...ENDMETHODS
-        methods = {}
-        methods_block_match = re.search(r'METHODS(.*?)ENDMETHODS', content, re.DOTALL)
-        if methods_block_match:
-            methods_content = methods_block_match.group(1)
-            source_pattern = r'SOURCE\s+#(\w+)(.*?)ENDSOURCE'
-            for method_match in re.finditer(source_pattern, methods_content, re.DOTALL):
-                method_name = method_match.group(1)
-                method_code = method_match.group(2)
-                cleaned_code = self._clean_code(method_code)
-                methods[method_name] = cleaned_code
+        methods = extract_form_all_sources(content, self._clean_code)
         
-        self.objects[object_name] = {
+        self.objects[("Forms", object_name)] = {
             'type': 'FRM',
             'properties': properties,
             'methods': methods
@@ -320,7 +397,7 @@ class XPOParser:
             cleaned_code = self._clean_code(method_code)
             methods[method_name] = cleaned_code
         
-        self.objects[object_name] = {
+        self.objects[("Jobs", object_name)] = {
             'type': 'JOB',
             'properties': properties,
             'methods': methods
@@ -375,19 +452,19 @@ class XPOParser:
         saved_count = 0
         skipped_count = 0
         
-        for object_name, object_data in self.objects.items():
-            # Создаем директорию для объекта
-            object_dir = self.output_dir / object_name
+        for object_key, object_data in self.objects.items():
+            if isinstance(object_key, tuple) and len(object_key) == 2:
+                aot_folder, object_name = object_key
+            else:
+                aot_folder, object_name = "", str(object_key)
+            object_dir = self.output_dir / aot_folder / object_name if aot_folder else self.output_dir / object_name
             object_dir.mkdir(parents=True, exist_ok=True)
             
-            # Сохраняем свойства объекта (если есть)
-            if object_data['properties']:
-                props_file = object_dir / "properties.txt"
-                # Перезаписываем properties.txt всегда, так как они могут измениться
-                with open(props_file, 'w', encoding=self.output_encoding, newline='\n') as f:
-                    f.write(f"Type: {object_data['type']}\n")
-                    for key, value in object_data['properties'].items():
-                        f.write(f"{key}: {value}\n")
+            props_file = object_dir / "properties.txt"
+            with open(props_file, 'w', encoding=self.output_encoding, newline='\n') as f:
+                f.write(f"Type: {object_data['type']}\n")
+                for key, value in object_data['properties'].items():
+                    f.write(f"{key}: {value}\n")
             
             # Сохраняем каждый метод в отдельный файл
             methods = object_data['methods']
@@ -408,7 +485,8 @@ class XPOParser:
                     methods_saved += 1
             
             if methods_saved > 0:
-                print(f"Сохранен объект {object_data['type']}: {object_name} ({methods_saved} методов сохранено" + 
+                loc = f"{aot_folder}/{object_name}" if aot_folder else object_name
+                print(f"Сохранен объект {object_data['type']}: {loc} ({methods_saved} методов сохранено" +
                       (f", {methods_skipped} пропущено" if methods_skipped > 0 else "") + ")")
                 saved_count += 1
             elif methods_skipped > 0:
@@ -500,8 +578,13 @@ def main():
         parser.parse()
         
         print(f"\nОбработано объектов: {len(parser.objects)}")
-        for obj_name, obj_data in parser.objects.items():
-            print(f"  - {obj_data['type']}: {obj_name} ({len(obj_data['methods'])} методов)")
+        for obj_key, obj_data in parser.objects.items():
+            if isinstance(obj_key, tuple) and len(obj_key) == 2:
+                folder, obj_name = obj_key
+                loc = f"{folder}/{obj_name}"
+            else:
+                loc = str(obj_key)
+            print(f"  - {obj_data['type']}: {loc} ({len(obj_data['methods'])} методов)")
         
         if parser.objects:
             parser.save_structured(overwrite=force)

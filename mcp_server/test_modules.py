@@ -96,7 +96,7 @@ def test_parser_integration():
         if exists:
             # Читаем методы
             methods = integration.read_element_methods("Global")
-            print(f"  Методов в parserXPO/Global: {len(methods)}")
+            print(f"  Методов в parserXPO/Classes/Global: {len(methods)}")
             
             if methods:
                 # Читаем один метод

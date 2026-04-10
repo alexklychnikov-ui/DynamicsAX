@@ -3,14 +3,31 @@
 """
 Модуль для интеграции кода в структуру parserXPO
 """
+import sys
 from pathlib import Path
 from typing import Dict, Optional
+
+_root = Path(__file__).resolve().parent.parent
+if str(_root) not in sys.path:
+    sys.path.insert(0, str(_root))
+
+from xpo_parser import AOT_CATEGORY_DIRS
 
 
 class ParserIntegration:
     def __init__(self, parser_dir: str = "parserXPO"):
         self.parser_dir = Path(parser_dir)
         self.parser_dir.mkdir(parents=True, exist_ok=True)
+
+    def _element_dir(self, element_name: str) -> Optional[Path]:
+        for cat in AOT_CATEGORY_DIRS:
+            p = self.parser_dir / cat / element_name
+            if p.is_dir():
+                return p
+        legacy = self.parser_dir / element_name
+        if legacy.is_dir():
+            return legacy
+        return None
     
     def save_element(self, element_data: Dict, overwrite: bool = True) -> bool:
         """Сохраняет элемент в структуру parserXPO
@@ -26,18 +43,18 @@ class ParserIntegration:
         if not element_name:
             return False
         
-        # Создаем директорию для элемента
-        element_dir = self.parser_dir / element_name
+        aot = element_data.get("aot_folder", "Classes")
+        if AOT_CATEGORY_DIRS and aot not in AOT_CATEGORY_DIRS:
+            aot = "Misc"
+        element_dir = self.parser_dir / aot / element_name
         element_dir.mkdir(parents=True, exist_ok=True)
         
-        # Сохраняем свойства
         properties = element_data.get('properties', {})
-        if properties:
-            props_file = element_dir / "properties.txt"
-            with open(props_file, 'w', encoding='utf-8') as f:
-                f.write(f"Type: {element_data.get('type', 'UNKNOWN')}\n")
-                for key, value in properties.items():
-                    f.write(f"{key}: {value}\n")
+        props_file = element_dir / "properties.txt"
+        with open(props_file, 'w', encoding='utf-8') as f:
+            f.write(f"Type: {element_data.get('type', 'UNKNOWN')}\n")
+            for key, value in properties.items():
+                f.write(f"{key}: {value}\n")
         
         # Сохраняем методы
         methods = element_data.get('methods', {})
@@ -72,9 +89,10 @@ class ParserIntegration:
         if not method_code.strip():
             return False
         
-        # Создаем директорию для элемента
-        element_dir = self.parser_dir / element_name
-        element_dir.mkdir(parents=True, exist_ok=True)
+        element_dir = self._element_dir(element_name)
+        if element_dir is None:
+            element_dir = self.parser_dir / "Classes" / element_name
+            element_dir.mkdir(parents=True, exist_ok=True)
         
         method_file = element_dir / f"{method_name}.xpp"
         
@@ -97,11 +115,12 @@ class ParserIntegration:
         Returns:
             Код метода или None
         """
-        method_file = self.parser_dir / element_name / f"{method_name}.xpp"
-        
+        element_dir = self._element_dir(element_name)
+        if element_dir is None:
+            return None
+        method_file = element_dir / f"{method_name}.xpp"
         if not method_file.exists():
             return None
-        
         with open(method_file, 'r', encoding='utf-8') as f:
             return f.read()
     
@@ -114,9 +133,8 @@ class ParserIntegration:
         Returns:
             Словарь {method_name: method_code}
         """
-        element_dir = self.parser_dir / element_name
-        
-        if not element_dir.exists():
+        element_dir = self._element_dir(element_name)
+        if element_dir is None:
             return {}
         
         methods = {}
@@ -149,11 +167,9 @@ class ParserIntegration:
         Returns:
             True если элемент существует
         """
-        element_dir = self.parser_dir / element_name
-        if not element_dir.exists():
+        element_dir = self._element_dir(element_name)
+        if element_dir is None:
             return False
-        
-        # Проверяем, что есть хотя бы один файл метода
         method_files = list(element_dir.glob("*.xpp"))
         return len(method_files) > 0
     
@@ -167,8 +183,10 @@ class ParserIntegration:
         Returns:
             True если метод существует
         """
-        method_file = self.parser_dir / element_name / f"{method_name}.xpp"
-        return method_file.exists()
+        element_dir = self._element_dir(element_name)
+        if element_dir is None:
+            return False
+        return (element_dir / f"{method_name}.xpp").exists()
 
 
 

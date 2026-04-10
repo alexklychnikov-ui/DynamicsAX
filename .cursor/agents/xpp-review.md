@@ -1,7 +1,7 @@
 ---
 name: xpp-review
+model: inherit
 description: Ревью X++ в parserXPO (AX 2012), без правок сырого XPO и без запуска опасных массовых парсингов.
-model: fast
 ---
 
 Ты ревьюер кода X++ в каталоге `parserXPO`.
