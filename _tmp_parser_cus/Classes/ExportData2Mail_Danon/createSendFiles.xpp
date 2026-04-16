@@ -1,0 +1,39 @@
+public boolean createSendFiles()
+{
+    TransDate       i;
+    #define.prefixSales ('SO_SLS')
+    #define.prefixOnHand('SO_INV')
+    ;
+
+    for (i=fromDate; i<=toDate; i++)
+    {
+        transDate = i;
+
+        fileName = #prefixSales + "_";
+        fileName = this.getNewFilePath();
+
+        if (this.createSalesData())
+        {
+            filesCon += [ fileName ];
+        }
+        else
+        {
+            info(strFmt("@MIK7744", transDate));
+        }
+
+    }
+
+    fileName = #prefixOnHand + "_";
+    fileName = this.getNewFilePath();
+
+    if (this.createInventSumData())
+    {
+        filesCon += [ fileName ];
+    }
+    else
+    {
+        info(strFmt("@MIK7786", transDate));
+    }
+
+    return super();
+}

@@ -1,0 +1,81 @@
+private boolean createSalesData()
+{
+    //tmpExportData2MailDanonSales    tmp;
+    Query                           query = new Query(queryStr(ExportData2Mail_DanonSales));
+    TextBuffer                      textBuffer = new TextBuffer();
+    QueryBuildDataSource            qbdsInventTrans;
+    QueryRun                        queryRun;
+    InventTable                     inventTable;
+    InventTrans                     inventTrans;
+    InventTransOrigin               inventTransOrigin;
+    SalesTable                      salesTable;
+    InventLocation                  inventLocation;
+    int                             cnt;
+    InteropPermission               permission;
+    #define.Qty          ('Продажи, шт')
+    #define.CostWithTax  ('Себестоимость с НДС')
+    #define.AmountWithTax('Сумма с НДС')
+    #define.SalesId      ('Заказ на продажу')
+    ;
+
+    textBuffer.appendText(strFmt('%1;%2;%3;%4;%5;%6;%7;%8;%9\n', #Date
+                                                               , #Region
+                                                               , #StoreId
+                                                               , #ProductName
+                                                               , #ItemId
+                                                               , #Qty
+                                                               , #CostWithTax
+                                                               , #AmountWithTax
+                                                               , #SalesId));
+
+    qbdsInventTrans = query.dataSourceTable(tableNum(InventTrans));
+    findOrCreateRange_W(qbdsInventTrans, fieldNum(InventTrans, DateFinancial), queryValue(transDate));
+
+    queryRun    = new QueryRun(query);
+
+    while (queryRun.next())
+    {
+        inventTable       = queryRun.get(tableNum(InventTable));
+        inventTransOrigin = queryRun.get(tableNum(InventTransOrigin));
+        inventTrans       = queryRun.get(tableNum(InventTrans));
+        salesTable        = queryRun.get(tableNum(SalesTable));
+
+        inventLocation = InventLocation::find(salesTable.InventLocationId);
+
+        textBuffer.appendText(strFmt('%1;%2;%3;%4;%5;%6;%7;%8;%9\n', inventTrans.DateFinancial
+                                                                   , inventLocation.InventSiteId
+                                                                   , inventLocation.SMCode
+                                                                   , inventTable.defaultProductName()
+                                                                   , inventTable.ItemId
+                                                                   , abs (inventTrans.Qty)
+                                                                   , abs (inventTrans.CostAmountAdjustment + inventTrans.CostAmountPosted) + this.getTaxAmountCost(inventTable, inventTrans)
+                                                                   , this.getAmountSalesWithTax(inventTrans, inventTransOrigin)
+                                                                   , salesTable.SalesId));
+        cnt++;
+    }
+
+    if (cnt > 0)
+    {
+        try
+        {
+            permission = new InteropPermission(InteropKind::ComInterop);
+            permission.assert();
+
+            textBuffer.toFile(fileName, FileEncoding::UTF8);
+            CodeAccessPermission::revertAssert();
+        }
+        catch
+        {
+            info(fileName);
+        }
+        catch (Exception::CLRError)
+        {
+            CodeAccessPermission::revertAssert();
+            info(CLRInterop::getLastException().ToString());
+        }
+
+        info(strFmt("@MIK7745", cnt, transDate));
+    }
+
+    return cnt;
+}

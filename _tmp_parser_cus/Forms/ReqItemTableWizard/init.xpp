@@ -1,0 +1,37 @@
+public void init()
+{
+    Query                   query;
+    QueryBuildDataSource    qbsItem;
+    QueryBuildDataSource    qbdInventItemGroupItem;
+    QueryBuildDataSource    qbsReq;
+    QueryBuildDataSource    qbsStorageDimensionGroup;
+
+    super();
+
+    query = new Query();
+    qbsItem = query.addDataSource(tableNum(InventTable));
+    qbsItem.name(inventTableWithOutReqItem_ds.name());
+    qbrCriteriaReqGroup1        = qbsItem.addRange(fieldNum(InventTable,ReqGroupId));
+    qbrCriteriaItemBuyerGroup1  = qbsItem.addRange(fieldNum(InventTable,ItemBuyerGroupId));
+    //+ korus5 13.11.2017 MIK_PLN_1_04_01
+    qbrCriteriaInventItemBrand1 = qbsItem.addRange(fieldNum(InventTable,InventItemBrand));
+
+    element.addEcoResCategoryDS(qbsItem, false);
+    //- korus5 13.11.2017 MIK_PLN_1_04_01
+
+    //add datasource for item group
+    qbdInventItemGroupItem  = element.addInventItemGroupItemDS(qbsItem);
+    qbrCriteriaItemGroup1   = qbdInventItemGroupItem.addRange(fieldNum(InventItemGroupItem,ItemGroupId));
+
+    //add datasource to get storage dimension group
+    qbsStorageDimensionGroup = element.addStorageDimensionGroupDS(qbsItem);
+    qbrCriteriaDimGroup1 = qbsStorageDimensionGroup.addRange(fieldNum(EcoResStorageDimensionGroup, Name));
+
+    qbsReq = qbsItem.addDataSource(tableNum(ReqItemTable));
+    qbsReq.relations(true);
+
+    qbsReq.joinMode(JoinMode::NoExistsJoin);
+
+    this.query(query);
+
+}
