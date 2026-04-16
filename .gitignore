@@ -22,6 +22,7 @@ __pycache__/
 
 # Logs
 *.log
+mcp_server/work_log.md
 
 # Папки проекта
 NewProjec/
