@@ -30,6 +30,7 @@ AOT_cus/
 Projects/
 parserXPO/
 indexXPO_cus/
+XPO/
 Инструменты и ресурсы DynamicsAX.png
 Инструменты и ресурсы DynamicsAXGPT.png
 
@@ -54,6 +55,9 @@ Thumbs.db
 
 # Состояние xpo_parser (дата последней проверки проекта)
 .xpo_parser_project_check
+
+# Локальные метаданные комментариев
+commentmeta.json
 
 
 
