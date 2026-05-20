@@ -1,0 +1,23 @@
+//INF_INT_1_000001004_01, SMironov, 15.04.2022
+public void createTransferReserveBatch(InforReserveBatchTableTmp    _reserveBatchTmp,
+                                        InventTransferId            _transferId)
+{
+    InforReserveBatchTable      table;
+    ;
+    ttsBegin;
+    delete_from table
+        where table.TransferId == _transferId;
+    while select _reserveBatchTmp
+    {
+        table.clear();
+        table.initValue();
+        table.TransferId    = _transferId;
+        table.ItemId        = _reserveBatchTmp.ItemId;
+        table.WMSPalletId   = _reserveBatchTmp.WMSPalletId;
+        table.InventBatchId = _reserveBatchTmp.InventBatchId;
+        table.InventTransId = InventTransferLine::findItemId(_transferId, _reserveBatchTmp.ItemId).InventTransId;
+        table.Qty           = _reserveBatchTmp.Qty;
+        table.insert();
+    }
+    ttsCommit;
+}

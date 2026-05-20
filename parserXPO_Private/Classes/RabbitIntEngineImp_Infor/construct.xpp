@@ -1,0 +1,20 @@
+static public RabbitIntEngineImp_Infor construct(RabbitQueueJourId _queueJourId)
+{
+    RabbitQueue              queue = RabbitQueue::find(_queueJourId);
+    InforInputDocumentType   inforInputDocumentType = InforInputDocumentType::find(queue.Event);
+    DictClass                dictClassImportClassRun;
+    RabbitIntEngineImp_Infor importClass;
+    ;
+
+    if (inforInputDocumentType.HandlerInputClassName  && SysDictClass::isSuperclass(className2Id(inforInputDocumentType.HandlerInputClassName), classNum(RabbitIntEngineImp)))
+    {
+        dictClassImportClassRun = new DictClass(className2Id(inforInputDocumentType.HandlerInputClassName ));
+        importClass = dictClassImportClassRun.makeObject();
+
+    }
+
+    if (!importClass)
+        throw error(strFmt("@MIK9305", queue.Event));
+
+    return importClass;
+}

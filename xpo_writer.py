@@ -188,11 +188,12 @@ class XPOWriter:
                     method_code,
                     element_type,
                 )
-                if not new_content and element_type in ('CLS', 'TAB', 'DBT'):
+                if not new_content and element_type in ('CLS', 'TAB', 'DBT', 'FRM'):
                     new_content = self._insert_new_source_block(
                         element_replacements[element_key]['content'],
                         method_name,
-                        method_code
+                        method_code,
+                        element_type
                     )
                 if new_content:
                     element_replacements[element_key]['content'] = new_content
@@ -704,7 +705,9 @@ class XPOWriter:
         
         return new_element_content
     
-    def _insert_new_source_block(self, element_content: str, method_name: str, method_code: str) -> Optional[str]:
+    def _insert_new_source_block(
+        self, element_content: str, method_name: str, method_code: str, element_type: Optional[str] = None
+    ) -> Optional[str]:
         """
         Вставляет новый блок SOURCE #methodName ... ENDSOURCE перед ENDMETHODS (для методов, которых ещё нет в XPO).
         """
@@ -713,7 +716,12 @@ class XPOWriter:
         if idx < 0:
             return None
         formatted_code = self._format_code_for_xpo(method_code, '        #')
-        new_block = '      SOURCE #{}\n{}\n      ENDSOURCE\n'.format(method_name, formatted_code)
+        xpo_source_name = (
+            frm_xpo_method_name(parse_frm_xpp_stem(method_name))
+            if element_type == "FRM" and "." in method_name
+            else method_name
+        )
+        new_block = '      SOURCE #{}\n{}\n      ENDSOURCE\n'.format(xpo_source_name, formatted_code)
         return element_content[:idx] + new_block + element_content[idx:]
 
     def _find_source_block_literal(self, element_content: str, source_marker: str) -> Optional[str]:

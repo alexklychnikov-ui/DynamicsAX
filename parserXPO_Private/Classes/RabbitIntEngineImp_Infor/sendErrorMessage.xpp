@@ -1,0 +1,12 @@
+//HNS_HNS_000002198_01, SMironov, 04.08.2025
+protected void sendErrorMessage()
+{
+    SysEmailId              emailId;
+    ;
+    if (errorEmailMsg)
+    {
+        emailId = MPParameters::find().TransferMarkInvalidStatusEmailId;
+        if (emailId)
+            SendEmailRunBase::runFromExternal(emailId, conNull(), '', errorEmailMsg);
+    }
+}

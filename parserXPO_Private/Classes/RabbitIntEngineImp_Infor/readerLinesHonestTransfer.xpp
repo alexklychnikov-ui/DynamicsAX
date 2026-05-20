@@ -1,0 +1,197 @@
+//HNS_HNS_000002198_01, SMironov, 01.08.2025
+public void readerLinesHonestTransfer(InventTransferTable _transferTable, Set _setDropId)
+{
+    int                                     ret = 0;
+    container                               conPallette = conNull();
+    SetEnumerator                           se;
+    int                                     i, j;
+    Set                                     setDropId = _setDropId;
+    XmlNodeList                             nodeListLine, mpList;
+    xmlNode                                 xmlNode, nodeDrop;
+    WMSPalletIdInfor                        wmsPalletId;
+    ItemId                                  itemId;
+    InventBatchId                           inventBatchId;
+    MPCode                                  mpCode;
+    RabbitIntEngineImpInforTransferMPTable  mpTable;
+    RecordInsertList                        ril;
+    boolean                                 isIstRecord = false;
+    Qty                                     qty;
+    str                                     packingTypeStr;
+    Set                                     set;// ntimofee 10.09.2025 HNS_HNS_000002243_01
+    //HNS_HNS_000002289_01, SMironov, 02.12.2025 ->
+    MPImportCodeSensitiveTmp                tmp;
+    mpCode                                  sensCode, correctCode;
+    MPCaseSensitive                         sens;
+    //HNS_HNS_000002289_01, SMironov, 02.12.2025 <-
+    ;
+
+    ttsBegin;
+    if (setDropId)
+    {
+        se  = setDropId.getEnumerator();
+        while (se.moveNext())
+        {
+            conPallette += se.current();
+        }
+    }
+    if (conLen(conPallette) == 0)
+        conPallette += '';
+    for (i = 1; i <= conLen(conPallette); i++)
+    {
+        wmsPalletId = conPeek(conPallette, i);
+        if (wmsPalletId == '')
+            delete_from mpTable
+                where mpTable.TransferId == _transferTable.TransferId;
+        else
+             delete_from mpTable
+                where mpTable.TransferId == _transferTable.TransferId
+                    && mpTable.WMSPalletId == wmsPalletId;
+    }
+    ril = new RecordInsertList(tableNum(RabbitIntEngineImpInforTransferMPTable));
+    set = new set(Types::Container);// ntimofee 10.09.2025 HNS_HNS_000002243_01
+    //HNS_HNS_000002289_01, SMironov, 02.12.2025 ->
+    //РџСЂРµРґРІР°СЂРёС‚РµР»СЊРЅРѕРµ С‡С‚РµРЅРёРµ РєРѕРґРѕРІ РјР°СЂРєРёСЂРѕРІРєРё РґР»СЏ СѓСЃС‚СЂР°РЅРµРЅРёСЏ СЂР°СЃР±Р°Р»Р°РЅСЃРёСЂРѕРІРєРё РїРѕ СЂРµРіРёСЃС‚СЂР°Рј
+    delete_from tmp;
+    if (xmlDocument)
+    {
+        nodeListLine = XMLDocument.getElementsByTagName(this.bodyTagName());
+        if (nodeListLine)
+        {
+            xmlnode = nodeListLine.item(0);
+            if (xmlNode.hasChildNodes())
+            {
+                nodeListLine = xmlNode.childNodes();
+                for (i = 0; i < nodeListLine.length(); i++)
+                {
+                    xmlNode = nodeListLine.item(i);
+                    if (xmlNode.name() == #DropIdHonestSign)
+                    {
+                        if (xmlNode.hasChildNodes())
+                        {
+                            mpList = xmlNode.childNodes();
+                            mpCode = ''; //HNS_HNS_000002289_02, SMironov, 05.02.2026
+                            for (j = 0; j < mpList.length(); j++)
+                            {
+                                nodeDrop = mpList.item(j);
+                                switch (nodeDrop.name())
+                                {
+                                    case #mpCode:
+                                        mpCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+                                        break;
+                                    case #hs_mark:
+                                        mpCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            if (mpCode) //HNS_HNS_000002289_02, SMironov, 05.02.2026
+                                MPImportCodeSensitiveTmp::createRecord(tmp, mpCode);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    MPImportCodeSensitiveTmp::createMap(tmp);
+    //HNS_HNS_000002289_01, SMironov, 02.12.2025 <-
+    //Р§С‚РµРЅРёРµ РґР°РЅРЅС‹С…
+    if (xmlDocument)
+    {
+        nodeListLine = XMLDocument.getElementsByTagName(this.bodyTagName());
+        if (nodeListLine)
+        {
+            xmlnode = nodeListLine.item(0);
+            if (xmlNode.hasChildNodes())
+            {
+                nodeListLine = xmlNode.childNodes();
+                for (i = 0; i < nodeListLine.length(); i++)
+                {
+                    xmlNode = nodeListLine.item(i);
+                    if (xmlNode.name() == #DropIdHonestSign)
+                    {
+                        if (xmlNode.hasChildNodes())
+                        {
+                            mpList = xmlNode.childNodes();
+                            for (j = 0; j < mpList.length(); j++)
+                            {
+                                nodeDrop = mpList.item(j);
+                                switch (nodeDrop.name())
+                                {
+                                    case #Sku:
+                                        itemId = nodeDrop.innerText();
+                                        itemId = InventTable::findItemId_Infor(itemId).ItemId;
+                                        break;
+                                    case #InventBatchId:
+                                        inventBatchId = nodeDrop.innerText();
+                                        break;
+                                    case #DropId:
+                                        wmsPalletId = nodeDrop.innerText();
+                                        break;
+                                    case #mpCode:
+                                        mpCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+                                        break;
+                                    case #Qty:
+                                        qty = str2num(nodeDrop.innerText());
+                                        break;
+                                    case #hs_mark_type:
+                                        packingTypeStr = nodeDrop.innerText();
+                                        break;
+                                    case #hs_mark:
+                                        mpCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+                                        break;
+                                }
+                            }
+                            mpTable.clear();
+                            mpTable.TransferId          = _transferTable.TransferId;
+                            mpTable.MessageId           = InfmessageId;
+                            mpTable.Queue               = queue.RecId;
+                            mpTable.ItemId              = itemId;
+                            mpTable.InventBatchId       = inventBatchId;
+                            mpTable.WMSPalletId         = wmsPalletId;
+                            mpTable.MPCode              = mpCode;
+                            mpTable.Qty                 = qty;
+                            mpTable.MPpackingType       = this.packingType(packingTypeStr);
+                            //HNS_HNS_000002289_01, SMironov, 02.12.2025 ->
+                            sensCode = mpCode;
+                            select firstOnly CaseSensitiveId from tmp
+                                where tmp.MPCode == sensCode
+                                    && tmp.MD5Key == str2MD5(sensCode);
+                            if (tmp.CaseSensitiveId)
+                            {
+                                mpCode      = tmp.CaseSensitiveId;
+                                correctCode = sensCode;
+                                sens        = true;
+                            }
+                            else
+                            {
+                                correctCode     = '';
+                                sens            = false;
+                            }
+                            mpTable.MPCode              = mpCode;
+                            mpTable.CaseSensitive       = sens;
+                            mpTable.CorrectCode         = correctCode;
+                            //HNS_HNS_000002289_01, SMironov, 02.12.2025 <-
+                            //+ ntimofee 10.09.2025 HNS_HNS_000002243_01
+                            if(!set.in([mpTable.TransferId, mpTable.ItemId, mpTable.InventBatchId, mpTable.MPCode]))
+                            {
+                                set.add([mpTable.TransferId, mpTable.ItemId, mpTable.InventBatchId, mpTable.MPCode]);
+                            }
+                            else
+                            {
+                                throw error (strFmt("@MIK14368", mpTable.TransferId, mpTable.ItemId, mpTable.InventBatchId, mpTable.MPCode));
+                            }
+                            //- ntimofee 10.09.2025 HNS_HNS_000002243_01
+
+                            ril.add(mpTable);
+                        }
+                        isIstRecord = true;
+                    }
+                }
+            }
+        }
+    }
+    if (isIstRecord)
+        ril.insertDatabase();
+    ttsCommit;
+}

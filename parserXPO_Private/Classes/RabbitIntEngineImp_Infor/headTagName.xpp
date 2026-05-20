@@ -1,0 +1,4 @@
+public str headTagName()
+{
+    return '';
+}

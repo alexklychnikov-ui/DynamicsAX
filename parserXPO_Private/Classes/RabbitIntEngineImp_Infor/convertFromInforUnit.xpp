@@ -1,0 +1,39 @@
+protected real convertFromInforUnit(
+    real        _value,
+    InventTable _inventTable
+    , boolean   _info = false //MIK_INT_1_000001603_01, SMironov, 14.02.2023
+)
+{
+    //MIK_INT_1_000001603_01, SMironov, 14.02.2023 ->
+    /*
+    UnitOfMeasureRecId              unitOfMeasureRecId = _inventTable.UnitOfMeasure_Infor().RecId;
+    ;
+
+    if (unitOfMeasureRecId)
+        return IOOutgoingType_XML_Infor::convertToInforUnit(
+                    _value,
+                    unitOfMeasureRecId,
+                    UnitOfMeasure::findBySymbol(_inventTable.inventTableModuleInvent().UnitId).RecId,
+                    _inventTable.Product);
+    else
+        return _value;
+    */
+    real    ret = _value;
+    ;
+    if (_inventTable.Unit_Infor)
+    {
+        if (_inventTable.Unit_Infor != _inventTable.inventUnitId())
+        {
+            ret = IOOutgoingType_XML_Infor::convertToInforUnit
+                    (ret,
+                    UnitOfMeasure::findBySymbol(_inventTable.Unit_Infor).RecId,
+                    UnitOfMeasure::findBySymbol(_inventTable.inventUnitId()).RecId,
+                    _inventTable.Product);
+            if (_info)
+                info(strFmt("@MIK12445",
+                      _inventTable.ItemId, _value, _inventTable.Unit_Infor, ret, _inventTable.inventUnitId()));
+        }
+    }
+    return ret;
+    //MIK_INT_1_000001603_01, SMironov, 14.02.2023 <-
+}

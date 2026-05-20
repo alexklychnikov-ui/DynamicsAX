@@ -13,9 +13,9 @@ from label_loader import LabelLoader
 from xpo_reader import XPOReader
 from parser_integration import ParserIntegration
 
-PROJECT_ROOT = Path(__file__).parent.parent
+from server import ALD_FILES, PROJECT_ROOT
+
 XPO_FILE = PROJECT_ROOT / "AOT_cus" / "PrivateProject_CUS_Layer_Export.xpo"
-ALD_FILE = PROJECT_ROOT / "AOT_cus" / "AxMIKru.ald"
 DB_FILE = PROJECT_ROOT / "indexXPO_cus" / "xpo_index.db"
 PARSER_DIR = PROJECT_ROOT / "parserXPO"
 
@@ -24,7 +24,7 @@ def test_label_loader():
     """Тестирует загрузку меток"""
     print("Тест 1: Загрузка меток из ALD файла...")
     try:
-        loader = LabelLoader(str(ALD_FILE))
+        loader = LabelLoader([str(p) for p in ALD_FILES])
         print(f"  Загружено меток: {len(loader.get_all_labels())}")
         
         # Тест получения метки

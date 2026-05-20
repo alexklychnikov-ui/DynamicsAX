@@ -1,0 +1,58 @@
+//HNS_INT_1_000000500_01, SMironov, 07.10.2021
+public void createInforQueueTable()
+{
+    str                     tag;
+    XmlNode                 node, element;
+    System.String           value;
+    #define.Message('Message')
+    #define.Head('Head')
+    #define.MessageId('MessageID')
+    #define.MessageDate('Date')
+    #define.MainMessageId('MainMessageID')
+
+    if (XmlDocument)
+    {
+        node = XmlDocument.getNamedElement(#message);
+        if (node)
+            node = node.getNamedElement(#head);
+        if (node)
+        {
+            element = node.getNamedElement(#messageId);
+            if (element)
+            {
+                value = element.text();
+                tag = CLRInterop::getAnyTypeForObject(value);
+                infmessageId = tag;
+            }
+            element = node.getNamedElement(#messagedate);
+            if (element)
+            {
+                value = element.text();
+                tag = CLRInterop::getAnyTypeForObject(value);
+                if (tag != '')
+                    infmessageDate = System.Convert::ToDateTime(tag);
+            }
+            element = node.getNamedElement(#mainmessageId);
+            if (element)
+            {
+                value = element.text();
+                infmainmessageId = CLRInterop::getAnyTypeForObject(value);
+            }
+            ttsBegin;
+            ImpQueueTable = InforImpQueueTable::findMessageId(InfmessageId, true);
+            if (ImpQueueTable.RecId == 0)
+            {
+                ImpQueueTable.clear();
+                ImpQueueTable.initValue();
+                ImpQueueTable.MessageId     = infmessageId;
+            }
+            ImpQueueTable.MessageDate   = infmessageDate;
+            ImpQueueTable.MainMessageId = infmainMessageId;
+            ImpQueueTable.DocType       = queue.Event;
+            ImpQueueTable.Queue         = queue.recid;
+            ImpQueueTable.DocNum        = documentNum;
+            ImpQueueTable.write();
+            ttsCommit;
+        }
+    }
+}

@@ -261,7 +261,14 @@ class XPOParser:
         try:
             return raw.decode('cp1251'), 'cp1251'
         except UnicodeDecodeError:
-            return raw.decode('utf-8', errors='replace'), 'utf-8'
+            pass
+
+        # Последний шанс: предпочитаем cp1251 с заменой, т.к. многие XPO из AX
+        # в реальных проектах имеют cp1251-подобные данные с редкими "битами".
+        try:
+            return raw.decode('cp1251', errors='replace'), 'cp1251-replace'
+        except Exception:
+            return raw.decode('utf-8', errors='replace'), 'utf-8-replace'
 
     def _normalize_newlines(self, text: str) -> str:
         """Приводит переносы к LF во внутреннем представлении."""

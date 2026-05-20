@@ -1,0 +1,4 @@
+public boolean validateImportData()
+{
+    return false;
+}

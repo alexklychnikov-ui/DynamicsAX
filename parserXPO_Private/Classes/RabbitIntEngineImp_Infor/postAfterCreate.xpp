@@ -1,0 +1,4 @@
+public boolean postAfterCreate(Common _header)
+{
+    return false;
+}

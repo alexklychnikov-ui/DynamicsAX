@@ -1,0 +1,350 @@
+//X5SHP_INT_1_000002056_01, SMironov, 05.03.2025
+public boolean createPickInvoices(SalesTable _salesTable, Set _setDropId
+                                , boolean _shippedPart = false //X5SHP_INT_1_000002068_01, SMironov, 02.04.2025
+                                )
+{
+    boolean                         ret = true;
+    container                       conPallette = conNull();
+    SetEnumerator                   se;
+    int                             i, j;
+    WMSPalletIdInfor                palletteId;
+    Set                             setDropId = _setDropId;
+    SalesFormLetter                 salesFormLetter;
+    SalesParmTable                  salesParmTable;
+    SalesParmLine                   salesParmLine;
+    container                       conParmLineRecId;
+    Map                             salesParmChangeMap;
+    //X5SHP_INT_000002064_01, SMironov, 19.03.2025 ->
+    CustPackingSlipJour             custPackingSlipJour;
+    TMPFrmVirtual                   tmpFrmVirtual;
+    List                            selectedList;
+    SalesUpdate                     salesUpdate;
+    boolean                         runPostInvoice = false;
+    //X5SHP_INT_000002064_01, SMironov, 19.03.2025 <-
+    boolean                         noSeparate = !_salesTable.separateInvoiceForEachDrop(); //X5SHP_INT_1_000002086_01, SMironov, 07.04.2025
+    boolean                         noParmLine; //X5SHP_INT_1_000002223_02, SMironov, 03.09.2025
+    ;
+    ttsBegin;
+    //X5SHP_INT_1_000002068_01, SMironov, 09.04.2025 ->
+    if (_shippedPart == false)
+        delete_from reserveBatchTmp;
+    //X5SHP_INT_1_000002068_01, SMironov, 09.04.2025 <-
+    this.readLinesBatch();
+    //X5SHP_INT_1_000002197_02, SMironov, 25.08.2025 ->
+    if (setDropId)
+    {
+        if (!this.checkPallette(_salesTable, _shippedPart))
+        {
+            ttsAbort;
+            return false;
+        }
+    }
+    //X5SHP_INT_1_000002197_02, SMironov, 25.08.2025 <-
+    this.reArrangeReserveBatch(_salesTable); //X5SHP_INT_1_000002068_01, SMironov, 03.04.2025
+    // + a.klychn 03.02.2026 X5SHP_INT_1_000002338_01
+    if (!this.checkBatchOrVolumeGradeAccountin(_salesTable.SalesId, true))
+    {
+        ttsAbort;
+        return false;
+    }
+    // - a.klychn 03.02.2026 X5SHP_INT_1_000002338_01
+    if (setDropId)
+    {
+        //X5SHP_INT_1_000002197_02, SMironov, 25.08.2025 ->
+        //РџРµСЂРµРЅРµСЃРµРЅРѕ РІС‹С€Рµ
+        /*
+        //X5SHP_INT_1_000002197_01, SMironov, 30.07.2025 ->
+        if (!this.checkPallette(_salesTable))
+        {
+            ttsAbort;
+            return false;
+        }
+        //X5SHP_INT_1_000002197_01, SMironov, 30.07.2025 <-
+        */
+        //X5SHP_INT_1_000002197_02, SMironov, 25.08.2025 <-
+        se  = setDropId.getEnumerator();
+        while (se.moveNext())
+        {
+            conPallette += se.current();
+        }
+    }
+    //X5SHP_INT_1_000002086_01, SMironov, 07.04.2025 ->
+    if (noSeparate
+        && conLen(conPallette) < 2)
+        noSeparate = false;
+    if (noSeparate)
+        conPallette = conNull();
+    //X5SHP_INT_1_000002086_01, SMironov, 07.04.2025 <-
+    if (conLen(conPallette) == 0)
+        conPallette += '';
+    //Р¦РёРєР» РїРѕ СЃРѕР·РґР°РЅРёСЋ РѕС‚РіСЂСѓР·РѕС‡РЅС‹С… РЅР°РєР»Р°РґРЅС‹С…
+    for (i = 1; i <= conLen(conPallette); i++)
+    {
+        palletteId = conPeek(conPallette, i);
+
+        salesFormLetter = SalesFormLetter::construct(DocumentStatus::PickingList);
+        salesFormLetter.salesTable(_salesTable);
+        salesFormLetter.parmShowDialog(false); //X5SHP_HNS_000002054_01, SMironov, 20.03.2025
+        salesFormLetter.proforma(false);
+        salesFormLetter.printFormLetter(false);
+        salesFormLetter.reArrangeNow(false);
+        salesFormLetter.sumBy(AccountOrder::Auto);
+        salesFormLetter.transDate(documentDate);
+        salesFormLetter.specQty(SalesUpdate::All);
+        salesFormLetter.parmPalletteId(palletteId);
+        salesFormLetter.initLinesQuery();
+        salesParmTable = SalesParmTable::findSalesId(_salesTable.SalesId, salesFormLetter.parmId());
+        if (salesParmTable.RecId == 0)
+        {
+
+            ttsAbort;
+            error(strFmt("@MIK13876", _salesTable.SalesId));
+            return false;
+        }
+        conParmLineRecId = conNull();
+        while select salesParmLine
+            where salesParmLine.ParmId == salesParmTable.ParmId
+                && salesParmLine.TableRefId == salesParmTable.TableRefId
+        {
+            conParmLineRecId += salesParmLine.RecId;
+        }
+        //X5SHP_INT_1_000002223_02, SMironov, 03.09.2025 ->
+        //РџСЂРѕРІРµСЂРєР° СЂРµР·РµСЂРІР° РїРѕ РЅРѕРјРµРЅРєР»Р°С‚СѓСЂР°Рј
+        if (IOInforParameters::find().InforSalesPickInvoicesItemsCheck)
+        {
+            noParmLine = false;
+            if (noSeparate)
+            {
+                while select ItemId from reserveBatchTmp
+                    group by ItemId
+                {
+                    select firstOnly RecId from salesParmLine
+                        where salesParmLine.ParmId == salesParmTable.ParmId
+                            && salesParmLine.TableRefId == salesParmTable.TableRefId
+                            && salesParmLine.ItemId == reserveBatchTmp.ItemId;
+                    if (salesParmLine.RecId == 0)
+                    {
+                        noParmLine = true;
+                        error(strFmt("@MIK14352", reserveBatchTmp.ItemId));
+                    }
+                }
+            }
+            else
+            {
+                while select ItemId from reserveBatchTmp
+                    group by ItemId
+                    where reserveBatchTmp.WMSPalletId == palletteId
+                {
+                    select firstOnly RecId from salesParmLine
+                        where salesParmLine.ParmId == salesParmTable.ParmId
+                            && salesParmLine.TableRefId == salesParmTable.TableRefId
+                            && salesParmLine.ItemId == reserveBatchTmp.ItemId;
+                    if (salesParmLine.RecId == 0)
+                    {
+                        noParmLine = true;
+                        error(strFmt("@MIK14352", reserveBatchTmp.ItemId));
+                    }
+                }
+            }
+            if (noParmLine)
+            {
+                ttsAbort;
+                error(strFmt("@MIK13876", _salesTable.SalesId));
+                return false;
+            }
+        }
+        //X5SHP_INT_1_000002223_02, SMironov, 03.09.2025 <-
+        for (j = 1; j <= conLen(conParmLineRecId); j++)
+        {
+            salesParmLine = salesParmLine::findRecId(conPeek(conParmLineRecId, j));
+            salesParmChangeMap = new Map(Types::String, Types::Real);
+            //X5SHP_INT_1_000002086_01, SMironov, 07.04.2025 ->
+            if (noSeparate)
+            {
+                while select sum(Qty) from reserveBatchTmp
+                    group by InventBatchId
+                    where reserveBatchTmp.ItemId == salesParmLine.ItemId
+                {
+                    salesParmChangeMap.insert(reserveBatchTmp.InventBatchId, reserveBatchTmp.Qty);
+                }
+            }
+            else
+            //X5SHP_INT_1_000002086_01, SMironov, 07.04.2025 <-
+            {
+                while select InventBatchId, Qty from reserveBatchTmp
+                    where reserveBatchTmp.WMSPalletId == palletteId
+                        && reserveBatchTmp.ItemId == salesParmLine.ItemId
+                {
+                    salesParmChangeMap.insert(reserveBatchTmp.InventBatchId, reserveBatchTmp.Qty);
+                }
+            }
+            SalesFormLetterParmData::changeParmLines(salesParmLine, salesParmChangeMap);
+        }
+        /*
+        while select forUpdate salesParmLine
+            where  salesParmLine.ParmId     == salesParmTable.ParmId
+                && salesParmLine.TableRefId == salesParmTable.TableRefId
+        {
+            info(strFmt("parm %4 %1 - %2 - %3 ", SalesParmLine.ItemId, SalesParmLine.inventDim().inventBatchId, salesParmLine.DeliverNow, palletteId));
+        }
+        */
+        //X5SHP_HNS_000002054_01, SMironov, 14.03.2025
+        // a.klychn 16.02.2026 X5SHP_INT_1_000002338_01-> РџРµСЂРµРЅРѕСЃ РґРѕ validate(), С‡С‚РѕР±С‹ checkMPCode РІРёРґРµР» РґР°РЅРЅС‹Рµ РІ MPSalesPurchMarkCodeTable
+        this.saveMPCode(_salesTable, WMSPickingRoute::findByParmId(salesParmTable.ParmId)
+                        , noSeparate //X5SHP_INT_1_000002086_01, SMironov, 07.04.2025
+                        , false, palletteId //X5SHP_INT_1_000002338_01, SMironov, 16.02.2026
+                        );
+        //X5SHP_HNS_000002054_01, SMironov, 14.03.2025 <-
+        //X5SHP_HNS_000002054_01, SMironov, 20.03.2025 ->
+        //salesFormLetter.run();
+        if (salesFormLetter.validate())
+            salesFormLetter.run();
+        else
+        {
+            ttsAbort;
+            error(strFmt("@MIK13876", _salesTable.SalesId));
+            return false;
+        }
+        //X5SHP_HNS_000002054_01, SMironov, 20.03.2025 <-
+
+        //X5SHP_INT_1_000002338_01, SMironov, 16.02.2026 ->
+        this.saveMPCode(_salesTable, WMSPickingRoute::findByParmId(salesParmTable.ParmId)
+                        , noSeparate, true, palletteId
+                        );
+        //X5SHP_INT_1_000002338_01, SMironov, 16.02.2026 <-
+        //Р•СЃР»Рё РЅСѓР¶РЅРѕ, СЃРѕР·РґР°РµРј РѕС‚Р±РѕСЂРѕС‡РЅСѓСЋ РЅР°РєР»Р°РґРЅСѓСЋ РЅР° СЃРєРѕРјРїР»РµРєС‚РѕРІР°РЅРЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ
+        if (_salesTable.InforSalesShippingProcessType == InforSalesShippingProcessType::PackingSlip)
+        {
+            salesFormLetter = SalesFormLetter::construct(DocumentStatus::PackingSlip);
+            salesFormLetter.salesTable(_salesTable);
+            salesFormLetter.parmShowDialog(false); //X5SHP_HNS_000002054_01, SMironov, 20.03.2025
+            salesFormLetter.proforma(false);
+            salesFormLetter.printFormLetter(false);
+            salesFormLetter.reArrangeNow(false);
+            salesFormLetter.sumBy(AccountOrder::Auto);
+            salesFormLetter.transDate(documentDate);
+            salesFormLetter.specQty(SalesUpdate::PickingList);
+            salesFormLetter.parmPalletteId(palletteId);
+            salesFormLetter.initLinesQuery();
+            salesParmTable = SalesParmTable::findSalesId(_salesTable.SalesId, salesFormLetter.parmId());
+            if (salesParmTable.RecId == 0)
+            {
+                ttsAbort;
+                error(strFmt("@MIK13875", _salesTable.SalesId));
+                return false;
+            }
+            conParmLineRecId = conNull();
+            while select salesParmLine
+                where salesParmLine.ParmId == salesParmTable.ParmId
+                    && salesParmLine.TableRefId == salesParmTable.TableRefId
+            {
+                conParmLineRecId += salesParmLine.RecId;
+            }
+            for (j = 1; j <= conLen(conParmLineRecId); j++)
+            {
+                salesParmLine = salesParmLine::findRecId(conPeek(conParmLineRecId, j));
+                salesParmChangeMap = new Map(Types::String, Types::Real);
+                //X5SHP_INT_1_000002086_01, SMironov, 07.04.2025 ->
+                if (noSeparate)
+                {
+                    while select sum(Qty) from reserveBatchTmp
+                        group by InventBatchId
+                        where reserveBatchTmp.ItemId == salesParmLine.ItemId
+                    {
+                        salesParmChangeMap.insert(reserveBatchTmp.InventBatchId, reserveBatchTmp.Qty);
+                    }
+                }
+                else
+                //X5SHP_INT_1_000002086_01, SMironov, 07.04.2025 <-
+                {
+                    while select InventBatchId, Qty from reserveBatchTmp
+                        where reserveBatchTmp.WMSPalletId == palletteId
+                            && reserveBatchTmp.ItemId == salesParmLine.ItemId
+                    {
+                        salesParmChangeMap.insert(reserveBatchTmp.InventBatchId, reserveBatchTmp.Qty);
+                    }
+                }
+                SalesFormLetterParmData::changeParmLines(salesParmLine, salesParmChangeMap);
+            }
+            //X5SHP_HNS_000002054_01, SMironov, 20.03.2025 ->
+            //salesFormLetter.run();
+            if (salesFormLetter.validate())
+                salesFormLetter.run();
+            else
+            {
+                ttsAbort;
+                error(strFmt("@MIK13875", _salesTable.SalesId));
+                return false;
+            }
+            //X5SHP_HNS_000002054_01, SMironov, 20.03.2025 <-
+        }
+        //X5SHP_INT_000002064_01, SMironov, 19.03.2025 ->
+        //Р Р°Р·РЅРѕСЃРєР° С„РёРЅР°РЅСЃРѕРІРѕР№ РЅР°РєР»Р°РґРЅРѕР№
+        if (_salesTable.inforPostInvoice())
+        {
+            salesFormLetter = SalesFormLetter::construct(DocumentStatus::Invoice);
+            salesFormLetter.salesTable(_salesTable);
+            salesFormLetter.parmShowDialog(false); //X5SHP_HNS_000002054_01, SMironov, 20.03.2025
+            salesFormLetter.proforma(false);
+            salesFormLetter.printFormLetter(false);
+            salesFormLetter.reArrangeNow(false);
+            salesFormLetter.sumBy(AccountOrder::Auto);
+            salesFormLetter.transDate(documentDate);
+            salesFormLetter.parmPalletteId(palletteId);
+            if (_salesTable.InforSalesShippingProcessType == InforSalesShippingProcessType::PackingSlip)
+            {
+                custPackingSlipJour = custPackingSlipJour::findPalletteId(_salesTable.SalesId, palletteId);
+                if (custPackingSlipJour.RecId != 0)
+                {
+                    tmpFrmVirtual.clear();
+                    tmpFrmVirtual.TableNum      = custPackingSlipJour.TableId;
+                    tmpFrmVirtual.RecordNo      = custPackingSlipJour.RecId;
+                    tmpFrmVirtual.NoYes         = NoYes::Yes;
+                    tmpFrmVirtual.Id            = custPackingSlipJour.SalesId;
+                    tmpFrmVirtual.write();
+                    salesUpdate                 = salesUpdate::PackingSlip;
+                    salesFormLetter.specQty(salesUpdate);
+                    runPostInvoice              = true;
+                    selectedList                = new List(Types::Record);
+                    selectedList.addEnd(tmpFrmVirtual);
+                    salesFormLetter.selectFromJournal(selectedList.pack());
+                 }
+            }
+            else
+            {
+                salesUpdate                 = salesUpdate::PickingList;
+                salesFormLetter.specQty(salesUpdate);
+                salesFormLetter.initLinesQuery();
+                runPostInvoice              = true;
+            }
+            if (runPostInvoice)
+            {
+                salesFormLetter.specQty(salesUpdate);
+                if (salesFormLetter.validate())
+                {
+                    salesFormLetter.reArrangeNow(false);
+                    salesFormLetter.run();
+                    //X5SHP_INT_1_000002068_01, SMironov, 28.03.2025 ->
+                    _salesTable.reread();
+                    ioExportProcessRun(_salesTable, IOOutgoingEvent::Post);
+                    //X5SHP_INT_1_000002068_01, SMironov, 28.03.2025 <-
+                }
+                else
+                {
+                    ttsAbort;
+                    error(strFmt("@MIK13884", _salesTable.SalesId));
+                    return false;
+                }
+            }
+            else
+            {
+                ttsAbort;
+                error(strFmt("@MIK13884", _salesTable.SalesId));
+                return false;
+            }
+            //X5SHP_INT_000002064_01, SMironov, 21.03.2025 <-
+        }
+    }
+    ttsCommit;
+    return ret;
+}

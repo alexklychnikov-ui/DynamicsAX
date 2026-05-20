@@ -1,0 +1,145 @@
+//X5SHP_HNS_000002054_04, SMironov, 25.04.2025 ->
+/*
+//X5SHP_HNS_000002054_01, SMironov, 13.03.2025
+public void saveMPCode(SalesTable _salesTable, WMSPickingRoute _route
+*/
+public void saveMPCodeOld(SalesTable _salesTable, WMSPickingRoute _route
+//X5SHP_HNS_000002054_04, SMironov, 25.04.2025 <-
+                        , boolean _noSeparate = false //X5SHP_INT_1_000002086_01, SMironov, 07.04.2025
+                        )
+{
+    MPSalesPurchMarkCodeTable               codeTable;
+    RabbitIntEngineImpInforSalesMPTable     salesMPTable;
+    InventTable                             inventTable;
+    RabbitIntEngineImpInforSalesMPTableTmp  tmp;
+    RecordInsertList                        ril;
+    int                                     kol = 0, i, j, k;
+    ItemId                                  itemId = '';
+    container                               conMiddle = conNull(), conHigh = conNull();
+    MPCode                                  mpCode, mpHighCode, mpMiddleCode;
+    Map                                     mapKolHigh = new Map(Types::Container, Types::Integer);
+    container                               conPallette = conNull(); //X5SHP_HNS_000002054_02, SMironov, 28.03.2025
+
+    void writeRecord(RabbitIntEngineImpInforSalesMPTableTmp _tmp, inventTable _inventTable, NoYes _agregation,
+                            InventQty _qty, MPCode _mpCode, MpCode _mpHighCode, MPCode _mpMiddleCode
+                            , InforPalletteId _palette = NoYes::No //X5SHP_HNS_000002054_02, SMironov, 28.03.2025
+                            )
+    {
+        codeTable.clear();
+        codeTable.initValue();
+        codeTable.Agregation        = _agregation;
+        codeTable.AgregationCount   = _qty;
+        codeTable.CustVendAC        = _salesTable.CustAccount;
+        codeTable.ItemId            = _tmp.ItemId;
+        codeTable.MPAgrCode         = _mpMiddleCode;
+        codeTable.MPCode            = _mpCode;
+        codeTable.MPHighAgrCode     = _mpHighCode;
+        codeTable.pickingRouteID    = _route.pickingRouteID;
+        codeTable.ProductName       = _inventTable.productName(CompanyInfo::languageId());
+        codeTable.UnitId            = _inventTable.inventUnitId();
+        codeTable.ProductGroupId    = _inventTable.MPGroupId;
+        codeTable.Qty               = _qty;
+        codeTable.SalesPurch        = SalesPurch::Sales;
+        codeTable.SalesPurchId      = _salesTable.SalesId;
+        codeTable.InforPalletteId   = _palette; //X5SHP_HNS_000002054_02, SMironov, 28.03.2025
+        ril.add(codeTable);
+    }
+
+    if (_route.RecId != 0)
+    {
+        select count(RecId) from salesMPTable
+            where salesMPTable.SalesId == _route.transRefId
+                //X5SHP_INT_1_000002086_01, SMironov, 07.04.2025 ->
+                //&& salesMPTable.WMSPalletId == _route.EDCPalletCode;
+                && ((_noSeparate == false
+                        && salesMPTable.WMSPalletId == _route.EDCPalletCode)
+                    ||
+                    (_noSeparate == true));
+                //X5SHP_INT_1_000002086_01, SMironov, 07.04.2025 <-
+        if (int642int(salesMPTable.RecId) > 0)
+        {
+            delete_from tmp;
+            insert_recordset tmp (ItemId, MPCode, MPHighAgrCode, MPMiddleAgrCode, Qty)
+                select ItemId, MPCode, MPHighAgrCode, MPMiddleAgrCode, Qty from salesMPTable
+                    where salesMPTable.SalesId == _route.transRefId
+                        //X5SHP_INT_1_000002086_01, SMironov, 07.04.2025 ->
+                        //&& salesMPTable.WMSPalletId == _route.EDCPalletCode;
+                        && ((_noSeparate == false
+                                && salesMPTable.WMSPalletId == _route.EDCPalletCode)
+                            ||
+                            (_noSeparate == true));
+                        //X5SHP_INT_1_000002086_01, SMironov, 07.04.2025 <-
+            ril = new RecordInsertList(tableNum(MPSalesPurchMarkCodeTable));
+            while select * from tmp
+                order by ItemId
+            {
+                if (itemId != tmp.ItemId)
+                    inventTable = inventTable::find(tmp.ItemId);
+                mpCode          = tmp.MPCode;
+                if (tmp.MPHighAgrCode == '' && tmp.MPCode != '')
+                {
+                    mpHighCode      = tmp.MPMiddleAgrCode;
+                    mpMiddleCode    = '';
+                    if (mpHighCode && !conFind(conHigh, mpHighCode))
+                        conHigh     += mpHighCode;
+                }
+                else
+                {
+                    mpHighCode      = tmp.MPHighAgrCode;
+                    mpMiddleCode    = tmp.MPMiddleAgrCode;
+                    if (mpHighCode && !conFind(conHigh, mpHighCode))
+                        conHigh     += mpHighCode;
+                    if (mpMiddleCode && !conFind(conMiddle, mpMiddleCode))
+                        conMiddle   += mpMiddleCode;
+                }
+                if (mpCode)
+                {
+                    kol++;
+                    writeRecord(tmp, inventTable, NoYes::No, 1, mpCode, mpHighCode, mpMiddleCode);
+                }
+                //X5SHP_HNS_000002054_02, SMironov, 28.03.2025 ->
+                if (tmp.MPHighAgrCode && !conFind(conPallette, tmp.MPHighAgrCode))
+                    conPallette += tmp.MPHighAgrCode;
+                //X5SHP_HNS_000002054_02, SMironov, 28.03.2025 <-
+                itemId          = tmp.ItemId;
+            }
+            for (i = 1; i <= conLen(conMiddle); i++)
+            {
+                mpMiddleCode = conPeek(conMiddle, i);
+                select count(RecId) from tmp
+                    group by itemId, MPHighAgrCode
+                    where tmp.MPMiddleAgrCode == mpMiddleCode;
+                k = int642int(tmp.RecId);
+                select firstOnly tmp
+                    where tmp.MPMiddleAgrCode == mpMiddleCode;
+                writeRecord(tmp, inventTable::find(tmp.ItemId), NoYes::Yes, k, mpMiddleCode, tmp.mpHighAgrCode, tmp.mpHighAgrCode);
+                if (mapKolHigh.exists([tmp.ItemId, tmp.mpHighAgrCode]))
+                    j = mapKolHigh.lookup([tmp.ItemId, tmp.mpHighAgrCode]);
+                else
+                    j = 0;
+                j += 1;
+                mapKolHigh.insert([tmp.ItemId, tmp.mpHighAgrCode], j);
+            }
+            for (i = 1; i <= conLen(conHigh); i++)
+            {
+                mpHighCode = conPeek(conHigh, i);
+                select count(RecId) from tmp
+                    group by itemId
+                    where tmp.MPHighAgrCode == mpHighCode;
+                k = int642int(tmp.RecId);
+                select firstOnly tmp
+                    where tmp.MPHighAgrCode == mpHighCode;
+                if (mapKolHigh.exists(mpHighCode))
+                    j = mapKolHigh.lookup([tmp.ItemId, mpHighCode]);
+                else
+                    j = 0;
+                j += k;
+                writeRecord(tmp, inventTable::find(tmp.ItemId), NoYes::Yes, j, mpHighCode, '', ''
+                            , conFind(conPallette, mpHighCode) //X5SHP_HNS_000002054_02, SMironov, 28.03.2025
+                            );
+            }
+            ril.insertDatabase();
+            info(strFmt("@MIK13877", _route.pickingRouteID, kol + conLen(conMiddle) + conLen(conHigh)));
+        }
+    }
+}

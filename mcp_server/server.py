@@ -31,7 +31,13 @@ if _current_dir.name == "mcp_server":
 else:
     PROJECT_ROOT = _current_dir
 XPO_FILE = PROJECT_ROOT / "AOT_cus" / "PrivateProject_CUS_Layer_Export.xpo"
-ALD_FILE = PROJECT_ROOT / "AOT_cus" / "AxMIKru.ald"
+ALD_FILES = (
+    PROJECT_ROOT / "AOT_cus" / "AxMIKru.ald",
+    PROJECT_ROOT / "AOT_cus" / "AxGMSru.ald",
+    PROJECT_ROOT / "AOT_cus" / "AxKORru.ald",
+    PROJECT_ROOT / "AOT_cus" / "axSYSru.ald",
+)
+ALD_FILE = ALD_FILES[0]
 DB_FILE = PROJECT_ROOT / "indexXPO_cus" / "xpo_index.db"
 PARSER_DIR = PROJECT_ROOT / "parserXPO"
 
@@ -50,15 +56,17 @@ def initialize_components():
     global label_loader, xpo_reader, parser_integration
     
     # Проверяем существование файлов
-    if not ALD_FILE.exists():
-        raise FileNotFoundError(f"ALD файл не найден: {ALD_FILE}")
+    missing_ald = [p for p in ALD_FILES if not p.exists()]
+    if missing_ald:
+        paths = "\n".join(str(p) for p in missing_ald)
+        raise FileNotFoundError(f"Не найдены ALD файлы:\n{paths}")
     if not XPO_FILE.exists():
         raise FileNotFoundError(f"XPO файл не найден: {XPO_FILE}")
     if not DB_FILE.exists():
         raise FileNotFoundError(f"База данных не найдена: {DB_FILE}")
     
     try:
-        label_loader = LabelLoader(str(ALD_FILE))
+        label_loader = LabelLoader([str(p) for p in ALD_FILES])
         xpo_reader = XPOReader(str(XPO_FILE), str(DB_FILE))
         parser_integration = ParserIntegration(str(PARSER_DIR))
     except Exception as e:
@@ -120,7 +128,7 @@ async def list_tools() -> List[Tool]:
         ),
         Tool(
             name="search_labels_in_code",
-            description="Ищет метки @MIK в коде элемента/метода и расшифровывает их из ALD",
+            description="Ищет метки @MIK/@GMS/@KOR/@SYS/… в коде элемента/метода и расшифровывает их из ALD (AxMIKru, AxGMSru, AxKORru, axSYSru)",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -138,7 +146,7 @@ async def list_tools() -> List[Tool]:
         ),
         Tool(
             name="replace_labels_in_parser",
-            description="Заменяет метки @MIK на их расшифровки в файлах parserXPO",
+            description="Заменяет метки (@MIK/@GMS/@KOR/@SYS/…) на расшифровки из ALD в файлах parserXPO",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -187,7 +195,7 @@ async def list_tools() -> List[Tool]:
                 "properties": {
                     "label_id": {
                         "type": "string",
-                        "description": "ID метки (например, 'MIK4140' или '4140')"
+                        "description": "ID метки (например, 'MIK4140', 'SYS333411', 'KOR1985' или только цифры — тогда префикс MIK)"
                     }
                 },
                 "required": ["label_id"]
@@ -320,7 +328,7 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
             if not found_labels:
                 return [TextContent(
                     type="text",
-                    text="Метки @MIK не найдены в коде"
+                    text="Метки вида @PREFIX123 не найдены в коде (или нет расшифровки в ALD)"
                 )]
             
             # Формируем результат

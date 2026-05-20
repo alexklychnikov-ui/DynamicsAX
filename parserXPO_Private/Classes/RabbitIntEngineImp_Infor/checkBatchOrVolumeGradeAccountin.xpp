@@ -1,0 +1,131 @@
+// a.klychn 29.01.2025 MIK_INT_000002316_01
+// РћР±СЉРµРґРёРЅС‘РЅРЅС‹Р№ РјРµС‚РѕРґ РїСЂРѕРІРµСЂРєРё: РѕР±СЂР°Р±РѕС‚РєР° РІС…РѕРґСЏС‰РёС… СЃРѕР±С‹С‚РёР№ Infor + СЂР°Р·РЅРѕСЃРєР° РЅР°РєР»Р°РґРЅС‹С….
+// РїР°СЂР°РјРµС‚СЂ РіСЂСѓРїРїС‹ РїСЂРё GTIN (@MIK14632), С„РѕСЂРјР°С‚ GTIN (@MIK14633), GTIN РІ Р±Р°Р·Рµ (@MIK14634),
+// Р·Р°РїСЂРµС‚ СЃРјРµС€РёРІР°РЅРёСЏ РџРЈ/РћРЎРЈ (@MIK14635), РЅРµСЃРєРѕР»СЊРєРѕ GTIN РЅР° SKU (@MIK14665).
+// Р’С‹Р·С‹РІР°РµС‚СЃСЏ РёР· createPickInvoices РґРѕ validate(); РїСЂРё СЂР°Р·РЅРѕСЃРєРµ РёР· С„РѕСЂРјС‹ РїСЂРѕРІРµСЂРєРё РґСѓР±Р»РёСЂСѓСЋС‚СЃСЏ РІ checkMPCode.
+// РџСЂРѕРІРµСЂРєРё РѕРґРЅРѕР№ СЃС‚СЂРѕРєРё (РіСЂСѓРїРїР°, С„РѕСЂРјР°С‚ GTIN, GTIN РІ Р±Р°Р·Рµ, СЃРјРµС€РёРІР°РЅРёРµ РІ РѕРґРЅРѕР№ СЃС‚СЂРѕРєРµ) РІС‹РЅРµСЃРµРЅС‹ РІ MPSalesPurchMarkCodeTable::validateGTINAndMarkingLine.
+public boolean checkBatchOrVolumeGradeAccountin(SalesId _salesId,
+                                                boolean _isPickingList = false)
+{
+    boolean                                 ret = true;
+    RabbitIntEngineImpInforSalesMPTable     salesMPTable;
+    InventTable                             inventTable;
+    MPCodeCheckType                         checkType;
+    container                               valRes;
+    SalesId                                 lastSalesId          = '';
+    ItemId                                  lastItemId           = '';
+    GTINFromInfor                           firstGTINFromInfor   = '';
+    boolean                                 hasGTINForLine       = false;
+    boolean                                 hasMarksForLine      = false;
+    boolean                                 hasGTINCurrent       = false;
+    boolean                                 hasMarksCurrent      = false;
+    str                                     errorStr;
+
+    void appendError(str _errorMsg)
+    {
+        if (errorEmailMsg)
+        {
+            errorEmailMsg += '\n';
+        }
+        errorEmailMsg += _errorMsg;
+    }
+
+    void processCheckError(str _errorMsg)
+    {
+        appendError(_errorMsg);
+
+        switch (checkType)
+        {
+            case MPCodeCheckType::Warning:
+                warning(_errorMsg);
+                break;
+
+            case MPCodeCheckType::Mistake:
+                error(_errorMsg);
+                ret = false;
+                throw error("@SYS21533");
+        }
+    }
+    ;
+
+    // Р’С‹Р±РѕСЂ СѓСЂРѕРІРЅСЏ РїСЂРѕРІРµСЂРєРё РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ РєРѕРЅС‚РµРєСЃС‚Р°
+    checkType = _isPickingList ? MPParameters::find().MPCodeCustPickingListCheckType : MPParameters::find().MPCodeCustInvoiceCheckType;
+
+    if (checkType == MPCodeCheckType::NoCheck)
+    {
+        return true;
+    }
+
+    while select SalesId, ItemId, MPCode, MPHighAgrCode, MPMiddleAgrCode, Qty, GTINFromInfor from salesMPTable
+        order by SalesId, ItemId
+        where salesMPTable.SalesId == _salesId
+    {
+        // РЎР±СЂРѕСЃ С„Р»Р°РіРѕРІ РїСЂРё СЃРјРµРЅРµ С‚РѕРІР°СЂР°; РїСЂРѕРІРµСЂРєР° РІ СЂР°Р·СЂРµР·Рµ РЅРѕРјРµРЅРєР»Р°С‚СѓСЂС‹ (ItemId)
+        if (lastSalesId != salesMPTable.SalesId
+            || lastItemId != salesMPTable.ItemId)
+        {
+            if (lastSalesId && lastItemId)
+            {
+                if (hasGTINForLine && hasMarksForLine)
+                {
+                    // Р’ Р·Р°РєР°Р·Рµ %1 РЅР° Р°СЂС‚РёРєСѓР» %2 СѓРєР°Р·Р°РЅРѕ Р±РѕР»СЊС€Рµ РѕРґРЅРѕРіРѕ РІРёРґР° СѓС‡С‘С‚Р°: Рё РџРЈ (РјР°СЂРєРё), Рё РћРЎРЈ (GTIN) (@MIK14635)
+                    errorStr = strFmt("@MIK14635", lastSalesId, lastItemId);
+                    processCheckError(errorStr);
+                }
+            }
+
+            lastSalesId        = salesMPTable.SalesId;
+            lastItemId         = salesMPTable.ItemId;
+            hasGTINForLine     = false;
+            hasMarksForLine    = false;
+            firstGTINFromInfor = '';
+        }
+
+        hasGTINCurrent  = salesMPTable.GTINFromInfor != '';
+        hasMarksCurrent = (salesMPTable.MPCode != '');
+
+        inventTable = InventTable::find(salesMPTable.ItemId, true);
+        if (!inventTable.RecId)
+            continue;
+
+        // + a.klychn 24.02.2026 X5SHP_INT_1_000002338_01
+        if (hasGTINCurrent
+            && (inventTable.MPVolumeAndVarietalAccSales
+                || inventTable.RetirementFromLegalEntity))
+        {
+            hasGTINForLine = true;
+            if (!firstGTINFromInfor)
+                firstGTINFromInfor = salesMPTable.GTINFromInfor;
+            else if (salesMPTable.GTINFromInfor != firstGTINFromInfor)
+            {
+                errorStr = strFmt("@MIK14665", salesMPTable.SalesId, salesMPTable.ItemId);
+                processCheckError(errorStr);
+            }
+        }
+        // - a.klychn 24.02.2026 X5SHP_INT_1_000002338_01
+        if (hasMarksCurrent)
+            hasMarksForLine = true;
+
+        valRes = MPSalesPurchMarkCodeTable::validateGTINAndMarkingLine(salesMPTable.SalesId,
+                                                                       salesMPTable.ItemId,
+                                                                       salesMPTable.GTINFromInfor,
+                                                                       salesMPTable.MPCode,
+                                                                       checkType);
+        if (!conPeek(valRes, 1))
+        {
+            errorStr = conPeek(valRes, 2);
+            processCheckError(errorStr);
+        }
+    }
+
+    // РџСЂРѕРІРµСЂРєР° РЅР° СЃРјРµС€РёРІР°РЅРёРµ РџРЈ Рё РћРЎРЈ РІ СЂР°Р·СЂРµР·Рµ РЅРѕРјРµРЅРєР»Р°С‚СѓСЂС‹ (РїРѕСЃР»РµРґРЅРёР№ С‚РѕРІР°СЂ РІ РІС‹Р±РѕСЂРєРµ)
+    // + a.klychn 16.02.2026 X5SHP_INT_1_000002338_01
+    if (lastSalesId && lastItemId && hasGTINForLine && hasMarksForLine)
+    {
+        errorStr = strFmt("@MIK14635", lastSalesId, lastItemId);
+        processCheckError(errorStr);
+    }
+    // - a.klychn 16.02.2026 X5SHP_INT_1_000002338_01
+
+    return ret;
+}

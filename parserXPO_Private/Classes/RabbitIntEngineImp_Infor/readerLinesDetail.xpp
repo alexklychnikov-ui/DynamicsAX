@@ -1,0 +1,4 @@
+public boolean readerLinesDetail(XmlNodeList         _nodeListLine)
+{
+    return false;
+}

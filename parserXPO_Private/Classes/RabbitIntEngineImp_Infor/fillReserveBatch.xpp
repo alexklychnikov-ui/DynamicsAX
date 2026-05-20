@@ -1,0 +1,64 @@
+//INF_INT_1_000001004_01, SMironov, 14.04.2022
+//MIK_INT_1_000002405_01, SMironov, 17.03.2026 ->
+//public void fillReserveBatch(InforReserveBatchTableTmp  _reserveBatchTmp,
+public boolean fillReserveBatch(InforReserveBatchTableTmp  _reserveBatchTmp,
+//MIK_INT_1_000002405_01, SMironov, 17.03.2026 <-
+                                ItemId                  _itemId,
+                                WMSPalletId             _wmsPalletId    = '',
+                                InventBatchId           _inventBatchId  = '',
+                                Qty                     _qty            = 0
+                                , boolean               _convert        = true //X5SHP_INT_1_000002155_01, SMironov, 18.06.2025
+                                , boolean               _blocked        = false //MIK_INT_1_000002405_01, SMironov, 17.03.2026
+                                )
+{
+    //X5SHP_INT_1_000002155_01, SMironov, 18.06.2025 ->
+    //РџСЂРё РїРµСЂРµСЂР°СЃРїСЂРµРґРµР»РµРЅРёРё РєРѕР»РёС‡РµСЃС‚РІР° РїРѕ РґСЂРѕРїР°Рј Р±РµСЂРµС‚СЃСЏ РєРѕР»РёС‡РµСЃС‚РІРѕ СѓР¶Рµ РёР· СЃРєР»Р°РґСЃРєРёС… РїСЂРѕРІРѕРґРѕРє
+    /*
+    Qty             qty = abs(this.convertFromInforUnit(_qty, InventTable::find(_itemId)
+                                                , true //MIK_INT_1_000001603_01, SMironov, 14.02.2023
+                                                ));
+    ;
+    */
+    Qty                 qty;
+    //MIK_INT_1_000002405_01, SMironov, 17.03.2026 ->
+    boolean             ret = false;
+    IOInforParameters   parameters;
+    //MIK_INT_1_000002405_01, SMironov, 17.03.2026 <-
+    ;
+    if (_convert)
+        qty = abs(this.convertFromInforUnit(_qty, InventTable::find(_itemId), true));
+    else
+        qty = abs(_qty);
+    //X5SHP_INT_1_000002155_01, SMironov, 18.06.2025  <-
+
+    //MIK_INT_1_000002405_01, SMironov, 17.03.2026 ->
+    select firstOnly forUpdate _reserveBatchTmp
+        where _reserveBatchTmp.ItemId == _itemId
+            && _reserveBatchTmp.WMSPalletId == _wmsPalletId
+            && _reserveBatchTmp.InventBatchId == _inventBatchId;
+    if (_reserveBatchTmp.RecId)
+    {
+        parameters = IOInforParameters::find();
+        if (parameters.InforDuplicateDataBlock && _blocked)
+            ret = true;
+        //MIK_INT_1_000002405_02, SMironov, 17.03.2026 ->
+        else if (parameters.InforDuplicateDataAgregate)
+        {
+            _reserveBatchTmp.Qty += qty;
+            _reserveBatchTmp.update();
+        }
+        //MIK_INT_1_000002405_02, SMironov, 17.03.2026 <-
+    }
+    if (ret == false)
+    //MIK_INT_1_000002405_01, SMironov, 17.03.2026 <-
+    {
+        _reserveBatchTmp.clear();
+        _reserveBatchTmp.ItemId         = _itemId;
+        _reserveBatchTmp.WMSPalletId    = _wmsPalletId;
+        _reserveBatchTmp.InventBatchId  = _inventBatchId;
+        _reserveBatchTmp.Qty            = qty;
+        _reserveBatchTmp.insert();
+    }
+
+    return ret; //MIK_INT_1_000002405_01, SMironov, 17.03.2026
+}

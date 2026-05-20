@@ -1,0 +1,46 @@
+// a.klychn 25.06.2021 INF_INT_000000253_01
+class RabbitIntEngineImp_Infor extends RabbitIntEngineImp
+{
+    Common                      daxDocumentHeader;
+    DocumentNum                 documentNum;
+    date                        documentDate;
+
+    //HNS_INT_1_000000500_01, SMironov, 08.10.2021 ->
+    str                         InfmessageId, InfmainMessageId;
+    utcDateTime                 InfmessageDate;
+    InforImpQueueTable          ImpQueueTable;
+    documentNum                 updateDocumentNum;
+    //HNS_INT_1_000000500_01, SMironov, 08.10.2021 <-
+    //+ a.klychn 02.12.2021 INF_INT_1_000000628_01
+    boolean                     isNotError;
+    //- a.klychn 02.12.2021 INF_INT_1_000000628_01
+    DocumentSignersCode         SignersCode;   //dkozlovt 14.12.2021 MIK_INT_000001402_16
+    //INF_INT_1_000001004_01, SMironov, 14.04.2022 ->
+    boolean                     reserveBatch;
+    Map                         mapInventBatchId;
+    InforReserveBatchTableTmp   reserveBatchTmp;
+    //INF_INT_1_000001004_01, SMironov, 14.04.2022 <-
+
+    InventTransferJour          TransferJour; // dkozlovt 27.05.2022 MIK_INT_000000951_05
+    Set                         existBatchVetisIsSupervisedSet; // syurin 03.08.2023 INF_INT_000001727_01
+    RabbitInforImpDocumentType  documentType; //X5SHP_INT_1_000002024_01, SMironov, 19.02.2025
+    Common                      commonTable; //X5SHP_INT_1_000002024_01, SMironov, 19.02.2025
+    str                         errorEmailMsg; //HNS_HNS_000002198_01, SMironov, 04.08.2025
+
+    #InforXML
+    //РРЅС„Рѕ РЎРІСЏР·РєР° С‚РµРіРѕРІ XML РљСЂРѕР»РёРєР° Рё РёРЅС‚РµРіСЂР°С†РёРё РљРѕСЂСѓСЃ
+    #define.customerorderpacked9  ('customerorderpacked9') //РЈРїР°РєРѕРІРєР° Р·Р°РІРµСЂС€РµРЅР° Infor          OrderPacked_Infor
+    #define.dropidshipped9        ('dropidshipped9')       //Р§Р°СЃС‚РёС‡РЅР°СЏ РѕС‚РіСЂСѓР·РєР° С‚РѕРІР°СЂР° Infor   TransferShipPartInfor
+    #define.ordershipped9         ('ordershipped9')        //РћС‚РіСЂСѓР·РєР° С‚РѕРІР°СЂР° Infor             ShipGoods_Infor
+    #define.asnverified9          ('asnverified9')         //РџСЂРёС…РѕРґ С‚РѕРІР°СЂР° Infor (РїР°СЂС‚РёСЏ)      GoodsReceive_InforBatch
+    #define.move9                 ('move9')                //РџРµСЂРµРЅРѕСЃ С‚РѕРІР°СЂР° Infor              Move_Infor
+    #define.adjustment9           ('adjustment9')          //РљРѕСЂСЂРµРєС‚РёСЂРѕРІРєР° РѕСЃС‚Р°С‚РєРѕРІ Infor      Adjustment_Infor
+    //HNS_INT_1_000000500_01, SMironov, 07.10.2021 ->
+    #define.asnverifiedcontrol9   ('asnverifiedcontrol9')   //РџСЂРёС…РѕРґ РјР°СЂРѕРє Infor                MPAcceptRespons
+    //HNS_INT_1_000000500_01, SMironov, 07.10.2021 <-
+    //HNS_INT_1_000000508_01, SMironov, 08.10.2021 ->
+    #define.adjustmentcontrol9    ('adjustmentcontrol9')    //РЎРїРёСЃР°РЅРёРµ РјР°СЂРѕРє Infor              MPWriteOff
+    //HNS_INT_1_000000508_01, SMironov, 08.10.2021 <-
+    #define.GTIN                  ('GTIN')                  // a.klychn 12.02.2026 X5SHP_INT_1_000002338_01
+
+}

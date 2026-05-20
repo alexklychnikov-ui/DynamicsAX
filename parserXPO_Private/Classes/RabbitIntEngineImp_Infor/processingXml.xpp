@@ -1,0 +1,144 @@
+public void processingXml()
+{
+    XmlNode             nodeList;
+    XmlNodeList         nodeListLine;
+    #OCCRetryCount
+    ;
+
+    existBatchVetisIsSupervisedSet = new Set(Types::String); // syurin 03.08.2023 INF_INT_000001727_01
+
+    try
+    {
+        //MIK_INT_1_000001604_01, SMironov, 14.02.2023 ->
+        if (this.parmTest())
+            ttsBegin;
+        //MIK_INT_1_000001604_01, SMironov, 14.02.2023 <-
+        this.initFromHeaderData();
+
+        this.updateErrorMessage(); //INF_INT_1_000002085_01, SMironov, 07.04.2025
+
+        //HNS_INT_1_000000500_01, SMironov, 07.10.2021 ->
+        this.createInforQueueTable();
+        //HNS_INT_1_000000500_01, SMironov, 07.10.2021 <-
+        this.updateQueueDocumenNum();
+
+        this.setJourQueueStatus(RabbitJourStatus::SuccessDone, RabbitQueueStatus::Done);
+
+        delete_from reserveBatchTmp; //MIK_INT_1_000001607_01, SMironov, 17.02.2023
+
+        if (this.validateImportData())
+        {
+            if (this.readerHeader())
+            {
+                if (this.lineTagName())    //СЃС‡РёС‚С‹РІР°РµРј СЃС‚СЂРѕРєРё
+                {
+                    //+ syurin 03.08.2023 INF_INT_000001727_01
+                    if (VetisServiceMicroServiceParam::find().BlockDelVetisIsSupervised)
+                    {
+                        nodeListLine = XMLDocument.getElementsByTagName(this.lineTagName());
+                        nodeList = nodeListLine.nextNode();
+                        while (nodeList)
+                        {
+                            if (nodeList.hasChildNodes() && nodeList.baseName() == this.lineTagName())
+                            {
+                                if (!this.readerLines2ExistBatchVetisIsSupervised(nodeList))
+                                {
+                                    throw error("@MIK10106");
+                                }
+                            }
+                            nodeList = nodeListLine.nextNode();
+                        }
+                    }
+                    //- syurin 03.08.2023 INF_INT_000001727_01
+                    nodeListLine = XMLDocument.getElementsByTagName(this.lineTagName());
+
+                    nodeList = nodeListLine.nextNode();
+                    while (nodeList)
+                    {
+                        if (nodeList.hasChildNodes() && nodeList.baseName() == this.lineTagName())
+                        {
+                            if (!this.readerLines(nodeList))
+                            {
+                                throw error("@MIK10106");
+                            }
+                        }
+                        nodeList = nodeListLine.nextNode();
+                    }
+                }
+            }
+            else
+            {
+                this.setError("@MIK9333", "@MIK10161", RabbitJourStatus::ErrorOther, RabbitQueueStatus::Error);
+            }
+            ttsBegin;
+            if (this.postAfterCreate(daxDocumentHeader))
+            {
+                ttsCommit;
+            }
+            else
+            {
+                ttsAbort;
+                this.sendErrorMessage(); //HNS_HNS_000002198_01, SMironov, 07.08.2025
+                this.setError("@MIK9333", "@MIK10162", RabbitJourStatus::ErrorOther, RabbitQueueStatus::Error);
+            }
+
+            //HNS_INT_1_000000500_01, SMironov, 11.10.2021 ->
+            this.updateInforQueueTable();
+            //HNS_INT_1_000000500_01, SMironov, 11.10.2021 <-
+        }
+        else
+        {
+            this.setError("@MIK9333", "@MIK10160", RabbitJourStatus::ErrorOther, RabbitQueueStatus::Error);
+        }
+        //+ a.klychn 02.12.2021 INF_INT_1_000000628_01
+        if (isNotError)
+        {
+            this.setJourQueueStatus(RabbitJourStatus::Created, RabbitQueueStatus::Create);
+        }
+        //- a.klychn 02.12.2021 INF_INT_1_000000628_01
+        //MIK_INT_1_000001604_01, SMironov, 14.02.2023 ->
+        if (this.parmTest())
+        {
+            ttsAbort;
+            if (queueStatus != RabbitQueueStatus::Error)
+                this.setJourQueueStatus(RabbitJourStatus::Created, RabbitQueueStatus::Create);
+        }
+        //MIK_INT_1_000001604_01, SMironov, 14.02.2023 <-
+
+    }
+    catch (Exception::Deadlock)
+    {
+        if (xSession::currentRetryCount() >= #RetryNum)
+        {
+            throw Exception::Deadlock;
+        }
+        else
+        {
+            retry;
+        }
+    }
+    catch (Exception::UpdateConflict)
+    {
+        if (appl.ttsLevel() == 0)
+        {
+            if (xSession::currentRetryCount() >= #RetryNum)
+            {
+                throw Exception::UpdateConflictNotRecovered;
+            }
+            else
+            {
+                retry;
+            }
+        }
+        else
+        {
+            throw Exception::UpdateConflict;
+        }
+    }
+    catch
+    {
+        clrError(); //INF_MERK_000001776_01, SMironov, 24.10.2023
+        info("@MIK9428");
+        this.setError("@MIK9333", "@MIK9352", RabbitJourStatus::ErrorOther, RabbitQueueStatus::Error);
+    }
+}

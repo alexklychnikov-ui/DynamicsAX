@@ -37,12 +37,18 @@ else:
     PROJECT_ROOT = _current_dir
 
 XPO_FILE = PROJECT_ROOT / "AOT_cus" / "PrivateProject_CUS_Layer_Export.xpo"
-ALD_FILE = PROJECT_ROOT / "AOT_cus" / "AxMIKru.ald"
+ALD_FILES = (
+    PROJECT_ROOT / "AOT_cus" / "AxMIKru.ald",
+    PROJECT_ROOT / "AOT_cus" / "AxGMSru.ald",
+    PROJECT_ROOT / "AOT_cus" / "AxKORru.ald",
+    PROJECT_ROOT / "AOT_cus" / "axSYSru.ald",
+)
 DB_FILE = PROJECT_ROOT / "indexXPO_cus" / "xpo_index.db"
 PARSER_DIR = PROJECT_ROOT / "parserXPO"
 
 print(f"   PROJECT_ROOT: {PROJECT_ROOT}")
-print(f"   ALD_FILE: {ALD_FILE} (exists: {ALD_FILE.exists()})")
+for p in ALD_FILES:
+    print(f"   ALD: {p} (exists: {p.exists()})")
 print(f"   XPO_FILE: {XPO_FILE} (exists: {XPO_FILE.exists()})")
 print(f"   DB_FILE: {DB_FILE} (exists: {DB_FILE.exists()})")
 print(f"   PARSER_DIR: {PARSER_DIR} (exists: {PARSER_DIR.exists()})")
@@ -50,7 +56,7 @@ print(f"   PARSER_DIR: {PARSER_DIR} (exists: {PARSER_DIR.exists()})")
 # Проверка инициализации
 print("\n3. Проверка инициализации компонентов...")
 try:
-    label_loader = LabelLoader(str(ALD_FILE))
+    label_loader = LabelLoader([str(p) for p in ALD_FILES])
     print(f"   [OK] LabelLoader: загружено {len(label_loader.get_all_labels())} меток")
 except Exception as e:
     print(f"   [ERROR] LabelLoader: {e}")

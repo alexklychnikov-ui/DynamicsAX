@@ -1,0 +1,123 @@
+//INF_INT_1_000001004_01, SMironov, 15.04.2022
+public boolean validateQtyInforDAX(InventTransferId _inventTransferId, StatusIssue _statusIssue)
+{
+    InforReserveBatchCheckView  view;
+    boolean                     ret = true;
+    //MIK_INT_1_000001545_01, SMironov, 29.12.2022 ->
+    InventTable                 inventTable;
+    //MIK_INT_1_000001545_01, SMironov, 29.12.2022 <-
+    InforReserveBatchTable      table; //INF_MERK_000001776_01, SMironov, 24.10.2023
+    ;
+    //MIK_INT_1_000001604_01, SMironov, 14.02.2023 ->
+    //Р•СЃР»Рё СЃРєР»Р°РґС‹ РЅРµ СЂР°РІРЅС‹ Р Р¦-РјР°РіР°Р·РёРЅ, С‚Рѕ РґСЂРѕРїРѕРІ РЅРµС‚, Рё РїСЂРѕРІРµСЂСЏС‚СЊ РЅРёС‡РµРіРѕ РЅРµ РЅР°РґРѕ
+    if (!
+        (InventLocation::find(InventTransferTable::find(_inventTransferId).InventLocationIdFrom)
+                .WarehouseType == WarehouseType::Distribution
+         &&
+         InventLocation::find(InventTransferTable::find(_inventTransferId).InventLocationIdTo)
+                .WarehouseType == WarehouseType::Shop)
+         )
+        return ret;
+    //MIK_INT_1_000001604_01, SMironov, 14.02.2023 <-
+    //X5SHP_EGAIS_000002044_01, SMironov, 14.04.2025 ->
+    //Р•СЃР»Рё СЌС‚Рѕ РїРёРІРѕ Рё РЅР° СЃРєР»Р°РґРµ РїР°СЂР°РјРµС‚СЂ РЅРµ РЎС‚СЂРѕРіРѕ РїРѕ РїР°СЂС‚РёСЏРј РёРЅС„РѕСЂ, С‚Рѕ РЅРµ РїСЂРѕРІРµСЂСЏРµРј
+    if (IOInforParameters::find().EGAISShipmentControl
+        && InventTransferTable::find(_inventTransferId).EGAISAlcItemType_RU == EGAISAlcItemType_RU::Beer)
+    {
+        if (InventTransferTable::find(_inventTransferId).InventLocationFrom().EGAISInforBatchReservation
+            != EGAISInforBatchReservation::StrictInforBatches)
+            return ret;
+    }
+    //X5SHP_EGAIS_000002044_01, SMironov, 14.04.2025 <-
+    //INF_MERK_000001776_01, SMironov, 24.10.2023 ->
+    while select * from reserveBatchTmp
+        join InventTable
+            where InventTable.ItemId == reserveBatchTmp.ItemId
+                && (!InventParameters::find().InforReserveBatchOnlyVetisEnabled
+                    || (InventParameters::find().InforReserveBatchOnlyVetisEnabled
+                ))
+    {
+        if (((InventTable.VetisIsSupervised && !VetisServiceMicroServiceParam::find().BlockDelVetisIsSupervised)
+            //+ syurin 25.10.2023 INF_INT_000001727_fix3
+            //|| (VetisServiceMicroServiceParam::find().BlockDelVetisIsSupervised && existBatchVetisIsSupervisedSet.in(reserveBatchTmp.ItemId))))
+            || (VetisServiceMicroServiceParam::find().BlockDelVetisIsSupervised && existBatchVetisIsSupervisedSet && existBatchVetisIsSupervisedSet.elements() && existBatchVetisIsSupervisedSet.in(reserveBatchTmp.ItemId))))
+            //- syurin 25.10.2023 INF_INT_000001727_fix3
+        { // a.klychn 09.12.2025 INF_CR_000002327_01
+            select firstOnly view
+                where view.TransferId == _inventTransferId
+                    && view.ItemId == reserveBatchTmp.ItemId
+                    && view.InventBatchId == reserveBatchTmp.InventBatchId;
+            if (view.RecId == 0)
+            {
+                table.clear();
+                table.initValue();
+                table.TransferId    = _inventTransferId;
+                table.ItemId        = reserveBatchTmp.ItemId;
+                table.WMSPalletId   = reserveBatchTmp.WMSPalletId;
+                table.InventBatchId = reserveBatchTmp.InventBatchId;
+                table.InventTransId = InventTransferLine::findItemId(_inventTransferId, reserveBatchTmp.ItemId).InventTransId;
+                table.Qty           = reserveBatchTmp.Qty;
+                table.insert();
+            }
+        } // a.klychn 09.12.2025 INF_CR_000002327_01
+    }
+    //INF_MERK_000001776_01, SMironov, 24.10.2023 <-
+    while select * from reserveBatchTmp
+        //MIK_INT_1_000001545_01, SMironov, 30.12.2022 ->
+        ////INF_MERK_000001776_01, SMironov, 24.10.2023 ->
+        //exists join InventTable
+        join InventTable
+        ////INF_MERK_000001776_01, SMironov, 24.10.2023 <-
+            where InventTable.ItemId == reserveBatchTmp.ItemId
+                && (!InventParameters::find().InforReserveBatchOnlyVetisEnabled
+                    || (InventParameters::find().InforReserveBatchOnlyVetisEnabled
+                //INF_MERK_000001776_01, SMironov, 24.10.2023 ->
+                //&& InventTable.VetisIsSupervised))
+                ))
+                //INF_MERK_000001776_01, SMironov, 24.10.2023 <-
+        //MIK_INT_1_000001545_01, SMironov, 30.12.2022 <-
+    {
+        ////INF_MERK_000001776_01, SMironov, 24.10.2023 ->
+        if (((InventTable.VetisIsSupervised && !VetisServiceMicroServiceParam::find().BlockDelVetisIsSupervised)
+            //+ syurin 25.10.2023 INF_INT_000001727_fix3
+            //|| (VetisServiceMicroServiceParam::find().BlockDelVetisIsSupervised && existBatchVetisIsSupervisedSet.in(reserveBatchTmp.ItemId))))
+            || (VetisServiceMicroServiceParam::find().BlockDelVetisIsSupervised && existBatchVetisIsSupervisedSet && existBatchVetisIsSupervisedSet.elements() && existBatchVetisIsSupervisedSet.in(reserveBatchTmp.ItemId))))
+            //- syurin 25.10.2023 INF_INT_000001727_fix3
+        ////INF_MERK_000001776_01, SMironov, 24.10.2023 <-
+        //INF_INT_1_000001480_01, SMironov, 01.11.2022 ->
+        /*
+        select firstOnly * from view
+            where view.TransferId == _inventTransferId
+                && view.ItemId == reserveBatchTmp.ItemId
+                && view.InventBatchId == reserveBatchTmp.InventBatchId
+                && view.WMSPalletId == reserveBatchTmp.WMSPalletId
+                && view.StatusIssue == _statusIssue
+                && view.InventBatchId == view.inventBatchIdDAX;
+        if (view.RecId == 0)
+        */
+        { // a.klychn 09.12.2025 INF_CR_000002327_01
+            select sum(qty), sum(qtyDAX) from view
+                where view.TransferId == _inventTransferId
+                    && view.ItemId == reserveBatchTmp.ItemId
+                    && view.InventBatchId == reserveBatchTmp.InventBatchId
+                    //&& view.WMSPalletId == reserveBatchTmp.WMSPalletId
+                    && view.StatusIssue == _statusIssue
+                    && view.InventBatchId == view.inventBatchIdDAX;
+            if (view.Qty == 0 && view.QtyDAX == 0)
+            //INF_INT_1_000001480_01, SMironov, 01.11.2022 <-
+            {
+                //+ syurin 16.11.2023 INF_INT_000001798_01
+                //error(strFmt("@MIK11219", reserveBatchTmp.ItemId, reserveBatchTmp.InventBatchId));
+                error(strFmt("@MIK12981", reserveBatchTmp.ItemId, reserveBatchTmp.InventBatchId));
+                //- syurin 16.11.2023 INF_INT_000001798_01
+                ret = false;
+            }
+            else if (abs(view.Qty) > abs(view.QtyDAX))
+            {
+                error(strFmt("@MIK11220", reserveBatchTmp.ItemId, reserveBatchTmp.InventBatchId));
+                ret = false;
+            }
+        } // a.klychn 09.12.2025 INF_CR_000002327_01
+    }
+    return ret;
+}

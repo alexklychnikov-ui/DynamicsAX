@@ -1,0 +1,77 @@
+//X5SHP_INT_1_000002197_01, SMironov, 30.07.2025
+public boolean checkPallette(SalesTable _salesTable
+                            , boolean _shippedPart = false //X5SHP_INT_1_000002220_01, SMironov, 25.08.2025
+                            )
+{
+    boolean                             ret = true;
+    InforWMSSalesPalletBatch            palletBatch;
+    //X5SHP_INT_1_000002220_01, SMironov, 25.08.2025 ->
+    int                                 i;
+    ItemId                              itemId;
+    container                           conItemIdCheckQty   = conNull();
+    container                           conItemIdCheckBatch = conNull();
+    //X5SHP_INT_1_000002220_01, SMironov, 25.08.2025 <-
+    ;
+    if (_salesTable.InventLocation().SalesInforCheckPalletStructure
+        && _salesTable.getSalesPool().SalesProcessCorrection)
+    {
+        //X5SHP_INT_1_000002220_01, SMironov, 25.08.2025 ->
+        //РџСЂРѕРІРµСЂРєР° РёРґРµС‚ Р»РёР±Рѕ РІ СЂР°Р·СЂРµР·Рµ РїР°СЂС‚РёР№, Р»РёР±Рѕ РІ СЂР°Р·СЂРµР·Рµ РЅРѕРјРµРЅРєР»Р°С‚СѓСЂ
+        /*
+        while select sum(Qty) from reserveBatchTmp
+            group by ItemId, WMSPalletId, inventBatchId
+        {
+            select sum(Qty) from palletBatch
+                where palletBatch.SalesId == _salesTable.SalesId
+                    && palletBatch.WMSPalletId == reserveBatchTmp.WMSPalletId
+                    && palletBatch.inventBatchId == reserveBatchTmp.InventBatchId;
+            if (reserveBatchTmp.Qty != palletBatch.Qty)
+                ret = checkFailed(strFmt("@MIK14284", reserveBatchTmp.Qty, reserveBatchTmp.ItemId,
+                    reserveBatchTmp.InventBatchId, reserveBatchTmp.WMSPalletId, palletBatch.Qty));
+        }
+        */
+        while select ItemId from reserveBatchTmp
+            group by ItemId
+        {
+            if (this.parmReserveBatch()
+                && this.parmReserveVetisBatch(_shippedPart, inventTable::find(reserveBatchTmp.ItemId)))
+                conItemIdCheckBatch += reserveBatchTmp.ItemId;
+            else
+                conItemIdCheckQty   += reserveBatchTmp.ItemId;
+        }
+        for (i = 1; i <= conLen(conItemIdCheckBatch); i++)
+        {
+            itemId = conPeek(conItemIdCheckBatch, i);
+            while select sum(Qty) from reserveBatchTmp
+                group by ItemId, WMSPalletId, inventBatchId
+                where reserveBatchTmp.ItemId == itemId
+            {
+                select sum(Qty) from palletBatch
+                    where palletBatch.SalesId == _salesTable.SalesId
+                        && palletBatch.WMSPalletId == reserveBatchTmp.WMSPalletId
+                        && palletBatch.ItemId == reserveBatchTmp.ItemId
+                        && palletBatch.inventBatchId == reserveBatchTmp.InventBatchId;
+                if (reserveBatchTmp.Qty != palletBatch.Qty)
+                    ret = checkFailed(strFmt("@MIK14284", reserveBatchTmp.Qty, reserveBatchTmp.ItemId,
+                        reserveBatchTmp.InventBatchId, reserveBatchTmp.WMSPalletId, palletBatch.Qty));
+            }
+        }
+        for (i = 1; i <= conLen(conItemIdCheckQty); i++)
+        {
+            itemId = conPeek(conItemIdCheckQty, i);
+            while select sum(Qty) from reserveBatchTmp
+                group by ItemId, WMSPalletId
+                where reserveBatchTmp.ItemId == itemId
+            {
+                select sum(Qty) from palletBatch
+                    where palletBatch.SalesId == _salesTable.SalesId
+                        && palletBatch.WMSPalletId == reserveBatchTmp.WMSPalletId
+                        && palletBatch.ItemId == reserveBatchTmp.ItemId;
+                if (reserveBatchTmp.Qty != palletBatch.Qty)
+                    ret = checkFailed(strFmt("@MIK14328", reserveBatchTmp.Qty, reserveBatchTmp.ItemId,
+                                                        reserveBatchTmp.WMSPalletId, palletBatch.Qty));
+            }
+        }
+    }
+    return ret;
+}
