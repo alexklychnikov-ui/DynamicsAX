@@ -1,5 +1,10 @@
 # Dynamics AX X++ Development Assistant
 
+
+<!-- MOCKUPS:START -->
+![Mockup](Docs/mockups/mockup-20260531-113055.png)
+<!-- MOCKUPS:END -->
+
 Репозиторий для анализа, модификации и генерации X++ кода для Microsoft Dynamics AX 2012.
 
 ## 🎯 Назначение
