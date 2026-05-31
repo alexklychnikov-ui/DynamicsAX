@@ -2,7 +2,7 @@
 
 
 <!-- MOCKUPS:START -->
-![Mockup](Docs/mockups/mockup-20260531-112845.png)
+![Mockup](Docs/mockups/mockup-20260531-113055.png)
 <!-- MOCKUPS:END -->
 
 Инструментарий для **Microsoft Dynamics AX 2012**: вынос X++ из AOT в IDE, быстрый анализ больших CUS-экспортов, безопасный рефакторинг и сборка обратно в XPO для импорта.
