@@ -1,0 +1,22 @@
+//X5SHP_HNS_000002054_04, SMironov, 25.04.2025
+public InforMPPackingType packingType(str _packingTypeStr = '')
+{
+    InforMPPackingType  ret = InforMPPackingType::NoDefined;
+    ;
+    switch (_packingTypeStr)
+    {
+        case 'plt':
+            ret = InforMPPackingType::plt;
+            break;
+        case 'pack':
+            ret = InforMPPackingType::pack;
+            break;
+        case 'box':
+            ret = InforMPPackingType::box;
+            break;
+        case 'ea':
+            ret = InforMPPackingType::ea;
+            break;
+    }
+    return ret;
+}

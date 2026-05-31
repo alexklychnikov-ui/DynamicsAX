@@ -1,0 +1,26 @@
+//+ syurin 03.08.2023 INF_INT_000001727_01
+//private void updateQueueDocumenNum()
+public void updateQueueDocumenNum()
+//- syurin 03.08.2023 INF_INT_000001727_01
+{
+    documentNum = this.DocumentNum();
+    if (documentNum)
+    {
+        if (queue.DocumentNum != documentNum)
+        {
+            try
+            {
+                if (!queue.selectForUpdate())
+                    queue.selectForUpdate(true);
+                ttsBegin;
+                queue.DocumentNum = documentNum;
+                queue.update();
+                ttsCommit;
+            }
+            catch (Exception::Deadlock)
+            {
+                retry;
+            }
+        }
+    }
+}

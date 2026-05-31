@@ -1,0 +1,48 @@
+public void executeQuery()
+{
+
+    if (lockItemGroup.value())
+        qbrCriteriaItemGroup1.value(queryValue(critItemGroup.text()));
+    else
+        qbrCriteriaItemGroup1.value(SysQuery::valueUnlimited());
+
+    if (lockReqGroup.value())
+       qbrCriteriaReqGroup1.value(queryValue(critReqGroup.text()));
+    else
+        qbrCriteriaReqGroup1.value(SysQuery::valueUnlimited());
+
+    if (lockDimGroup.value())
+        qbrCriteriaDimGroup1.value(queryValue(storageDimensionGroupName));
+    else
+        qbrCriteriaDimGroup1.value(SysQuery::valueUnlimited());
+
+    if (lockItemBuyerGroup.value())
+        qbrCriteriaItemBuyerGroup1.value(queryValue(critItemBuyerGroup.text()));
+    else
+        qbrCriteriaItemBuyerGroup1.value(SysQuery::valueUnlimited());
+
+    //+ korus5 13.11.2017 MIK_PLN_1_04_01
+    if (lockEcoResCategory.value())
+    {
+        qbdsProductCategory1.enabled(true);
+
+        qbrCriteriaEcoResCategoryNSL1.value(queryValue(ecoResCategory.NestedSetLeft) + '..');
+        qbrCriteriaEcoResCategoryNSR1.value('..' + queryValue(ecoResCategory.NestedSetRight));
+    }
+    else
+    {
+        qbdsProductCategory1.enabled(false);
+
+        qbrCriteriaEcoResCategoryNSL1.value(SysQuery::valueUnlimited());
+        qbrCriteriaEcoResCategoryNSR1.value(SysQuery::valueUnlimited());
+    }
+
+    if (lockInventItemBrand.value())
+        qbrCriteriaInventItemBrand1.value(queryValue(CritInventItemBrand.value()));
+    else
+        qbrCriteriaInventItemBrand1.value(SysQuery::valueUnlimited());
+    //- korus5 13.11.2017 MIK_PLN_1_04_01
+
+    super();
+
+}

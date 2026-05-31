@@ -1,0 +1,147 @@
+//X5SHP_HNS_000002054_04, SMironov, 25.04.2025
+public void saveMPCode(SalesTable _salesTable, WMSPickingRoute _route, boolean _noSeparate = false
+                    , boolean _update = false, WMSPalletId _palletteId = '' //X5SHP_INT_1_000002338_01, SMironov, 16.02.2026
+                    )
+{
+    MPSalesPurchMarkCodeTable               codeTable;
+    RabbitIntEngineImpInforSalesMPTable     salesMPTable;
+    RabbitIntEngineImpInforSalesMPTable     salesMPTableBuf; // a.klychn 03.02.2026 X5SHP_INT_1_000002338_01
+    InventTable                             inventTable;
+    RecordInsertList                        ril;
+    int                                     kol = 0;
+    ItemId                                  itemId = '';
+    InventLocationId                        inventLocationId    = _salesTable.InventLocationId; //HNS_HNS_000002179_01, SMironov, 10.07.2025
+    // + a.klychn 03.02.2026 X5SHP_INT_1_000002338_01
+    Map                                     gtinMap            = new Map(Types::String, Types::Container);
+    MapEnumerator                           me;
+    GTINFromInfor                           gtinVal;
+    Qty                                     qtySum;
+    // - a.klychn 03.02.2026 X5SHP_INT_1_000002338_01
+
+    void writeRecord(RabbitIntEngineImpInforSalesMPTable _salesMPTable, inventTable _inventTable)
+    {
+        codeTable.clear();
+        codeTable.initValue();
+        switch (_salesMPTable.MPPackingType)
+        {
+            case InforMPPackingType::plt:
+                codeTable.Agregation        = NoYes::Yes;
+                codeTable.InforPalletteId   = NoYes::Yes;
+                break;
+            case InforMPPackingType::box,
+                InforMPPackingType::pack:
+                codeTable.Agregation        = NoYes::Yes;
+                codeTable.InforPalletteId   = NoYes::No;
+                break;
+            default:
+                codeTable.Agregation        = NoYes::No;
+                codeTable.InforPalletteId   = NoYes::No;
+                break;
+        }
+        codeTable.AgregationCount   = _salesMPTable.Qty;
+        codeTable.CustVendAC        = _salesTable.CustAccount;
+        codeTable.ItemId            = _salesMPTable.ItemId;
+        codeTable.pickingRouteID    = _route.pickingRouteID;
+        codeTable.ProductName       = _inventTable.productName(CompanyInfo::languageId());
+        codeTable.UnitId            = _inventTable.inventUnitId();
+        codeTable.ProductGroupId    = _inventTable.MPGroupId;
+        codeTable.Qty               = _salesMPTable.Qty;
+        codeTable.SalesPurch        = SalesPurch::Sales;
+        codeTable.SalesPurchId      = _salesTable.SalesId;
+        codeTable.InventLocationId  = inventLocationId; //HNS_HNS_000002179_01, SMironov, 10.07.2025
+        // + a.klychn 03.02.2026 X5SHP_INT_1_000002338_01
+        if (_salesMPTable.GTINFromInfor)
+        {
+            codeTable.GTINFromInfor = _salesMPTable.GTINFromInfor;
+            codeTable.MPCode        = '';
+        }
+        else
+        {
+            codeTable.GTINFromInfor = '';
+            codeTable.MPCode        = _salesMPTable.MPCode;
+            codeTable.CorrectCode   = _salesMPTable.CorrectCode;
+            codeTable.CaseSensitive = _salesMPTable.CaseSensitive;
+        }
+        // - a.klychn 03.02.2026 X5SHP_INT_1_000002338_01
+        ril.add(codeTable);
+    }
+    ;
+    //X5SHP_INT_1_000002338_01, SMironov, 16.02.2026 ->
+    if (_update
+        && _route.RecId != 0) //РћР±РЅРѕРІР»РµРЅРёРµ РєРѕРґРѕРІ РјР°СЂРєРёСЂРѕРІРєРё
+    {
+        while select forUpdate codeTable
+            where codeTable.SalesPurch == SalesPurch::Sales
+                && codeTable.SalesPurchId == _salesTable.SalesId
+                && codeTable.pickingRouteID == ''
+        {
+            codeTable.pickingRouteID = _route.pickingRouteID;
+            codeTable.update();
+        }
+    }
+    else
+    {
+        if (_update == false
+            && _route.RecId == 0)
+        {
+            _route.RecId = 1;
+            _route.transRefId = _salesTable.SalesId;
+            _route.EDCPalletCode = _palletteId;
+        }
+        //X5SHP_INT_1_000002338_01, SMironov, 16.02.2026 <-
+        if (_route.RecId != 0)
+        {
+            ril = new RecordInsertList(tableNum(MPSalesPurchMarkCodeTable));
+            while select * from salesMPTable
+                order by itemId
+                where salesMPTable.SalesId == _route.transRefId
+                    && ((_noSeparate == false
+                            && salesMPTable.WMSPalletId == _route.EDCPalletCode)
+                        ||
+                        (_noSeparate == true))
+            {
+                if (itemId != salesMPTable.ItemId)
+                    inventTable = inventTable::find(salesMPTable.ItemId);
+                if (salesMPTable.MPCode)
+                {
+                    kol++;
+                    writeRecord(salesMPTable, inventTable);
+                }
+                // + a.klychn 03.02.2026 X5SHP_INT_1_000002338_01
+                else if (salesMPTable.GTINFromInfor)
+                {
+                    if (gtinMap.exists(salesMPTable.ItemId))
+                    {
+                        [gtinVal, qtySum] = gtinMap.lookup(salesMPTable.ItemId);
+                        qtySum += salesMPTable.Qty;
+                        gtinMap.insert(salesMPTable.ItemId, [gtinVal, qtySum]);
+                    }
+                    else
+                        gtinMap.insert(salesMPTable.ItemId, [salesMPTable.GTINFromInfor, salesMPTable.Qty]);
+                }
+                // - a.klychn 03.02.2026 X5SHP_INT_1_000002338_01
+                itemId = salesMPTable.ItemId;
+            }
+            // + a.klychn 03.02.2026 X5SHP_INT_1_000002338_01
+            me = gtinMap.getEnumerator();
+            while (me.moveNext())
+            {
+                itemId   = me.currentKey();
+                [gtinVal, qtySum] = me.currentValue();
+                inventTable = InventTable::find(itemId);
+                salesMPTableBuf.clear();
+                salesMPTableBuf.SalesId       = _route.transRefId;
+                salesMPTableBuf.ItemId        = itemId;
+                salesMPTableBuf.GTINFromInfor = gtinVal;
+                salesMPTableBuf.Qty           = qtySum;
+                salesMPTableBuf.MPPackingType = InforMPPackingType::NoDefined;
+                kol++;
+                writeRecord(salesMPTableBuf, inventTable);
+                info(strFmt("РЈСЃРїРµС€РЅРѕ РѕР±СЂР°Р±РѕС‚Р°РЅ GTIN %1 РґР»СЏ Р·Р°РєР°Р·Р° %2, С‚РѕРІР°СЂ %3, РєРѕР»РёС‡РµСЃС‚РІРѕ %4", gtinVal, _route.transRefId, itemId, qtySum));
+            }
+            // - a.klychn 03.02.2026 X5SHP_INT_1_000002338_01
+            ril.insertDatabase();
+            info(strFmt("@MIK13877", _route.pickingRouteID, kol));
+        }
+    }
+}

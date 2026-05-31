@@ -9,16 +9,23 @@ alwaysApply: true
 10|Modifications to X++ code should only be performed in the parserXPO directory, in the corresponding .xpp files.
 
 # Поиск и извлечение объектов AOT
+- При начале каждого нового чата сначала выполняй health-check индекса командой `python indexXPO_cus/check_xpo_index_health.py` (или через команду `/xpo-index-check`) и кратко сообщай результат.
+- Если health-check вернул `FAIL`, сначала устраняй причину (lock/устаревший индекс) и только после этого выполняй поиск/извлечение объектов через индекс/MCP.
 - Всегда, когда нужно найти объект AOT (по запросу пользователя или AI-агента), сначала используй индексированную базу `indexXPO_cus/xpo_index.db` (таблица `elements`) для поиска по `element_name` / `element_type`.
-- Для извлечения конкретного объекта из большого `AOT_cus/PrivateProject_CUS_Layer_Export.xpo` используй вспомогательную функцию `parse_object_from_index(...)` из `xpo_parser.py`, которая:
-  - берет `file_position` и `size` из БД,
-  - вырезает соответствующий chunk XPO,
-  - парсит его через `utils/xpo_utils.parse_xpo_element`,
-  - сохраняет в `parserXPO/<ObjectName>/*.xpp` и `properties.txt`.
+- Для извлечения конкретного объекта из большого `AOT_cus/PrivateProject_CUS_Layer_Export.xpo` используй `parse_object_from_index(...)` из `xpo_parser.py`: строка в SQLite `elements` → срез файла по байтам `file_position`/`size` → `utils/xpo_utils.parse_xpo_element` → `parserXPO/<ObjectName>/*.xpp` и `properties.txt`. Если срез не совпадает с индексом (другая схема смещений), используй полный `xpo_parser.py` по файлу или MCP `dynamics-ax-mcp`.
 - Не читай и не парсь весь `PrivateProject_CUS_Layer_Export.xpo` целиком, если достаточно точечного извлечения через индекс.
+- После правок XPP в `parserXPO` запускай `xpo_writer.py`; результат — `XPO/<имя_исходного>_WR.xpo` рядом с исходным `.xpo` (не правь `_WR.xpo` как источник).
+
+# Командные триггеры
+- Если сообщение пользователя содержит команду `/ax-investigation`, немедленно активируй скилл `.cursor/skills/ax-investigation-pipeline/SKILL.md` и выполняй исследовательский протокол из этого скилла.
+- Для `/ax-investigation` результат исследования всегда оформляй в `investigationTask.md` в корне проекта.
+- Если сообщение пользователя содержит команду `/ax-phased-dev`, немедленно активируй скилл `.cursor/skills/ax-phased-dev-pipeline/SKILL.md` и выполняй поэтапный протокол разработки из этого скилла (следующая фаза и сборка `*_WR.xpo` — только по явной команде пользователя).
 
 # Синтаксис API форм и контролов X++
 - При использовании методов контролов форм (FormControl, FormDataFieldControl, FormCheckBoxControl и т.п.) — например `value()` / `valueStr()`, `modified()`, `visible()` — всегда проверять применимость и корректный синтаксис по эталонному коду в `AOT_cus/PrivateProject_CUS_Layer_Export.xpo` (через индекс `indexXPO_cus/xpo_index.db` и точечное извлечение) и использовать только подходящий для данного типа контрола вариант.
+
+# Строки и переносы строк в X++
+- Для переноса строки в X++ использовать литерал `'\r\n'`, а не `chr(10)` — компилятор может выдавать ошибку на `chr(10)`.
 
 # Кодировка файлов для AOT
 - Файлы **XPO** (и любой исходный код X++, который будет импортироваться или открываться в AOT Dynamics AX) должны сохраняться в кодировке **Windows-1251 (CP1251)**. Иначе кириллица в AOT отображается как кракозябры.

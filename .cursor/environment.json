@@ -1,0 +1,20 @@
+{
+  "repositories": [
+    {
+      "url": "https://github.com/alexklychnikov-ui/MyPortfolio.git",
+      "path": "/workspace/portfolio"
+    },
+    {
+      "url": "https://github.com/alexklychnikov-ui/DynamicsAX.git",
+      "path": "/workspace/dynamicsax"
+    },
+    {
+      "url": "https://github.com/alexklychnikov-ui/Zerocode2md.git",
+      "path": "/workspace/zerocode2md"
+    }
+  ],
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "install": "bash .cursor/cloud-install.sh"
+}

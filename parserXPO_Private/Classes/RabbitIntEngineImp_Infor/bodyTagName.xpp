@@ -1,0 +1,5 @@
+//X5SHP_INT_1_000002068_01, SMironov, 02.04.2025
+public str bodyTagName()
+{
+    return '';
+}

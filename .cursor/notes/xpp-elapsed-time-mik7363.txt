@@ -1,0 +1,8 @@
+X++ (AX): замер длительности через timeNow + time2str + label @MIK7363
+
+  int timeBegin;
+  timeBegin = timeNow();
+  ...
+  info(strFmt("@MIK7363", time2str(timeNow() - timeBegin, 0, 0)));
+
+Используется в parserXPO/ExportCUSLayerBatch/run.xpp для вывода общего времени обработки.

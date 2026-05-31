@@ -1,0 +1,29 @@
+//dkozlovt 14.12.2021 MIK_INT_000001402_16
+public void InsertDocumentSignersCode(Common _Table, DocumentsignersType _signersType)
+{
+    InventDocumentSigners   InventDocumentSigners;
+
+    if(SignersCode && _Table)
+    {
+        ttsBegin;
+
+        select forupdate * from InventDocumentSigners
+                where InventDocumentSigners.RefTableId == _Table.TableId
+                && InventDocumentSigners.RefRecId == _Table.Recid
+                && InventDocumentSigners.SignersType == _signersType
+                && InventDocumentSigners.SignersCode == SignersCode;
+
+        InventDocumentSigners.RefTableId    = _Table.TableId;
+        InventDocumentSigners.RefRecId      = _Table.Recid;
+        InventDocumentSigners.SignersType   = _signersType;
+        InventDocumentSigners.SignersCode   = SignersCode;
+
+        //+ dkozlovt 30.05.2022 MIK_INT_000000951_05
+        if(TransferJour)
+            InventDocumentSigners.InventTransferJour = TransferJour.RecId;
+        InventDocumentSigners.write();
+        //- dkozlovt 30.05.2022 MIK_INT_000000951_05
+
+        ttsCommit;
+    }
+}

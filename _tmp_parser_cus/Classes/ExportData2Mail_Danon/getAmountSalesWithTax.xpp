@@ -1,0 +1,20 @@
+private Amount getAmountSalesWithTax(InventTrans        _inventTrans,
+                                     InventTransOrigin  _inventTransOrigin)
+{
+    SalesLine             salesLine;
+    CustInvoiceTrans      custInvoiceTrans;
+    Amount                amountSalesLine;
+    ;
+
+    custInvoiceTrans = CustInvoiceTrans::findInventTransid(_inventTransOrigin.InventTransId);
+
+    amountSalesLine = abs (_inventTrans.Qty * custInvoiceTrans.SalesPrice);
+
+    salesLine = custInvoiceTrans.salesLine();
+    return abs (amountSalesLine + Tax::calcTaxAmount(salesLine.TaxGroup,
+                                                     salesLine.TaxItemGroup,
+                                                     salesLine.salesTable().ShippingDateRequested,
+                                                     salesLine.CurrencyCode,
+                                                     amountSalesLine,
+                                                     TaxModuleType::SalesInvoice));
+}

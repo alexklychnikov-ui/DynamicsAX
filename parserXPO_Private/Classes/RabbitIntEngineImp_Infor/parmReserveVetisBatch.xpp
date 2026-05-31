@@ -1,0 +1,79 @@
+//X5SHP_INT_1_000002024_01, SMironov, 19.02.2025
+public boolean parmReserveVetisBatch(boolean _shippedPart, InventTable _inventTable)
+{
+    boolean             existBatchVetisIsSupervised = false;
+    boolean             ret = false;
+    InventTransferTable transferTable;
+    SalesTable          saleTable;
+    ;
+    switch (documentType)
+    {
+        case RabbitInforImpDocumentType::Transfer:
+            //X5SHP_EGAIS_000002044_01, SMironov, 14.04.2025 ->
+            transferTable = commonTable as InventTransferTable;
+            if (IOInforParameters::find().EGAISShipmentControl
+                && transferTable.EGAISAlcItemType_RU == EGAISAlcItemType_RU::Beer)
+            {
+                if (transferTable.InventLocationFrom().EGAISInforBatchReservation
+                    != EGAISInforBatchReservation::Optionally)
+                    ret = true;
+            }
+            else
+            //X5SHP_EGAIS_000002044_01, SMironov, 14.04.2025 <-
+            if (InventParameters::find().InforReserveBatchOnlyVetisEnabled == NoYes::No)
+                ret = true;
+            else if (VetisServiceMicroServiceParam::find().BlockDelVetisIsSupervised == NoYes::No)
+            {
+                if (_inventTable.VetisIsSupervised)
+                    ret = true;
+            }
+            else
+            {
+                transferTable = commonTable as InventTransferTable;
+                if (existBatchVetisIsSupervisedSet
+                    && existBatchVetisIsSupervisedSet.elements()
+                    && existBatchVetisIsSupervisedSet.in(_inventTable.ItemId))
+                    ret = true;
+                else if (_shippedPart
+                    && transferTable.PickingCompleteDateTime
+                    && InventTransferLine::findItemId(transferTable.TransferId, _inventTable.ItemId).qty2Vetis(true))
+                    ret = true;
+            }
+            break;
+        case RabbitInforImpDocumentType::Sales:
+            //X5SHP_EGAIS_000002044_01, SMironov, 14.04.2025 ->
+            saleTable = commonTable as SalesTable;
+            if (IOInforParameters::find().EGAISShipmentControl
+                && saleTable.alcoholType() == EGAISAlcItemType_RU::Beer)
+            {
+                if (saleTable.InventLocation().EGAISInforBatchReservation
+                    != EGAISInforBatchReservation::Optionally)
+                    ret = true;
+            }
+            else
+            //X5SHP_EGAIS_000002044_01, SMironov, 14.04.2025 <-
+            if (InventParameters::find().SalesInforReserveBatchOnlyVetisEnabled == NoYes::No)
+                ret = true;
+            else if (VetisServiceMicroServiceParam::find().BlockDelVetisIsSupervised == NoYes::No)
+            {
+                if (_inventTable.VetisIsSupervised)
+                    ret = true;
+            }
+            else
+            {
+                saleTable = commonTable as SalesTable;
+                if (existBatchVetisIsSupervisedSet
+                    && existBatchVetisIsSupervisedSet.elements()
+                    && existBatchVetisIsSupervisedSet.in(_inventTable.ItemId))
+                    ret = true;
+                else if (_shippedPart
+                    && saleTable.PickingCompleteDateTime
+                    && SalesLine::findItemId(saleTable.SalesId, _inventTable.ItemId).qty2Vetis())
+                    ret = true;
+            }
+            break;
+        default:
+            break;
+    }
+    return ret;
+}

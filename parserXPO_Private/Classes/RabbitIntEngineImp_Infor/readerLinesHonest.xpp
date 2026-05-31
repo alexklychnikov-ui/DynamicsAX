@@ -1,0 +1,279 @@
+//X5SHP_HNS_000002054_01, SMironov, 13.03.2025
+// a.klychn 12.02.2026 X5SHP_INT_1_000002338_01 РџРµСЂРµРїРёСЃР°РЅРѕ РёСЃС…РѕРґРЅРёРє РІ readerLinesHonest_old
+//
+// Р—Р°РїРѕР»РЅСЏРµС‚ РїСЂРѕРјРµР¶СѓС‚РѕС‡РЅСѓСЋ С‚Р°Р±Р»РёС†Сѓ RabbitIntEngineImpInforSalesMPTable РґР°РЅРЅС‹РјРё РёР· РІС…РѕРґСЏС‰РµРіРѕ XML:
+// 1) РёР· РіСЂСѓРїРїС‹ DropIDDetails (СЃС‚СЂРѕРєРё DropIDDetail СЃ GTIN Рё/РёР»Рё РјР°СЂРєР°РјРё) вЂ” С‚РѕР»СЊРєРѕ РµСЃР»Рё РІ РіСЂСѓРїРїРµ РµСЃС‚СЊ РЅРµРїСѓСЃС‚РѕР№ GTIN;
+// 2) РёР· РіСЂСѓРїРїС‹ DropIdHonestSign (РјР°СЂРєРё Р§Р—).
+// РџСЂРѕРІРµСЂРєР° РЅР° СЃРјРµС€РёРІР°РЅРёРµ РџРЈ/РћРЎРЈ РїРѕ РѕРґРЅРѕР№ РЅРѕРјРµРЅРєР»Р°С‚СѓСЂРµ РІС‹РїРѕР»РЅСЏРµС‚СЃСЏ РІ checkBatchOrVolumeGradeAccountin.
+//
+public void readerLinesHonest(SalesTable _salesTable, Set _setDropId)
+{
+    container                           conPallette = conNull();
+    SetEnumerator                       se;
+    int                                 i, j;
+    Set                                 setDropId = _setDropId;
+    XmlNodeList                         nodeListLine, mpList;
+    xmlNode                             xmlNode, nodeDrop;
+    WMSPalletIdInfor                    wmsPalletId;
+    ItemId                              itemId;
+    InventBatchId                       inventBatchId;
+    MPCode                              mpCode, mpHighCode, mpMiddleCode;
+    RabbitIntEngineImpInforSalesMPTable salesMPTable;
+    RecordInsertList                    ril;
+    boolean                             isIstRecord = false;
+    Qty                                 qty;
+    str                                 packingTypeStr;
+    GTINFromInfor                       gtinFromInfor;
+    boolean                             hasDropIdDetailWithGTIN;
+    MPImportCodeSensitiveTmp            tmp;
+    mpCode                              sensCode, correctCode;
+    MPCaseSensitive                     sens;
+    ;
+
+    ttsBegin;
+
+    // РћС‡РёСЃС‚РєР° СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёС… Р·Р°РїРёСЃРµР№ РїРѕ Р·Р°РєР°Р·Сѓ Рё РїР°Р»РµС‚Р°Рј (РёР»Рё РІСЃРµРіРѕ Р·Р°РєР°Р·Р° РїСЂРё РїСѓСЃС‚РѕРј РЅР°Р±РѕСЂРµ РїР°Р»РµС‚)
+    if (setDropId)
+    {
+        se = setDropId.getEnumerator();
+        while (se.moveNext())
+            conPallette += se.current();
+    }
+    if (conLen(conPallette) == 0)
+        conPallette += '';
+    for (i = 1; i <= conLen(conPallette); i++)
+    {
+        wmsPalletId = conPeek(conPallette, i);
+        if (wmsPalletId == '')
+            delete_from salesMPTable
+                where salesMPTable.SalesId == _salesTable.SalesId;
+        else
+            delete_from salesMPTable
+                where salesMPTable.SalesId == _salesTable.SalesId
+                    && salesMPTable.WMSPalletId == wmsPalletId;
+    }
+
+    // РџРѕСЃС‚СЂРѕРµРЅРёРµ РІСЂРµРјРµРЅРЅРѕР№ С‚Р°Р±Р»РёС†С‹ РєРѕРґРѕРІ РґР»СЏ СѓС‡С‘С‚Р° СЂРµРіРёСЃС‚СЂРѕРЅРµР·Р°РІРёСЃРёРјРѕСЃС‚Рё (mpCode/hs_mark РёР· РѕР±РѕРёС… РёСЃС‚РѕС‡РЅРёРєРѕРІ)
+    delete_from tmp;
+    if (xmlDocument)
+    {
+        nodeListLine = XMLDocument.getElementsByTagName(this.bodyTagName());
+        if (nodeListLine)
+        {
+            xmlNode = nodeListLine.item(0);
+            if (xmlNode.hasChildNodes())
+            {
+                nodeListLine = xmlNode.childNodes();
+                for (i = 0; i < nodeListLine.length(); i++)
+                {
+                    xmlNode = nodeListLine.item(i);
+                    if (xmlNode.name() == #DropIdHonestSign && xmlNode.hasChildNodes())
+                    {
+                        mpList = xmlNode.childNodes();
+                        mpCode = '';
+                        for (j = 0; j < mpList.length(); j++)
+                        {
+                            nodeDrop = mpList.item(j);
+                            if (nodeDrop.name() == #mpCode || nodeDrop.name() == #hs_mark)
+                                mpCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+                        }
+                        if (mpCode)
+                            MPImportCodeSensitiveTmp::createRecord(tmp, mpCode);
+                    }
+                }
+            }
+        }
+    }
+
+    MPImportCodeSensitiveTmp::createMap(tmp);
+
+    ril = new RecordInsertList(tableNum(RabbitIntEngineImpInforSalesMPTable));
+    if (!xmlDocument)
+    {
+        ttsCommit;
+        return;
+    }
+
+    // Р—Р°РїРёСЃСЊ РёР· DropIDDetails: С‚РѕР»СЊРєРѕ РµСЃР»Рё РІ РіСЂСѓРїРїРµ РµСЃС‚СЊ С…РѕС‚СЏ Р±С‹ РѕРґРёРЅ РЅРµРїСѓСЃС‚РѕР№ С‚РµРі GTIN
+    nodeListLine = XMLDocument.getElementsByTagName(#DropIDDetails);
+    if (nodeListLine && nodeListLine.length() > 0)
+    {
+        nodeListLine = nodeListLine.item(0).childNodes();
+        hasDropIdDetailWithGTIN = false;
+        for (j = 0; j < nodeListLine.length(); j++)
+        {
+            xmlNode = nodeListLine.item(j);
+            if (xmlNode.name() != #DropIdDetail || !xmlNode.hasChildNodes())
+                continue;
+            mpList = xmlNode.childNodes();
+            for (i = 0; i < mpList.length(); i++)
+            {
+                nodeDrop = mpList.item(i);
+                if (nodeDrop.name() == #GTIN && strLRTrim(SysEmailTable::htmlDecode(nodeDrop.innerText())))
+                {
+                    hasDropIdDetailWithGTIN = true;
+                    break;
+                }
+            }
+            if (hasDropIdDetailWithGTIN)
+                break;
+        }
+
+        if (hasDropIdDetailWithGTIN)
+        {
+            // Р Р°Р·Р±РѕСЂ DropIDDetail: С‚РѕР»СЊРєРѕ С‚РµРіРё Sku, Qty, DROPID, InventBatchId, GTIN (РєР°Рє РІ XML)
+            for (i = 0; i < nodeListLine.length(); i++)
+            {
+                xmlNode = nodeListLine.item(i);
+                if (xmlNode.name() != #DropIdDetail || !xmlNode.hasChildNodes())
+                    continue;
+                gtinFromInfor  = '';
+                qty            = 0;
+                wmsPalletId    = '';
+                inventBatchId  = '';
+                itemId         = '';
+                mpList = xmlNode.childNodes();
+
+                for (j = 0; j < mpList.length(); j++)
+                {
+                    nodeDrop = mpList.item(j);
+                    switch (nodeDrop.name())
+                    {
+                        case #Sku:
+                            itemId = InventTable::findItemId_Infor(nodeDrop.innerText()).ItemId;
+                            break;
+                        case #InventBatchId:
+                            inventBatchId = nodeDrop.innerText();
+                            break;
+                        case #DropId:
+                            wmsPalletId = nodeDrop.innerText();
+                            break;
+                        case #Qty:
+                            qty = str2num(nodeDrop.innerText());
+                            break;
+                        case #GTIN:
+                            gtinFromInfor = strLRTrim(SysEmailTable::htmlDecode(nodeDrop.innerText()));
+                            break;
+                    }
+                }
+
+                if (gtinFromInfor == '')
+                    continue;
+
+                salesMPTable.clear();
+                salesMPTable.SalesId         = _salesTable.SalesId;
+                salesMPTable.MessageId       = InfmessageId;
+                salesMPTable.Queue           = queue.RecId;
+                salesMPTable.ItemId          = itemId;
+                salesMPTable.InventBatchId   = inventBatchId;
+                salesMPTable.WMSPalletId     = wmsPalletId;
+                salesMPTable.MPCode          = '';
+                salesMPTable.Qty             = qty;
+                salesMPTable.MPpackingType   = 0;
+                salesMPTable.GTINFromInfor   = gtinFromInfor;
+                salesMPTable.CaseSensitive   = false;
+                salesMPTable.CorrectCode     = '';
+                ril.add(salesMPTable);
+                isIstRecord = true;
+            }
+        }
+    }
+
+    // Р—Р°РїРёСЃСЊ РёР· DropIdHonestSign (РјР°СЂРєРё Р§Р—): РІСЃРµ СѓР·Р»С‹ body СЃ РёРјРµРЅРµРј DropIdHonestSign
+    nodeListLine = XMLDocument.getElementsByTagName(this.bodyTagName());
+    if (nodeListLine && nodeListLine.length() > 0)
+    {
+        nodeListLine = nodeListLine.item(0).childNodes();
+        for (i = 0; i < nodeListLine.length(); i++)
+        {
+            xmlNode = nodeListLine.item(i);
+            if (xmlNode.name() != #DropIdHonestSign || !xmlNode.hasChildNodes())
+                continue;
+            gtinFromInfor  = '';
+            mpCode         = '';
+            mpHighCode     = '';
+            mpMiddleCode   = '';
+            qty            = 0;
+            packingTypeStr = '';
+            wmsPalletId    = '';
+            inventBatchId  = '';
+            itemId         = '';
+            mpList = xmlNode.childNodes();
+            for (j = 0; j < mpList.length(); j++)
+            {
+                nodeDrop = mpList.item(j);
+                switch (nodeDrop.name())
+                {
+                    case #Sku:
+                        itemId = InventTable::findItemId_Infor(nodeDrop.innerText()).ItemId;
+                        break;
+                    case #InventBatchId:
+                        inventBatchId = nodeDrop.innerText();
+                        break;
+                    case #DropId:
+                        wmsPalletId = nodeDrop.innerText();
+                        break;
+                    case #mpCode:
+                        mpCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+                        break;
+                    case #middleMPCode:
+                        mpMiddleCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+                        break;
+                    case #highMPCode:
+                        mpHighCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+                        break;
+                    case #Qty:
+                        qty = str2num(nodeDrop.innerText());
+                        break;
+                    case #hs_mark_type:
+                        packingTypeStr = nodeDrop.innerText();
+                        break;
+                    case #hs_mark:
+                        mpCode = SysEmailTable::htmlDecode(nodeDrop.innerText());
+                        break;
+                    case #GTIN:
+                        gtinFromInfor = strLRTrim(SysEmailTable::htmlDecode(nodeDrop.innerText()));
+                        break;
+                }
+            }
+            if (mpCode == '')
+                continue;
+            salesMPTable.clear();
+            salesMPTable.SalesId         = _salesTable.SalesId;
+            salesMPTable.MessageId      = InfmessageId;
+            salesMPTable.Queue          = queue.RecId;
+            salesMPTable.ItemId         = itemId;
+            salesMPTable.InventBatchId  = inventBatchId;
+            salesMPTable.WMSPalletId    = wmsPalletId;
+            salesMPTable.MPCode         = mpCode;
+            salesMPTable.Qty            = qty;
+            salesMPTable.MPpackingType  = this.packingType(packingTypeStr);
+            salesMPTable.GTINFromInfor  = gtinFromInfor;
+            sensCode = mpCode;
+            select firstOnly CaseSensitiveId from tmp
+                where tmp.MPCode == sensCode
+                    && tmp.MD5Key == str2MD5(sensCode);
+            if (tmp.CaseSensitiveId)
+            {
+                mpCode      = tmp.CaseSensitiveId;
+                correctCode = sensCode;
+                sens        = true;
+            }
+            else
+            {
+                correctCode = '';
+                sens        = false;
+            }
+            salesMPTable.MPCode        = mpCode;
+            salesMPTable.CaseSensitive = sens;
+            salesMPTable.CorrectCode   = correctCode;
+            ril.add(salesMPTable);
+            isIstRecord = true;
+        }
+    }
+
+    // РњР°СЃСЃРѕРІР°СЏ РІСЃС‚Р°РІРєР° РІ RabbitIntEngineImpInforSalesMPTable
+    if (isIstRecord)
+        ril.insertDatabase();
+    ttsCommit;
+}

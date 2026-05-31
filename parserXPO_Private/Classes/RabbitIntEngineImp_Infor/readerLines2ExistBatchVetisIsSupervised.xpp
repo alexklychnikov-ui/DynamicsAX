@@ -1,0 +1,54 @@
+// syurin 03.08.2023 INF_INT_000001727_01
+public boolean readerLines2ExistBatchVetisIsSupervised(XmlNode         _nodeList)
+{
+    xmlNode         xmlNode;
+    xmlNodeList     xmlNodeList;
+    ItemId          itemId;
+    InventTable     inventTable;
+    InventBatchId   inventBatchId;
+    ;
+
+    xmlNodeList = _nodeList.childNodes();
+    xmlNode = xmlNodeList.nextNode();
+
+    while (xmlNode)
+    {
+        switch (xmlNode.baseName())
+        {
+            case  #Sku:
+                itemId = xmlNode.innerText();
+                break;
+            case #InventBatchId:
+                inventBatchId = xmlNode.innerText();
+                break;
+        }
+        xmlNode = xmlNodeList.nextNode();
+    }
+    if (!ItemId)
+        return true;
+
+    inventTable     = InventTable::findItemId_Infor(ItemId);
+    if (!inventTable)
+    {
+        error(strFmt("@MIK4140", ItemId));
+        return false;
+    }
+
+    //+ syurin 25.10.2023 INF_INT_000001727_fix3
+    //if (InventBatch::find(inventBatchId, InventTable.ItemId).VetisIsSupervised)
+    if (existBatchVetisIsSupervisedSet && InventBatch::find(inventBatchId, InventTable.ItemId).VetisIsSupervised)
+    //- syurin 25.10.2023 INF_INT_000001727_fix3
+    {
+        existBatchVetisIsSupervisedSet.add(InventTable.ItemId);
+    }
+    //+ syurin 22.11.2023 INF_INT_000001798_01
+    else
+    {
+        if (existBatchVetisIsSupervisedSet && InventTable.VetisIsSupervised)
+            existBatchVetisIsSupervisedSet.add(InventTable.ItemId);
+    }
+    //- syurin 22.11.2023 INF_INT_000001798_01
+
+
+    return true;
+}

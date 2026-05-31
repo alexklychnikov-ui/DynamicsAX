@@ -1,0 +1,143 @@
+//HNS_HNS_000002198_01, SMironov, 04.08.2025
+public boolean checkMPCodesTransfer(InventTransferTable _inventTransferTable)
+{
+    boolean                                 ret = true;
+    RabbitIntEngineImpInforTransferMPTable  mpCodeTable;
+    RabbitIntEngineImpInforTransferMPTmp    tmp;
+    InventTable                             inventTable;
+    MPProductGroup                          productGroup;
+    mpTable                                 mpTable;
+    boolean                                 isFirst;
+    MPGenerateUPDBasedOnMovements           generateUPD;
+    MPMovementMarkWithinOrgReflect          movementMark;
+    MPRetirementByTransfer                  retire;
+    MPVolumeAndVarietalAccTransfer          volume;
+    WMSPalletIdInfor                        palletteId;
+    MPProductGroupId                        groupId;
+    boolean                                 isReflect = false;
+    int                                     i = 0;
+    container                               conMPGroup = conNull();
+
+    void setError(str _errorMsg)
+    {
+        if (errorEmailMsg)
+            errorEmailMsg += '\n';
+        errorEmailMsg += _errorMsg;
+    }
+
+    if (MPExceptionsTransferTable::isFoundCondition(_inventTransferTable))
+    {
+        if (RabbitIntEngineImpInforTransferMPTable::existForQueue(queue.RecId))
+            info("@MIK14307");
+        return ret;
+    }
+    while select ItemId, WMSPalletId from MPCodeTable
+        order by WMSPalletId, itemId
+        group by ItemId, WMSPalletId
+        where mpCodeTable.Queue == queue.RecId
+        join MPRetirementByTransfer, MPVolumeAndVarietalAccTransfer, MPGroupId from inventTable
+            group by MPRetirementByTransfer, MPVolumeAndVarietalAccTransfer, MPGroupId
+            where inventTable.ItemId == mpcodeTable.ItemId
+            outer join GenerateUPDBasedOnMovements, MovementMarkWithinOrgReflect, GroupId from productGroup
+                group by GenerateUPDBasedOnMovements, MovementMarkWithinOrgReflect, GroupId
+                where productGroup.GroupId == inventTable.MPGroupId
+    {
+        if (palletteId != mpCodeTable.WMSPalletId)
+        {
+            palletteId  = mpCodeTable.WMSPalletId;
+            isFirst     = true;
+        }
+        if (isFirst)
+        {
+            movementMark                    = productGroup.MovementMarkWithinOrgReflect;
+            generateUPD                     = productGroup.GenerateUPDBasedOnMovements;
+            groupId                         = productGroup.GroupId;
+        }
+        else if (ret)
+        {
+            if (movementMark != productGroup.MovementMarkWithinOrgReflect
+                || generateUPD != productGroup.GenerateUPDBasedOnMovements)
+            {
+                ret = false;
+                error(strFmt("@MIK14302", palletteId, groupId, productGroup.GroupId));
+                break;
+            }
+        }
+        tmp.clear();
+        tmp.ItemId                          = mpCodeTable.ItemId;
+        tmp.WMSPalletId                     = mpCodeTable.WMSPalletId;
+        tmp.MPGroupId                       = inventTable.MPGroupId;
+        tmp.MPVolumeAndVarietalAccTransfer  = inventTable.MPVolumeAndVarietalAccTransfer;
+        tmp.MPRetirementByTransfer          = inventTable.MPRetirementByTransfer;
+        tmp.MovementMarkWithinOrgReflect    = productGroup.MovementMarkWithinOrgReflect;
+        tmp.GenerateUPDBasedOnMovements     = productGroup.GenerateUPDBasedOnMovements;
+        if (tmp.MovementMarkWithinOrgReflect == MPMovementMarkWithinOrgReflect::Yes
+            && tmp.MPRetirementByTransfer
+            && !tmp.MPVolumeAndVarietalAccTransfer)
+            isReflect = true;
+        tmp.insert();
+        if (!conFind(conMPGroup, inventTable.MPGroupId))
+            conMPGroup += inventTable.MPGroupId;
+    }
+    if (ret && isReflect)
+    {
+        for (i = 1; i <= conLen(conMPGroup); i++)
+        {
+            groupId = conPeek(conMPGroup, i);
+            isFirst = true;
+            while select MPRetirementByTransfer, MPVolumeAndVarietalAccTransfer from tmp
+                where tmp.MPGroupId == groupId
+            {
+                if (isFirst)
+                {
+                    retire = tmp.MPRetirementByTransfer;
+                    volume = tmp.MPVolumeAndVarietalAccTransfer;
+                    isFirst = false;
+                }
+                else
+                {
+                    if (retire != tmp.MPRetirementByTransfer
+                        || volume != tmp.MPVolumeAndVarietalAccTransfer)
+                    {
+                        error(strFmt("@MIK14306", groupId));
+                        ret = false;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    if (ret && isReflect)
+    {
+        i = 0;
+        update_recordSet mpCodeTable
+            setting Reflect = NoYes::Yes
+            where mpCodeTable.Queue == queue.recid
+        join tmp
+            where tmp.ItemId == mpCodeTable.ItemId
+                && tmp.WMSPalletId == mpCodeTable.WMSPalletId
+                && tmp.MovementMarkWithinOrgReflect == MPMovementMarkWithinOrgReflect::Yes
+                && tmp.MPRetirementByTransfer
+                && !tmp.MPVolumeAndVarietalAccTransfer;
+        if (MPParameters::find().TransferCheckMarkStatus)
+        {
+            while select mpCodeTable
+                where mpCodeTable.Queue == queue.recid
+                    && mpCodeTable.Reflect
+            {
+                mpTable = MPTable::find(mpCodeTable.MPCode);
+                if (mpTable.RecId == 0 || mpTable.Status != MPCisStatus::INTRODUCED)
+                {
+                    setError(strFmt("@MIK14271", _inventTransferTable.transferId, mpCodeTable.MPCode));
+                    error(strFmt("@MIK14271", _inventTransferTable.transferId, mpCodeTable.MPCode));
+                    ret = false;
+                    i++;
+                }
+            }
+            if (!ret)
+                error(strFmt("@MIK14301", i));
+        }
+    }
+
+    return ret;
+}

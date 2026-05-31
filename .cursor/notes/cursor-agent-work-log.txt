@@ -1,0 +1,284 @@
+2026-04-22 16:14:52 — Запрос: `@lightrag + @Projects/УКМ2АХ21integration.md/УКМ2АХ21integration.md`.
+Промт: «@lightrag + @Projects/УКМ2АХ21integration.md/УКМ2АХ21integration.md».
+Сделано: файл `Projects/УКМ2АХ21integration.md/УКМ2АХ21integration.md` загружен в LightRAG через `upsert_text_to_knowledge_base` с `source_id=Projects/УКМ2АХ21integration.md/УКМ2АХ21integration.md`, `replace_existing=true`; ответ MCP: `status_code=200`, `status=success`, `track_id=insert_20260422_081448_5805f411`.
+
+2026-04-22 12:14:31 — Запрос: оформить `Documentation/finish.md` (постановка задачи / что сделано / полезно для будущих контекстов).
+Промт: «в finish.md опиши всё что сделано в формате постановка задачи, что сделано, полезно для будущих контекстов агента».
+Сделано: заполнен `Projects/MIK_INT_1_000002418_01InforWMSPallet/Documentation/finish.md` с итогами реализации: постановка по `dropidpacked9`, перечень внесённых правок в `readerLines` и `WMSPickingRoute.existPalletteSales*`, micro-optimize, результаты `/xpp-review`, сборка `*_WR.xpo`, и набор практических ориентиров для следующих сессий агента.
+
+2026-04-22 12:02:24 — Запрос: докрутить micro-optimize и сделать WR.
+Промт: «докручивай micro-optimize и делай WR».
+Сделано: в `parserXPO/Classes/RabbitIntEngineImp_Infor_DPC/readerLines.xpp` убран избыточный вызов `existPalletteSales` в OR-guard (оставлен один `existPalletteSalesAnyStatus`); проверка линтера — без ошибок. Выполнен `python xpo_writer.py "XPO/SharedProject_MIK_INT_1_000002418_01.xpo" parserXPO --force --no-input`; сформирован `XPO/SharedProject_MIK_INT_1_000002418_01_WR.xpo`, writer сообщил обновление 3 методов: `readerLines` (CLS:RabbitIntEngineImp_Infor_DPC), `existPalletteSales` и `existPalletteSalesAnyStatus` (DBT:WMSPickingRoute).
+
+2026-04-22 11:59:14 — Запрос: закрыть medium-риск и сделать быстрый /xpp-review.
+Промт: «да, давай закроем medium-риск, не забывай про комментарии, потом быстрый /xpp-review».
+Сделано: доработан `readerLines` — guard переведён с глобального `existPallette(dropId)` на связку `existPalletteSales(salesId, dropId) || existPalletteSalesAnyStatus(salesId, dropId)`; добавлен метод `parserXPO/Tables/WMSPickingRoute/existPalletteSalesAnyStatus.xpp` (по `transRefId+EDCPalletCode`, без фильтра статуса). Это устраняет ложный матч по чужому заказу и сохраняет обработку ретраев при статусных расхождениях. Выполнен повторный `/xpp-review`: verdict — medium закрыт, остался только low (избыточный первый вызов в OR).
+
+2026-04-22 11:43:58 — Запрос: выполнить согласованный todo (T3–T6) по dropidpacked9.
+Промт: «хорошо выполняй».
+Сделано: в `parserXPO/Classes/RabbitIntEngineImp_Infor_DPC/readerLines.xpp` заменён жёсткий блокер `WMSPickingRoute::existPallette(...)->checkFailed` на логику идемпотентного ретрая для sales: поиск существующей строки, проверка completed-маршрута по конкретному `SalesId`, `return true` для эквивалентного повтора и `checkFailed(@MIK14825)` при конфликте qty/InforQty. Добавлен новый метод `parserXPO/Tables/WMSPickingRoute/existPalletteSales.xpp` (Complete + `transRefId == salesId` + `EDCPalletCode`) для исключения ложного конфликта сценария «1 drop = несколько заказов». Проверка линтера по изменённым файлам — ошибок нет.
+
+2026-04-22 11:40:05 — Запрос: скорректировать todo-лист (T1 вариант 2, T4 допускает 1 drop = несколько заказов).
+Промт: «T1 вариант 2; T4 у нас может быть 1 drop = несколько заказов; внеси поправки в todo и выкати снова».
+Сделано: подготовлена обновлённая версия плана: ретрай с новым MessageId и тем же составом обрабатывается как идемпотентный доворот (дозапись только отсутствующих строк без апдейта qty/партии), исключён ложный конфликт по `DropId` между разными заказами.
+
+2026-04-22 11:33:29 — Запрос: продолжить разработку, сначала todo-лист, без выполнения.
+Промт: «Продолжай по сути разработки: сначала todo-лист выполнения, потом я смотрю и даю команду».
+Сделано: сверен актуальный `task.md` по MIK_INT_1_000002418_01 и текущий состав `parserXPO`; подготовлен пошаговый todo на реализацию безопасной идемпотентной обработки повторного `dropidpacked9` после `ordershipped9` без манипуляций `EDCPalletCode`.
+
+2026-04-22 11:28:10 — Запрос: обновлённый проект, /xpo-parse.
+Промт: «я положил обновленный проект /xpo-parse».
+Сделано: выполнен `python xpo_parser.py "XPO/SharedProject_MIK_INT_1_000002418_01.xpo" parserXPO --force --no-input`; созданы/обновлены каталоги объектов: `Tables/InforWMSPallet`, `Tables/InforWMSPalletBatch`, `Tables/InforWMSSalesPallet`, `Tables/InforWMSSalesPalletBatch`, `Tables/WMSPickingRoute`, `Classes/RabbitIntEngineExpImp`, `Classes/RabbitIntEngineImp`, `Classes/RabbitIntEngineImp_Infor`, `Classes/RabbitIntEngineImp_Infor_DPC`, `Misc/MIK_INT_1_000002418_01`.
+
+2026-04-22 11:26:55 — Запрос: стоп и начать сначала, /xpo-delete.
+Промт: «стоп давай сначала /xpo-delete».
+Сделано: выполнен `python xpo_delete.py --yes`; очищены каталоги `parserXPO` и `XPO`. По выводу скрипта удалено 196 файлов и 13 каталогов в `parserXPO`, 1 файл в `XPO`; итогом проверено: `parserXPO` и `XPO` существуют, файлов и вложенных каталогов нет.
+
+2026-04-22 11:24:43 — Запрос: продолжить анализ dropidpacked9/ordershipped9 и подготовить план todo.
+Промт: «да, продолжай».
+Сделано: проанализированы `RabbitIntEngineImp_Infor_DPC.readerLines`, `InforWMSSalesPalletBatch.existPallette`, `WMSPickingRoute.existPallette`; подтверждена точка риска: при существующей строке паллеты и `WMSPickingRoute::existPallette` срабатывает `checkFailed`, что роняет обработку всего сообщения и мешает записать недостающие строки ретрая. Зафиксировано ограничение текущего XPO: нет класса обработчика `ordershipped9` и нет таблицы `InforInputDocumentType` в выгрузке — для полной безопасной реализации потребуется дополнительный объектный контекст (класс ordershipped + маппинг события/очереди + реальные XML/queue IDs).
+
+2026-04-22 11:22:39 — Запрос: /dynamics-ax-xpo-roundtrip.
+Промт: «/dynamics-ax-xpo-roundtrip».
+Сделано: выполнен обязательный чеклист скилла — прочитаны `.cursor/rules/comment_rules.mdc` и `commentmeta.json` (developer=`a.klychn`, project=`MIK_INT_1_000002418_01`); подтверждено, что для правок `parserXPO/**/*.xpp` будут использоваться правила разметки `// +` / `// -` и текущая дата.
+
+2026-04-22 11:14:13 — Запрос: проект MIK_INT_1_000002418_01, /dynamics-ax-xpo-roundtrip, /xpo-parse.
+Промт: «проект MIK_INT_1_000002418_01 /dynamics-ax-xpo-roundtrip /xpo-parse».
+Сделано: прочитаны обязательные `comment_rules.mdc` и `commentmeta.json`; выполнен парсинг `python xpo_parser.py "XPO/SharedProject_MIK_INT_1_000002418_01.xpo" parserXPO --no-input`; создано/обновлено 10 объектов: `Tables/InforWMSPallet`, `Tables/InforWMSPalletBatch`, `Tables/InforWMSSalesPallet`, `Tables/InforWMSSalesPalletBatch`, `Tables/WMSPickingRoute`, `Classes/RabbitIntEngineExpImp`, `Classes/RabbitIntEngineImp`, `Classes/RabbitIntEngineImp_Infor`, `Classes/RabbitIntEngineImp_Infor_DPC`, `Misc/MIK_INT_1_000002418_01`.
+
+2026-04-22 11:10:01 — Запрос: включить автозапуск AutoHotkey-скрипта hotkeys (F6/F7/F8) в Windows.
+Промт: «да, нужен автозапуск».
+Сделано: добавлен файл автозагрузки `C:\Users\User\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\cursor-lightrag-hotkeys-autostart.cmd`; скрипт запускает `AutoHotkey64.exe` с `C:\Python\Projects\DynamicsAX\.cursor\scripts\cursor-lightrag-hotkeys.ahk`, содержит проверки существования exe/скрипта, подтверждено наличие файла (`AUTOSTART_FILE=OK`).
+
+2026-04-22 11:08:18 — Запрос: проверить/починить AutoHotkey для F6/F7/F8 в Cursor (LightRAG команды).
+Промт: «Это не старое решение… Делай/проверяй работу AutoHotkey».
+Сделано: подтверждено решение через AHK; установлен/обновлён AutoHotkey v2.0.24 (`winget install AutoHotkey.AutoHotkey --exact --silent`), создан скрипт `C:\Python\Projects\DynamicsAX\.cursor\scripts\cursor-lightrag-hotkeys.ahk` с биндами `F6 -> @lightrag ?`, `F7 -> @lightrag +`, `F8 -> @lightrag status` (активны в окне Cursor), скрипт запущен через `C:\Users\User\AppData\Local\Programs\AutoHotkey\v2\AutoHotkey64.exe`, проверен процесс: `AutoHotkey64.exe ... cursor-lightrag-hotkeys.ahk` (PID 1604, RUNNING).
+
+2026-04-21 — Запрос: исправить структуру FK XML (`SU99460735.xml`) по примеру `notControl_SU80481156.xml`.
+Сделано: в `parserXPO/Classes/RabbitIntEngineExp_FK/CreateXMLFromSTR_I.xpp` заголовочные поля (`stQuery`) перенесены в блок `HEADER`, добавлен fallback имён узлов при пустых `massageTypeHeader/massageTypeLine` (`#Body`=LINES и `LINE`), исправлено открытие line-узлов; в `startXML_I.xpp` удалено преждевременное закрытие `HEADER` (закрывается после записи полей заголовка в `CreateXMLFromSTR_I`). Пересобран writer: `XPO/SharedProject_MIK_INT_000002316_01_WR.xpo` (обновлено 4 метода, включая 2 целевых в `RabbitIntEngineExp_FK`).
+
+2026-04-21 — Запрос: /xpo-parse после очистки.
+Сделано: `python xpo_parser.py "XPO\SharedProject_MIK_INT_000002316_01.xpo" parserXPO --force --no-input` (XPO_NO_INPUT=1). Созданы/обновлены каталоги объектов: `Macros/FKRabbit`, `BaseEnums/IOSystemType`, `BaseEnums/FKActionType`, `BaseEnums/RabbitExchangeType`, `Tables/RabbitQueue`, `Tables/RabbitTableChangeLog`, `Tables/RabbitOutputDocumentType`, `Tables/PurchTable`, `Classes/PurchTableType`, `Classes/RabbitMQOutputSettingCopy`, `Classes/Global`, `Classes/RabbitProcessing_FK`, `Classes/RabbitIntEngineMultiBatch_FK`, `Classes/SymExport`, `Classes/FKExport`, `Classes/RabbitIntEngineExp_FK`, `Classes/RabbitIntEngineExp_FK_ReceiptList`, `Forms/VendReceiptsListJournal`, `Forms/RabbitOutputDocumentType`, `Forms/RabbitQueue`, `MenuItem_Action/RabbitMQOutputSettingCopy`, `MenuItem_Action/RabbitProcessing_FK`, `Menus/Integration`, `Privileges/RabbitProcessing_FK`, `Jobs/RabbitQueueFormTest`, `Misc/MIK_INT_000002316_01`.
+
+2026-04-21 — Запрос: /xpo-delete (повторная очистка parserXPO и XPO).
+Сделано: `python xpo_delete.py --yes`. По выводу скрипта: `parserXPO` — удалено 25 файлов, удалено 2 пустых каталога; `XPO` — удалено 2 файла, удалено 0 каталогов. Итого удалено 27 файлов и 2 каталога.
+
+2026-04-21 — Запрос: исправить падение формы RabbitQueue («Ошибка расширенного диапазона запроса: синтаксическая ошибка рядом с …»).
+Сделано: в `ds.RabbitQueue.executeQuery.xpp` упрощено выражение range до безопасного синтаксиса AX: `((Event != "") && (Event != "@MIK14833"))`; для FK — `queryValue("@MIK14833")`. Убрано разрешение метки через `SysLabel::labelId2String2`, которое ломало синтаксис range. Пересобран WR: `XPO\\Form_RabbitQueue_WR.xpo` (обновлено 6 методов).
+
+2026-04-21 — Запрос: /xpo-write после фиксов RabbitQueue.
+Сделано: `python xpo_writer.py "XPO\Form_RabbitQueue.xpo" parserXPO --force --no-input`. Результат: `C:\Python\Projects\DynamicsAX\XPO\Form_RabbitQueue_WR.xpo`. Обновлено методов: 6 (`classDeclaration`, `ctrl.IsFKDocCheckBox.modified`, `ctrl.IsInforDocCheckBox.modified`, `ds.RabbitQueue.executeQuery`, `ds.RabbitQueue.init`, `init`).
+
+2026-04-21 — Запрос: продолжить фиксы RabbitQueue после xpp-review.
+Сделано: `ds.RabbitQueue.executeQuery.xpp` — введена единая переменная `mikEventValue = SysLabel::labelId2String2("@MIK14833")`; Infor и FK ветки используют одно и то же значение (`queryValue(mikEventValue)`), убран literal `@MIK14833` в FK-ветке. `init.xpp` — добавлена нормализация lastValue: при `Yes/Yes` у чекбоксов принудительно сбрасывается `isFKDocCheckBox` в `No`.
+
+2026-04-21 — Запрос: привести проектные теги в комментариях RabbitQueue к `commentmeta.json` (`MIK_INT_000002316_01`).
+Сделано: в `ds.RabbitQueue.executeQuery.xpp` и `ctrl.IsInforDocCheckBox.modified.xpp` заменены маркеры `// +` / `// -` с `X5SHP_INT_1_000002338_04` на `MIK_INT_000002316_01`.
+
+2026-02-05 — Запрос: executeQuery — два range на одном реквизите Event дают ИЛИ; нужен И (не пусто и не MIK / отдельно FK).
+Сделано: удалён второй `QueryBuildRange` по `Event` (`qbrIsFKFilter`) из `classDeclaration` и `ds.RabbitQueue.init`. В `executeQuery` для Infor — один `qbrIsInforFilter` со сложным значением `strFmt('((%1 != %2) && (%1 != %3))', fieldStr(RabbitQueue, Event), queryValue(''), queryValue(SysLabel::labelId2String2(literalStr("@MIK14833"))))` (не пусто И не текст метки MIK14833); для FK — `qbrIsInforFilter.value('@MIK14833')`; else — unlimited. Маркеры `// +` / `// -` сохранены.
+
+2026-02-05 — Запрос: executeQuery — условие И между фильтром Infor (не пусто) и FK (@MIK14833) на поле Event.
+Сделано: в `ds.RabbitQueue.executeQuery.xpp` обе ветки (Infor и FK) выставляют оба range; в `ds.RabbitQueue.init.xpp` для `qbrIsInforFilter` и `qbrIsFKFilter` задан `group(1)` для AND по одному полю. Маркеры `// +` / `// -` a.klychn 05.02.2026 X5SHP_INT_1_000002338_04.
+
+2026-04-21 — Запрос: /xpo-write (сборка WR из parserXPO).
+Сделано: `python xpo_writer.py "XPO\Form_RabbitQueue.xpo" parserXPO --force --no-input`. Результат: `XPO\Form_RabbitQueue_WR.xpo` (полный путь: `C:\Python\Projects\DynamicsAX\XPO\Form_RabbitQueue_WR.xpo`). Обновлено методов: 2 (`ctrl.IsFKDocCheckBox.modified`, `ctrl.IsInforDocCheckBox.modified`).
+
+2026-04-21 — Запрос: взаимоисключение чекбоксов IsFKDocCheckBox / IsInforDocCheckBox на форме RabbitQueue (как радиокнопки).
+Сделано: в `ctrl.IsFKDocCheckBox.modified.xpp` и `ctrl.IsInforDocCheckBox.modified.xpp` после `super()` при `ret`: если включён текущий чекбокс — второй сбрасывается в `NoYes::No`, затем `executeQuery()`; блок `// +` / `// -` a.klychn 21.04.2026 X5SHP_INT_1_000002338_04.
+
+2026-04-21 — Запрос: /xpo-parse.
+Сделано: `python xpo_parser.py "XPO\Form_RabbitQueue.xpo" parserXPO --force --no-input` (XPO_NO_INPUT=1). Создан/обновлён объект: `parserXPO/Forms/RabbitQueue` — 24 метода + `properties.txt`.
+
+2026-04-21 — Запрос: /xpo-delete (очистка parserXPO и XPO).
+Сделано: `python xpo_delete.py --yes` из корня репозитория. По выводу скрипта: parserXPO — удалено 151 файл, удалено 9 пустых каталогов; XPO — удалено 2 файла; всего удалено 153 файла и 9 каталогов.
+
+2026-04-18 — Запрос: документация MS Dynamics AX 2012 для Cursor Indexing & Docs.
+Сделано: подобраны официальные URL (Learn: Technical Library, Developer Library, X++ guide, карточка продукта). Проверено: список custom docs в Cursor не выставляется через settings.json; добавление только через UI @Docs / Indexing & Docs.
+
+2026-04-20 09:27:50 — Запрос: /dynamics-ax-xpo-roundtrip (скилл).
+Сделано: зафиксирован пайплайн: правка только в parserXPO/**/*.xpp; разбор xpo_parser.py → UTF-8; сборка xpo_writer.py → <stem>_WR.xpo в кодировке исходного XPO; импорт в AOT — cp1251; точечно — parse_object_from_index + indexXPO_cus/xpo_index.db; флаги --force, CI/XPO_NO_INPUT; после правок .xpp — предложить writer и путь *_WR.xpo.
+
+2026-04-20 09:39:41 — Запрос: изучить InvoiceModify.md, projectResult.md, ShemaChecked.md + новые вводные (GTIN/OrderShipped/УПД, суммирование по SKU, статусы маркировки, GTINSetup index 0); подготовить только поэтапный план с проверкой xpo-roundtrip субагентом после этапов.
+Сделано: сверка с доками — в коде/ald нет @MIK13576; текущая схема использует @MIK14712/@MIK9004 для пустых данных, не «Внешнее описание номенклатур для клиента»; InvoiceModify — остаётся невыявленная точка вызова updateAgregationCount; сформирован поэтапный todo (этапы A–F) в ответе пользователю, выполнение отложено.
+
+2026-04-20 09:53:11 — Запрос: старт поэтапной реализации (B–G) + roundtrip.
+Сделано: парсинг XPO → parserXPO; этап G уже был в коде (SalesFormLetter_Invoice.endUpdate → updateAgrCountForCorrectiveInvoice). Реализовано B+C: validateGTINAndMarkingLine — при ОСУ без строк в MPSalesPurchMarkCodeTable проверка CustVendExternalItem, пустой GTIN → @MIK13576 (параметры %1 ItemId, %2 CustAccount); иначе прежний @MIK14712. УПД addDopSvetTov502: замена @MIK13988 на @MIK13576; ветка без InforGTINCheck — перед fillMarks проверка getGTIN, пусто → @MIK13576; ветка MPVolume fallback без fillGTINs — пустой getGTIN → @MIK13576. D: readerLinesHonest — первый проход по DropIDDetails строит Map ItemId→GTIN, строки без GTIN получают GTIN соседней строки по SKU (сумма Qty дальше в saveMPCode как раньше). E: existMPCodeMarkOnly + processSalesTable; existAgregation и notExistAgr — фильтр MPCode!='' && GTINFromInfor==''. Новый метод existMPCodeMarkOnly.xpp. Этап F не тронут: InventItemGTIN::createGTIN в стандартном слое, не в этом XPO. Запуск: python xpo_writer.py → XPO/SharedProject_X5SHP_INT_1_000002338_01_WR.xpo. Напоминание: метка @MIK13576 должна быть в ald на стенде.
+
+2026-04-20 — Запрос: комментарии comment_rules для readerLinesHonest.xpp:186–187.
+Сделано: блок // + ... // - с a.klychn 20.04.2026 X5SHP_INT_1_000002338_04 вокруг наследования GTIN по SKU из Map.
+
+2026-04-20 — Запрос: комментарии ко всем последним исправлениям (comment_rules).
+Сделано: a.klychn 20.04.2026 X5SHP_INT_1_000002338_04 — validateGTINAndMarkingLine (CustVendExternalItem/@MIK13576); existMPCodeMarkOnly (первая строка метода); existAgregation/notExistAgr (фильтр ПУ без GTIN); processSalesTable (existMPCodeMarkOnly); addDopSvetTov502 (ветки @MIK13576); readerLinesHonest (Map, первый проход Map, блок наследования GTIN). xpo_writer перезапуск.
+
+2026-04-20 — Запрос: этап F (InventItemGTIN/GTINSetup) + слить parserXPO в SharedProject_X5SHP_INT_1_000002338_04.xpo, выход с постфиксом _W.
+Сделано: скопирован Tables/InventItemGTIN из парса 04 в parserXPO; createGTIN — комментарий этапа F (gtinSetupKnown / EAN-UCC-8 enum 0 уже в логике из 04). Скрипт merge_xpo_04_from_01wr.py: 14 элементов из 01_WR вставлены в 04 перед RabbitIntEngineImp_Infor_Shipped (без PRN и без дубликата InventItemGTIN). xpo_writer по SharedProject_X5SHP_INT_1_000002338_04_full.xpo — подставлен createGTIN. Итоговый файл: XPO/SharedProject_X5SHP_INT_1_000002338_04_W.xpo (копия 04_full_WR.xpo).
+
+2026-04-20 — Запрос: обновить Documentation/InvoiceModify.md и Documentation/projectResult.md по итоговым изменениям.
+Сделано: в InvoiceModify.md зафиксированы закрытие вызова updateAgrCountForCorrectiveInvoice в SalesFormLetter_Invoice.endUpdate и блок изменений этапов B–F (MIK13576, УПД, суммирование SKU, статусы, GTINSetup, перечень AOT). В projectResult.md добавлен раздел 2.9 (модификация _04), обновлен runtime-блок проверок и расширен high-level лог датой 20.04.2026 с деталями внедренных доработок.
+
+2026-04-20 — Запрос: /xpo-delete (очистка parserXPO и XPO).
+Сделано: запущен `python xpo_delete.py --yes`; очищены каталоги parserXPO и XPO. По выводу скрипта: удалено 451 файлов в parserXPO (удалено 19 пустых каталогов), удалено 6 файлов в XPO. Итого удалено 457 файлов и 19 каталогов.
+
+2026-04-20 — Запрос: /xpo-parse.
+Сделано: выполнен `python xpo_parser.py "XPO\SharedProject_X5SHP_INT_1_000002338_04.xpo" parserXPO --force --no-input`; созданы/обновлены каталоги объектов: Tables/MPSalesPurchMarkCodeTable, Tables/InventItemGTIN, Classes/XMLExcelReport_UTDPicking503_XML, Classes/RabbitIntEngineImp_Infor, Classes/MPMarkingStatusUpdateSalesRunBase, Misc/X5SHP_INT_1_000002338_04.
+
+2026-04-20 — Запрос: оставить маркеры `// + ... X5SHP_INT_1_000002338_04` и добавить пояснение строкой ниже.
+Сделано: в `readerLinesHonest`, `processSalesTable`, `validateGTINAndMarkingLine`, `existAgregation`, `notExistAgr` восстановлены/сохранены маркеры `// + ... // - ...` и добавлены логические комментарии на русском сразу после `// +`.
+
+2026-04-20 — Запрос: применить тот же стиль для `existMPCodeMarkOnly` и `InventItemGTIN.createGTIN`.
+Сделано: в `existMPCodeMarkOnly` перенесен комментарий в тело метода и оформлен блоком `// + ... // - ...` с русским пояснением; в `InventItemGTIN.createGTIN` добавлен блок `// + ... этап F // - ... этап F` над проверкой `gtinSetupKnown` с коротким логическим объяснением.
+
+2026-04-20 — Запрос: убрать ссылки на todo/этапы в маркере комментария `createGTIN`.
+Сделано: в `parserXPO/Tables/InventItemGTIN/createGTIN.xpp` удалено `этап F` из строк `// + ...` и `// - ...`, оставлен только формат `developer + date + project`.
+
+2026-04-20 — Запрос: применить тот же формат маркеров в `existMPCodeMarkOnly`.
+Сделано: в `parserXPO/Tables/MPSalesPurchMarkCodeTable/existMPCodeMarkOnly.xpp` добавлен блок `// + ... // - ...` в теле метода с логическим пояснением на русском.
+
+2026-04-20 — Запрос: исправить выявленные риски после рефакторинга.
+Сделано: 1) `validateGTINAndMarkingLine` — убран `forUpdate` с `SalesTable::find`, fallback-проверка `CustVendExternalItem` заменена на цикл с trim/отсевом `'0'` для снижения ложного `@MIK13576`; 2) `readerLinesHonest` — добавлен `ambiguousGtinItems` (запрет подстановки GTIN при неоднозначности по SKU), в `DropIdHonestSign` GTIN принудительно очищается для строк с `MPCode`, `mpCode` читается с `strLRTrim`, транзакция сокращена до финального блока delete+insert; 3) `processSalesTable` — убран длительный `forUpdate`, `forUpdate` выполняется только перед `doUpdate`. Повторный `xpp-review`: high/medium по этим рискам не выявлены.
+
+2026-04-20 — Запрос: обновить InvoiceModify.md/projectResult.md и выполнить /xpo-write.
+Сделано: документы дополнены блоком post-refactor фиксов рисков (ложные статусы, неоднозначный GTIN, @MIK13576, блокировки). Выполнен `python xpo_writer.py "XPO\SharedProject_X5SHP_INT_1_000002338_04.xpo" parserXPO --force --no-input`; создан `XPO/SharedProject_X5SHP_INT_1_000002338_04_WR.xpo`, обновлено 7 методов.
+
+2026-04-20 — Запрос: добавить в правила обязательное чтение comment_rules в начале нового чата.
+Сделано: в `.cursor/rules/comment_rules.mdc` добавлен раздел «Обязательный старт нового чата» с требованием сначала читать `@.cursor/rules/comment_rules.mdc` перед любыми правками `.xpp` в `parserXPO`.
+
+2026-04-20 — Запрос: надёжно связать скилл dynamics-ax-xpo-roundtrip с comment_rules.mdc (один запуск скилла).
+Сделано: в `.cursor/skills/dynamics-ax-xpo-roundtrip/SKILL.md` добавлен раздел «Обязательный порядок»: до правок parserXPO обязательное чтение `@.cursor/rules/comment_rules.mdc` и `commentmeta.json` инструментом чтения; скилл явно не заменяет comment_rules; расширено поле `description` в frontmatter для подхвата при поиске скилла.
+
+2026-04-20 — Запрос: усилить AX_Modification_Rules в comment_rules.mdc (не удалять код; /* */; копия блока с полным // + // - при невозможности точечной разметки).
+Сделано: раздел «Правило модификаций» переписан: базовые запреты на удаление; сценарий «не влезает точечная разметка» → старый фрагмент в /* */, ниже копия с правками целиком в // + // -; «удаление» только через /* */ и общий // + // -; оговорка о вложенных комментариях; исключение для п. 5–6 где без дубля разметки.
+
+2026-04-23 18:06:12 — Запрос: сделать скилл-пайплайн «Исследователь» (XPO + инструкция + LightRAG + CUS + стоп при нехватке AOT) с обязательной фиксацией результата в investigationTask.md.
+Промт: «Хочу сделать скилл-паплайн Иследователь…».
+Сделано: добавлен новый скилл `.cursor/skills/ax-investigation-pipeline/SKILL.md` с формализованным протоколом: запрос XPO при отсутствии входа, анализ XPO по инструкции, добор контекста через LightRAG, добор недостающего кода через MCP CUS, стоп-условие с запросом недостающих AOT-элементов, жёсткие ограничения (без написания кода, без галлюцинаций, обязательные уточнения при неоднозначности) и единый шаблон результата для `investigationTask.md` (варианты решения, AOT на модификацию, риски/сомнения, нехватка данных).
+Дополнительно: создан файл `investigationTask.md` в корне проекта со стартовой структурой из 4 разделов для накопления результатов исследования по задачам.
+
+2026-04-23 18:08:22 — Запрос: добавить командный триггер `/ax-investigation`.
+Промт: «да, добавить командный триггер (например /ax-investigation)».
+Сделано: в `.cursor/rules/dynamicsrule.mdc` добавлен раздел «Командные триггеры» с явной маршрутизацией `/ax-investigation` на скилл `.cursor/skills/ax-investigation-pipeline/SKILL.md` и требованием всегда фиксировать результат в `investigationTask.md`. Также обновлено `description` в `.cursor/skills/ax-investigation-pipeline/SKILL.md` (добавлен явный триггер по команде `/ax-investigation` для лучшего автоподхвата).
+
+2026-04-23 18:13:08 — Запрос: перенести `merge_xpo_04_from_01wr.py` в `UtilsParserWriter`.
+Промт: «@merge_xpo_04_from_01wr.py перенеси в @UtilsParserWriter».
+Сделано: файл перенесён из корня в `UtilsParserWriter/merge_xpo_04_from_01wr.py`; исходный файл в корне удалён. Для корректной работы после переноса обновлён путь `ROOT` на `Path(__file__).resolve().parents[1]`, чтобы скрипт продолжил работать с каталогом `XPO` из корня репозитория.
+
+2026-04-29 15:36:40 — Запрос: `/ax-investigation-pipeline` по описанию `RabbitIntEngineImp_Infor_DPC` с контекстом `finish.md` и акцентом на `InforWMSSalesPallet*`/`InforWMSPallet*`, формат для консультанта, с разделением "до/после" по проекту `MIK_INT_1_000002418_01`.
+Промт: «/ax-investigation-pipeline Задача описать работу класса @parserXPO/Classes/RabbitIntEngineImp_Infor_DPC ...».
+Сделано: выполнен исследовательский проход по `Projects/MIK_INT_1_000002418_01InforWMSPallet/Documentation/finish.md`, `Projects/MIK_INT_1_000002418_01InforWMSPallet/Documentation/task.md` и входному запросу; сформирован/обновлён `investigationTask.md` в корне проекта в шаблоне скилла (разделы 1-4), добавлено консультантское описание "до/после" модификаций и акцент на моменты заполнения/изменения таблиц `InforWMSSalesPallet`, `InforWMSSalesPalletBatch`, `InforWMSPallet`, `InforWMSPalletBatch`; отдельно зафиксированы пробелы по недостающим исходникам `parserXPO`/`XPO` и меткам AOT.
+
+2026-04-29 15:55:20 — Запрос: пояснить `не найдено` в `investigationTask.md` и добавить в исследовательский скилл правило проверки меток через `AOT_cus/AxMIKru.ald`.
+Промт: «@investigationTask.md:62 что значит не найдено?... Проверь эту информацию и добавь её как знание или умение в скилл исследования».
+Сделано: подтверждено по XPO и ALD соответствие `@MIK12108` -> `Состав дропа`; дополнительно подтверждено `@MIK13791` -> `Палеты по продажам`. Обновлен `investigationTask.md`: вместо общего "не найдено" добавлен блок "частично найдено по меткам" с расшифровками и явной фиксацией объектов, где `Label` в свойствах отсутствует (`InforWMSPallet`, `RabbitIntEngineImp_Infor_DPC`). Обновлен `.cursor/skills/ax-investigation-pipeline/SKILL.md`: добавлены обязательные правила декодирования `XPO Label -> AOT_cus/*.ald` перед выводом `не найдено` и явная фиксация случаев отсутствия свойства `Label`.
+
+2026-04-29 16:03:10 — Запрос: зафиксировать в исследовательском скилле проверку локального `parserXPO` и обязательный анализ родительского класса при наследовании (`extends`), с добором из `AOT_cus/PrivateProject_CUS_Layer_Export.xpo` при необходимости.
+Промт: «...в папке parserXPO всё это есть... бывает обращение к классу родителю... зафиксируй это в .cursor/skills/ax-investigation-pipeline и пока ничего не меняй в investigationTask.md».
+Сделано: обновлен `.cursor/skills/ax-investigation-pipeline/SKILL.md` — добавлены правила: (1) перед запросом AOT у пользователя всегда проверять наличие элементов в `parserXPO`; (2) при `class ... extends ...` обязательно анализировать родительский класс; (3) при нехватке деталей добирать родителя из `AOT_cus/PrivateProject_CUS_Layer_Export.xpo` через MCP/индекс; (4) в пайплайне шага локального анализа добавлен пункт о разборе влияния методов родителя на поведение дочернего класса. `investigationTask.md` не изменялся по этому запросу.
+
+2026-04-29 16:04:40 — Запрос: добавить в скилл правило всегда очищать `investigationTask.md` перед анализом.
+Промт: «Плюс в этот же скилл ещё всегда перед анализом удалять все данные из @investigationTask.md».
+Сделано: в `.cursor/skills/ax-investigation-pipeline/SKILL.md` обновлён раздел «Стартовый протокол»: новый обязательный шаг №1 — полная очистка `investigationTask.md` перед каждым новым исследованием; нумерация последующих шагов протокола скорректирована.
+
+2026-04-29 16:10:55 — Запрос: повторно выполнить `/ax-investigation-pipeline` по `RabbitIntEngineImp_Infor_DPC` с детальным объяснением "до/после" и акцентом на таблицы `InforWMSSalesPallet`, `InforWMSSalesPalletBatch`, `InforWMSPallet`, `InforWMSPalletBatch`.
+Промт: «теперь ещё раз /ax-investigation-pipeline ... Всё сделать подробно как для человека, который в этом не разбирается».
+Сделано: по протоколу скилла полностью очищен и заново сформирован `investigationTask.md`; выполнен повторный анализ `readerLines`, `postAfterCreate`, методов `findOrCreate/insert/update/existPallette/findMessageId` в целевых таблицах и проверок `WMSPickingRoute`; в отчете детально описано какие поля входного сообщения и внутренние переменные участвуют в ветвлении, сравнении и записи, а также разница поведения до и после модификаций `MIK_INT_1_000002418_01`.
+
+2026-04-29 16:28:15 — Запрос: извлечь и проанализировать родительский класс сразу, и зафиксировать правило в скилле чтобы это не повторялось.
+Промт: «да, сделай Плюс это надо как-то зафиксировать в .cursor/skills/ax-investigation-pipeline чтобы это не повторялось».
+Сделано: извлечен `RabbitIntEngineImp_Infor` из `AOT_cus/PrivateProject_CUS_Layer_Export.xpo` в `parserXPO_Private/Classes/RabbitIntEngineImp_Infor` (44 метода); подтверждены ключевые влияющие элементы родителя (`InfmessageId`, `convertFromInforUnit`, `createInforQueueTable`, `processingXml`) и отражены в `investigationTask.md`. Обновлен `.cursor/skills/ax-investigation-pipeline/SKILL.md`: добавлены жесткие правила немедленного извлечения родителя в `parserXPO_Private` при его отсутствии в `parserXPO`, запрет откладывать это на «дополнительный шаг», и требование фиксировать конкретные методы/поля родителя в результате.
+
+2026-05-14 11:24:25 — Запрос: расширить использование меток ALD помимо `AxMIKru.ald` — добавить `AxGMSru.ald`, `AxKORru.ald`, `axSYSru.ald`; отразить в скилле и в MCP `server.py`.
+Промт: «надо добавить в проект использование меток не только из файла AxMIKru.ald а также по аналогии из файлов ... Также добавить в использовании сервера MCP server.py:34».
+Сделано: `mcp_server/label_loader.py` — загрузка из списка ALD, парсинг меток `@PREFIX+цифры` (MIK/GMS/KOR/SYS и др.), единый паттерн для `Label #@...`; `mcp_server/server.py` — константа `ALD_FILES` из четырёх путей, проверка наличия всех файлов, `LabelLoader([...])`, обновлены описания инструментов; синхронизированы `check_server.py`, `test_server_init.py`, `test_modules.py`. Обновлен `.cursor/skills/ax-investigation-pipeline/SKILL.md` (правило 5 и шаг пайплайна про расшифровку Label).
+
+2026-05-14 11:27:08 — Запрос: команда `/xpo-delete`.
+Промт: «/xpo-delete».
+Сделано: в корне `DynamicsAX` выполнен `python xpo_delete.py --yes`: из `parserXPO` удалено 439 файлов и 14 каталогов, из `XPO` — 2 файла; итого 441 файл, 14 каталогов. Сами каталоги `parserXPO` и `XPO` сохранены.
+
+2026-05-14 11:35:00 — Запрос: команда `/dynamics-ax-xpo-roundtrip` (скилл).
+Промт: «/dynamics-ax-xpo-roundtrip».
+Сделано: по скиллу прочитаны `.cursor/rules/comment_rules.mdc` и `commentmeta.json` (developer `a.klychn`, project `MIK_INTS_01_000002463_01`); пользователю выдан чеклист roundtrip (parser → правки в `parserXPO` → writer `*_WR.xpo`, кодировки, флаги). Правок `.xpp` не выполнялось.
+
+2026-05-14 11:47:15 — Запрос: `/ax-investigation` по потере сигналов RabbitMQ / SLAT-14 при смене статусов `RetailZReportTable` (Z-отчёты УКМ4).
+Промт: полный текст задачи с контекстом `УКМ2АХ21integration.md`, XPO `PrivateProject_ZReport_ExpRabb1C.xpo`, фрагмент `ioExportProcessRun`.
+Сделано: очищен и заполнен `investigationTask.md`: разбор `RetailZReportTable.insert/update/updateStatus` (в т.ч. `update_recordSet` без триггера `update`, ветка `Post` только для `ZReportStatus::Posted`), закомментированный вызов `updateStatus` в `doCorrectionZReport`, вызовы `RetailZReportPostService::retailZReportPost` из UKM4/ZReport incoming types; зафиксировано отсутствие в XPO `RabbitTableChangeLog::allowadd2Queue` и класса `RetailZReportPostService`; контекст шага 16 из markdown; гипотезы, риски, план логирования и список недостающих AOT-артефактов; LightRAG — общие сущности без кода.
+
+2026-05-14 12:05:00 — Запрос: `investigationTask.md:105` — наличие `allowadd2Queue`/`add2Queue` в `AOT_cus/PrivateProject_CUS_Layer_Export.xpo`, MCP.
+Промт: «разве этого нет в AOT_cus/PrivateProject_CUS_Layer_Export.xpo + поиск с помощью MCP».
+Сделано: в CUS XPO найдены `RabbitTableChangeLog` и методы; обновлён `investigationTask.md` §4 и риск по `allowadd2Queue`. Поиск по файлу через PowerShell; MCP не вызывался.
+
+2026-05-14 12:20:00 — Запрос: исправить `investigationTask.md:117` — имена классов и параметры запуска по скринам; класс в `PrivateProject_ZReport_ExpRabb1C_Dop.xpo`.
+Промт: «…один и тот же класс \\Classes\\RetailZReportPostService … _Dop.xpo».
+Сделано: в `investigationTask.md` обновлены источники, §1 (сервис в `_Dop.xpo`), §2, §3 (гипотеза 3, риск), логирование п.3, §4: задание «3 УКМ Retail: дорезервирование…», пояснение `SysOperationServiceController` vs `RetailZReportPostService`, параметры диалога «Обработка розничной реализации», ссылка на asset-скрин; сняты бывшие п.1–2 «нехватки данных».
+
+2026-05-14 12:35:00 — Запрос: учесть `RabbitTableChangeLog` в `PrivateProject_ZReport_ExpRabb1C_Dop.xpo`; пересмотреть логику и пробелы в `investigationTask.md`.
+Сделано: переписан §4 (основной код — `_Dop.xpo`, CUS для diff; отличие фильтра **FK** MIK_INT_000002316_01); обновлены источники, §2, §3, §5, вариант 3; риск по `allowadd2Queue`; добавлены `RetailZReportCreateMultiThreadPost` / сверка diff / отсутствие таблиц настроек в `_Dop`.
+
+2026-05-14 12:50:00 — Запрос: `investigationTask.md:112` — объясняющий скрин настроек SLAT-14 / событий Rabbit.
+Промт: «@investigationTask.md:112 объясняющий скрин» + вложенное изображение.
+Сделано: в источники добавлен asset `image-f9982b52-...png`; блок «нехватка» перестроен: подробное описание скрина (SLAT-14, таблица 106552, `RabbitIntEngineExp_ZReport`, флаги Insert/Update/Posting), связь с `allowadd2Queue` и типичным обходом `update_recordSet`; убран пункт «нужен скрин RabbitOutputDocumentType»; остался один пункт «Posted vs enum».
+
+2026-05-14 13:05:00 — Запрос: значения enum `ZReportStatus` (0…5 + RU); поправить `investigationTask.md`.
+Промт: строки `0;Imported;…` … `5;Reserved;…`.
+Сделано: таблица enum в §1, явные переходы из ТЗ в индексах, контекст «Обработан» = `Posted` (2); обновлены §2, §3 (риск), §4 (убрана нехватка enum), блок «Нужно от пользователя» закрыт; §5 перенумерован (6 шагов); исправлена строка источников после черновика с «…».
+
+2026-05-14 15:20:00 — Запрос: поправить `investigationTask.md` (блок про ALD).
+Промт: «поправь md» после уточнения, что ALD есть в `AOT_cus`.
+Сделано: в строке **ALD** источников убрано неверное «файлы не найдены»; указаны `AOT_cus\AxMIKru.ald` и др., расшифровка **`@MIK2822`** → «Загруженные Z-отчеты» (~стр. 2907), примечание про возможный ignore `.ald` в индексации поиска.
+
+2026-05-14 16:00:00 — Запрос: убрать из `investigationTask.md` риск по **`ExchangeType` SLAT-14** (FK/Infor vs `allowadd2Queue`).
+Промт: «я сам всё проверил там выставлено всё верно».
+Сделано: §3 строка риска без предупреждения FK/Infor; §2 пункт SLAT-14 — отметка о проверке AOT/БД и снятии риска; §4 убраны буллет про неизвестный `ExchangeType` на скрине и предложение «если FK/Infor…» в описании `allowadd2Queue`; в блоке «смысл» убрана ветка про несовпадение `ExchangeType`; §5 п.3 — без обязательной проверки `ExchangeType`, со ссылкой что SLAT-14 уже проверен.
+
+2026-05-14 16:35:00 — Запрос: зафиксировать в `investigationTask.md`, что **`RabbitTableChangeLog` в Dop актуален**, Infor/FK **должны** отсекаться; diff с CUS перед merge не gate.
+Промт: текст пользователя про актуальность Dop и ветки Infor/FK.
+Сделано: §1 гипотеза 3, §2 пункт таблицы, §4 (источник правды, логика «эталон _Dop»), убран буллет «сверка diff перед merge»; явно: отсев Infor/FK **намеренный**; CUS — не эталон, сравнение опционально.
+
+2026-05-14 17:10:00 — Запрос: по `investigationTask.md` заполнить подробный todo в `Projects/MIK_INTS_01_000002463_01ZRepTo1C/Documentation/todoList.md` + постановка про SLAT-14 / три перехода / шаг 16 + список AOT для `parserXPO`.
+Промт: полный текст пользователя с критическими переходами и контекстом бизнес-процесса.
+Сделано: создан/заполнен `todoList.md`: постановка, таблица `ZReportStatus`, три критических перехода с enum, фазы A–F (воспроизведение, статический разбор write-путей, диагностика, выбор решения, реализация/parserXPO, регресс), чеклист из постановки, таблица **11+** элементов AOT для выгрузки в репо, исключение `Global::ioExportProcessRun` без доказательств, ссылки на XPO и roundtrip.
+
+2026-05-14 17:45:00 — Запрос: `/xpo-parse`.
+Промт: команда Cursor XPO parse в корень `parserXPO`.
+Сделано: `python xpo_parser.py ... --force --no-input` для `PrivateProject_ZReport_ExpRabb1C.xpo`, `PrivateProject_ZReport_ExpRabb1C_Dop.xpo`, `XPO/SharedProject_MIK_INTS_01_000002463_01.xpo`; затем итоговый порядок **основной Z XPO → Dop**, чтобы `RabbitTableChangeLog` и сервисы постинга в дереве соответствовали **`_Dop.xpo`** (SharedProject перезаписывал общие объекты). В `parserXPO` остаются также `Forms/RetailZReportTable`, `BaseEnums/ZReportStatus` из раннего прогона SharedProject.
+
+2026-05-14 18:00:00 — Запрос: `/dynamics-ax-xpo-roundtrip` (скилл).
+Промт: вложенный SKILL.md.
+Сделано: прочитаны `.cursor/rules/comment_rules.mdc` и `commentmeta.json` (`developer` **a.klychn**, `project` **MIK_INTS_01_000002463_01**); зафиксирован чеклист roundtrip для следующих правок `.xpp` в `parserXPO`.
+
+2026-05-14 18:30:00 — Запрос: выполнять `todoList.md` по фазам; после каждой фазы `/xpp-review`, править critical/medium до чистоты; следующая фаза по команде пользователя.
+Промт: полный текст с делегированием `xpp-review`.
+Сделано: в `todoList.md` добавлен режим фаз + **фаза B** закрыта в репо (B.1–B.3, B.5–B.6 отмечены), матрица write-путей `Status` / Rabbit, заметка про субагент `xpp-review` (ложное «нет файлов»). Фаза A — только AX, не автоматизирована. Правок `.xpp` не выполнялось (критичные находки = уже известная модель `updateStatus`/`update_recordSet`).
+
+2026-05-14 19:15:00 — Запрос: добавлен `XPO/Form_RabbitTableChangeLog.xpo` — распарсить в репо.
+Промт: «добавил форму … распась в репо».
+Сделано: `python xpo_parser.py "XPO/Form_RabbitTableChangeLog.xpo" parserXPO --force --no-input` → **`Forms/RabbitTableChangeLog`** (8 методов).
+
+2026-05-14 19:45:00 — Запрос: добита полная форма `RetailZReportTable` — продолжить анализ (кнопка «Выгрузить в Rabbit»).
+Промт: текст пользователя.
+Сделано: разбор секции `FORM #RetailZReportTable` в `XPO/SharedProject_MIK_INTS_01_000002463_01.xpo`: `MenuItemButton` **`RabbitTableChangeLog_add2Queue`** (ручная выгрузка в очередь), кнопка **`RecordPost`** (`runPosting`); у DS **`RetailZReportTable.AllowEdit = No`**; строка «Игнорировать update» в XPO не найдена. `parserXPO/Forms/RetailZReportTable` по-прежнему 4 фрагмента (остальное в DESIGN XPO). Повторный parse SharedProject.
+
+2026-05-14 20:15:00 — Запрос: зафиксировать в `Projects/MIK_INTS_01_000002463_01ZRepTo1C/Documentation/CriticalPlace.md` таблицу и выводы (AOT / номера строк).
+Промт: «зафиксируй это в CriticalPlace.md таблицу и выводы».
+Сделано: заполнен `CriticalPlace.md`: таблицы по форме `RetailZReportTable`, таблице `RetailZReportTable`, `RabbitTableChangeLog`, `RetailZReportPostService`, форме `RabbitTableChangeLog`; примечание про отсутствие MenuItem в XPO и про «Игнорировать update»; блок выводов (5 пунктов).
+
+2026-05-14 20:35:00 — Запрос: `/md2docx` для `CriticalPlace.md`.
+Промт: команда md2docx + путь к файлу.
+Сделано: `python md2docx.py Projects\MIK_INTS_01_000002463_01ZRepTo1C\Documentation\CriticalPlace.md` → **`Projects\MIK_INTS_01_000002463_01ZRepTo1C\Documentation\CriticalPlace.docx`** (абсолютный путь в выводе скрипта).
+
+2026-05-20 — Запрос: план по MRC_MERK_000002479 (УПД в ВСД), обобщённая команда для фаз + xpp-review.
+Промт: прочитать task.md, поэтапный план, после каждого этапа xpp-review в субагенте, следующий этап по команде; подготовить универсальную команду (MD или текст).
+Сделано: составлен план фаз 0–7, шаблон команды `/ax-phased-dev` для других проектов; реализация не начата (ожидание команды пользователя).
+2026-05-20 — Уточнение: `*_WR.xpo` / `/xpo-roundtrip` только по явному согласованию пользователя, не автоматически после последней фазы.
+
+2026-05-20 — Реализация MRC_MERK_000002479_01 (УПД в ВСД).
+Промт: «да, реализуем».
+Сделано: извлечены VetisMicroServiceConnector_TranspSale/TransportBase в parserXPO; правки fillUTDNumber, fillTTNNumber, init, getRequestData, SalesPool.validateFieldValue; xpp-review + фикс NoYes::Yes, setWaybillNum для UTD, проверка documentNum. WR.xpo не собирался (ждёт согласования).
+
+2026-05-19 — Запрос: сравнение (cus) vs (xpo) — «удаляются строки», нет комментариев в addPackingList.
+Промт: почему удаление вместо комментирования; проверить всё.
+2026-05-19 — Исправление 5 ошибок компиляции (479).
+Промт: исправить ошибки компиляции (имя метода, validateFieldValue/Write, SetEnumerator).
+Сделано: checkVetisTransportSalesFillDocumentExclusive → checkVetisTransportSalesFillDocumentExcl; validateFieldValue fieldnum→fieldStr; previewMode return перенесён после `;` в addRequestDataLines/BeforeShipment; WR пересобран.
+
+Сделано: причина — в parserXPO лежала версия addPackingList из CUS/424 (guid/globalId/marks), xpo_writer --force подменил весь SOURCE; для 479 метод вне scope. Откат addPackingList.xpp к SharedProject_MRC_MERK_000002479_01.xpo (packingTypeGlobalId, qty, productMarks). Пересборка WR: addPackingList не в списке обновлений (19 методов), в WR снова старые имена атрибутов.

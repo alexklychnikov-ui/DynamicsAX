@@ -1,0 +1,78 @@
+private boolean createInventSumData()
+{
+    Query                   query = new Query(queryStr(ExportData2Mail_DanonInventSum));
+    QueryRun                queryRun;
+    InventTable             inventTable;
+    InventSum               inventSum;
+    InventDim               inventDim;
+    InventLocation          inventLocation;
+    int                     cnt;
+    TextBuffer              textBuffer = new TextBuffer();
+    InteropPermission       permission;
+    InventQtyAvailOrdered availOrdered(InventDim _inventDim)
+    {
+        InventDim               inventDimLocal = _inventDim;
+        InventDimParm           inventDimParm;
+        InventSumAvailability   inventSumAvailability;
+        InventQtyAvailOrdered   ret;
+        ;
+
+        inventDimParm.initFromInventDim(inventDimLocal);
+        inventSumAvailability = InventSumAvailability::newFromInventSum(InventSum::findSumQty(inventTable.ItemId,
+                                                                                              inventDimLocal,
+                                                                                              inventDimParm));
+        return inventSumAvailability.availTotal();
+    }
+
+    #define.Qty        ('Остатки, шт')
+    ;
+
+    textBuffer.appendText(strFmt('%1;%2;%3;%4;%5;%6\n', #Date
+                                                      , #Region
+                                                      , #StoreId
+                                                      , #ProductName
+                                                      , #ItemId
+                                                      , #Qty));
+    queryRun    = new QueryRun(query);
+
+    while (queryRun.next())
+    {
+        inventTable       = queryRun.get(tableNum(InventTable));
+        inventSum = queryRun.get(tableNum(InventSum));
+        inventDim = queryRun.get(tableNum(InventDim));
+
+        inventLocation = InventLocation::find(inventDim.InventLocationId);
+
+        textBuffer.appendText(strFmt('%1;%2;%3;%4;%5;%6\n', DateTimeUtil::date(DateTimeUtil::applyTimeZoneOffset(DateTimeUtil::getSystemDateTime(),
+                                                            DateTimeUtil::getCompanyTimeZone()))
+                                                          , inventLocation.InventSiteId
+                                                          , inventLocation.SMCode
+                                                          , inventTable.defaultProductName()
+                                                          , inventTable.ItemId
+                                                          , availOrdered(inventDim)));
+            cnt++;
+
+    }
+
+    if (cnt > 0)
+    {
+        try
+        {
+            permission = new InteropPermission(InteropKind::CLRInterop);
+            permission.assert();
+
+            textBuffer.toFile(fileName, FileEncoding::UTF8);
+            CodeAccessPermission::revertAssert();
+         }
+         catch (Exception::CLRError)
+         {
+             CodeAccessPermission::revertAssert();
+             info(CLRInterop::getLastException().ToString());
+         }
+
+        info(strFmt("@MIK7787", cnt, transDate));
+    }
+
+
+    return cnt;
+}

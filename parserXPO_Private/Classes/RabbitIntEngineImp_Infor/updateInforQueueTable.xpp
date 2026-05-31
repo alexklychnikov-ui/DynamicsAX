@@ -1,0 +1,12 @@
+//HNS_INT_1_000000500_01, SMironov, 11.10.2021
+public void updateInforQueueTable()
+{
+    if (ImpQueueTable && updateDocumentNum)
+    {
+        ttsBegin;
+        ImpQueueTable.selectForUpdate(true);
+        ImpQueueTable.DocNum = updateDocumentNum;
+        ImpQueueTable.update();
+        ttsCommit;
+    }
+}

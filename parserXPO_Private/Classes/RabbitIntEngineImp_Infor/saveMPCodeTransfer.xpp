@@ -1,0 +1,70 @@
+//HNS_HNS_000002198_01, SMironov, 01.08.2025
+public void saveMPCodeTransfer(InventTransferTable _transferTable, WMSPalletId _palletteId = '')
+{
+    MPTransferOrderMarkCodeTable            codeTable;
+    RabbitIntEngineImpInforTransferMPTable  mpTable;
+    InventTable                             inventTable;
+    RecordInsertList                        ril;
+    int                                     kol = 0;
+    ItemId                                  itemId = '';
+
+    void writeRecord(RabbitIntEngineImpInforTransferMPTable _mpTable, inventTable _inventTable)
+    {
+        codeTable.clear();
+        codeTable.initValue();
+        switch (_mpTable.MPPackingType)
+        {
+            case InforMPPackingType::plt:
+                codeTable.Agregation        = NoYes::Yes;
+                codeTable.IsPallete         = NoYes::Yes;
+                break;
+            case InforMPPackingType::box,
+                InforMPPackingType::pack:
+                codeTable.Agregation        = NoYes::Yes;
+                codeTable.IsPallete         = NoYes::No;
+                break;
+            default:
+                codeTable.Agregation        = NoYes::No;
+                codeTable.IsPallete         = NoYes::No;
+                break;
+        }
+        codeTable.AgregationCount       = _mpTable.qty;
+        codeTable.ItemId                = _mpTable.ItemId;
+        codeTable.MPCode                = _mpTable.mpCode;
+        codeTable.ProductName           = _inventTable.productName(CompanyInfo::languageId());
+        codeTable.UnitId                = _inventTable.inventUnitId();
+        codeTable.ProductGroupId        = _inventTable.MPGroupId;
+        codeTable.Qty                   = _mpTable.qty;
+        codeTable.DocumentType          = MPTransferOrderMarkDocumentType::TransferOrder;
+        codeTable.DocumentNum           = _transferTable.TransferId;
+        codeTable.InventLocationIdFrom  = _transferTable.InventLocationIdFrom;
+        codeTable.InventLocationIdTo    = _transferTable.InventLocationIdTo;
+        codeTable.WMSPalletId           = _palletteId;
+        //HNS_HNS_000002289_01, SMironov, 02.12.2025 ->
+        codeTable.CorrectCode           = _mpTable.CorrectCode;
+        codeTable.CaseSensitive         = _mpTable.CaseSensitive;
+        //HNS_HNS_000002289_01, SMironov, 02.12.2025 <-
+        ril.add(codeTable);
+    }
+
+    ril = new RecordInsertList(tableNum(MPTransferOrderMarkCodeTable));
+    while select * from mpTable
+        order by itemId
+        where mpTable.Queue == queue.RecId
+            && mpTable.Reflect
+    {
+        if (itemId != mpTable.ItemId)
+            inventTable = inventTable::find(mpTable.ItemId);
+        if (mpTable.MPCode)
+        {
+            kol++;
+            writeRecord(mpTable, inventTable);
+        }
+        itemId          = mpTable.ItemId;
+    }
+    ril.insertDatabase();
+    if (_palletteId)
+        info(strFmt("@MIK14291", _transferTable.TransferId, _palletteId, kol));
+    else
+        info(strFmt("@MIK14290", _transferTable.TransferId,  kol));
+}

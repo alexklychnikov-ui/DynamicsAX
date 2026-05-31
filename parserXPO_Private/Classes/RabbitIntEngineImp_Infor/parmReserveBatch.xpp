@@ -1,0 +1,8 @@
+//INF_INT_1_000001004_01, SMironov, 14.04.2022
+public boolean parmReserveBatch(boolean _reserveBatch = reserveBatch)
+{
+    ;
+    reserveBatch = _reserveBatch;
+
+    return reserveBatch;
+}

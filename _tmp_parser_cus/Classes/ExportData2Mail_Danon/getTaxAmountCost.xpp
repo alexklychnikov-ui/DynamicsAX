@@ -1,0 +1,25 @@
+private Amount getTaxAmountCost(InventTable  _inventTable,
+                                InventTrans  _inventTrans)
+{
+    TaxGroupData          taxGroupData;
+    TaxOnItem             taxOnItem;
+    TaxAmountCur          taxAmountCur;
+    ;
+
+    taxOnItem = TaxOnItem::findTaxItemGroup_IN(_inventTable.inventTableModuleSales().TaxItemGroupId);
+
+    select firstOnly TaxGroup, RecId from TaxGroupData
+        where TaxGroupData.TaxCode == taxOnItem.TaxCode;
+
+    if (!_inventTrans.CurrencyCode)
+        _inventTrans.CurrencyCode = CompanyInfo::standardCurrency();
+
+    taxAmountCur = Tax::calcTaxAmount(TaxGroupData.TaxGroup,
+                                      taxOnItem.TaxItemGroup,
+                                      _inventTrans.DatePhysical,
+                                      _inventTrans.CurrencyCode,
+                                      abs (_inventTrans.CostAmountAdjustment + _inventTrans.CostAmountPosted),
+                                      TaxModuleType::SalesInvoice);
+
+    return taxAmountCur;
+}

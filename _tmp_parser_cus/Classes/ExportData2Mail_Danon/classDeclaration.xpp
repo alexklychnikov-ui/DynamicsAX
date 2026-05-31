@@ -1,0 +1,10 @@
+class ExportData2Mail_Danon extends ExportData2Mail
+{
+    TransDate       transDate;
+
+    #define.Date       ('Дата')
+    #define.Region     ('Регион')
+    #define.StoreId    ('Магазин')
+    #define.ProductName('Товар')
+    #define.ItemId     ('Код товара')
+}

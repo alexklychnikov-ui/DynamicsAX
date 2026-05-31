@@ -1,0 +1,12 @@
+// ntimofee 11.09.2025 HNS_HNS_000002243_01
+boolean setError(RabbitErrorsNum       _Num,
+                 str                   _errorTxt,
+                 RabbitJourStatus      _jourStatus     = jourStatus,
+                 RabbitQueueStatus     _queueStatus    = queueStatus)
+{
+    ;
+
+    ignorefilterForErr = true;
+
+    return super(_Num, _errorTxt, _jourStatus, _queueStatus);
+}

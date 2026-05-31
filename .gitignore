@@ -22,10 +22,17 @@ __pycache__/
 
 # Logs
 *.log
+mcp_server/work_log.md
 
 # Папки проекта
 NewProjec/
 AOT_cus/
+Projects/
+parserXPO/
+indexXPO_cus/
+XPO/
+Инструменты и ресурсы DynamicsAX.png
+Инструменты и ресурсы DynamicsAXGPT.png
 
 # Документация и планы
 rabbitConectionsPlan.md
@@ -45,6 +52,13 @@ TS_GTIN_IntegrationAX2012.docx
 # Системные файлы
 .DS_Store
 Thumbs.db
+
+# Состояние xpo_parser (дата последней проверки проекта)
+.xpo_parser_project_check
+
+# Локальные метаданные комментариев
+commentmeta.json
+investigationTask.md
 
 
 

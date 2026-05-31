@@ -1,0 +1,2 @@
+Type: CLS
+extends: ExportData2Mail

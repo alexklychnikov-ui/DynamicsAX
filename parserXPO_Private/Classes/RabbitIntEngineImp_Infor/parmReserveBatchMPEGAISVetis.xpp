@@ -1,0 +1,40 @@
+//MIK_INT_1_000002301_01, SMironov, 05.11.2025
+public boolean parmReserveBatchMPEGAISVetis(InventLocation _inventLocation, InventTable _inventTable, InventBatchId _batchId = '')
+{
+    boolean             existBatchVetisIsSupervised = false;
+    boolean             ret = false;
+    InventParameters    inventParameters = InventParameters::find();
+    ;
+
+    if (InventParameters.InforReserveBatch
+        && InforReserveBatchLocationTable::exist(_inventLocation.InventLocationId))
+    {
+        //Р•СЃР»Рё РЅРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅР° РЅРё РѕРґРЅР° РіР°Р»РєР°, Р·РЅР°С‡РёС‚ СЂРµР·РµСЂРІРёСЂСѓРµРј РїРѕ РїР°СЂС‚РёРё РРЅС„РѕСЂ РґР»СЏ РІСЃРµС… РїСЂРѕРґСѓРєС‚РѕРІ
+        if (inventParameters.InforReserveBatchOnlyVetisEnabled == NoYes::No
+            && inventParameters.InforReserveBatchOnlyEGAISEnabled == NoYes::No
+            && inventParameters.InforReserveBatchOnlyMPEnabled == NoYes::No)
+            ret = true;
+        //РџСЂРѕРІРµСЂРєР° СЃРѕРѕС‚РІРµС‚СЃС‚РІРёСЏ РЅР° РїРѕРґРЅР°РґР·РѕСЂРЅРѕСЃС‚СЊ Р’РµС‚РёСЃ
+        if (!ret && inventParameters.InforReserveBatchOnlyVetisEnabled)
+        {
+            if (_inventTable.VetisIsSupervised
+                || (_batchId
+                    && InventBatch::find(_batchId, _inventTable.ItemId).VetisIsSupervised))
+            ret = true;
+        }
+        //РџСЂРѕРІРµСЂРєР° СЃРѕРѕС‚РІРµС‚СЃС‚РІРёСЏ РЅР° РїРѕРґРЅР°РґР·РѕСЂРЅРѕСЃС‚СЊ Р§Р—
+        if (!ret && inventParameters.InforReserveBatchOnlyMPEnabled)
+        {
+            if (_inventTable.DistributionIsMark
+                || _inventTable.MPVolumeAndVarietalAccounting)
+                ret = true;
+        }
+        //РџСЂРѕРІРµСЂРєР° СЃРѕРѕС‚РІРµС‚СЃС‚РІРёСЏ РЅР° РїРѕРґРЅР°РґР·РѕСЂРЅРѕСЃС‚СЊ Р•Р“РђРРЎ
+        if (!ret && inventParameters.InforReserveBatchOnlyEGAISEnabled)
+        {
+            if (_inventTable.AlcoholProductionTypeId_RU)
+                ret = true;
+        }
+    }
+    return ret;
+}

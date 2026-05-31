@@ -1,0 +1,67 @@
+//X5SHP_INT_1_000002024_02, SMironov, 27.02.2025
+public boolean validateQtyInforDAXSales(SalesId _salesId, StatusIssue _statusIssue)
+{
+    InforReserveSalesBatchCheckView     view;
+    boolean                             ret = true;
+    InforReserveSalesBatchTable         table;
+    ;
+    //X5SHP_EGAIS_000002044_01, SMironov, 14.04.2025 ->
+    //Р•СЃР»Рё СЌС‚Рѕ РїРёРІРѕ Рё РЅР° СЃРєР»Р°РґРµ РїР°СЂР°РјРµС‚СЂ РЅРµ РЎС‚СЂРѕРіРѕ РїРѕ РїР°СЂС‚РёСЏРј РёРЅС„РѕСЂ, С‚Рѕ РЅРµ РїСЂРѕРІРµСЂСЏРµРј
+    if (IOInforParameters::find().EGAISShipmentControl
+        && SalesTable::find(_salesId).alcoholType() == EGAISAlcItemType_RU::Beer)
+    {
+        if (salesTable::find(_salesId).InventLocation().EGAISInforBatchReservation
+            != EGAISInforBatchReservation::StrictInforBatches)
+            return ret;
+    }
+    //X5SHP_EGAIS_000002044_01, SMironov, 14.04.2025 <-
+    //Р•СЃР»Рё СЃРєР»Р°РґС‹ РЅРµ СЂР°РІРЅС‹ Р Р¦-РјР°РіР°Р·РёРЅ, С‚Рѕ РґСЂРѕРїРѕРІ РЅРµС‚, Рё РїСЂРѕРІРµСЂСЏС‚СЊ РЅРёС‡РµРіРѕ РЅРµ РЅР°РґРѕ
+    if (InventParameters::find().SalesWarehouseTypeExists(SalesTable::find(_salesId).InventLocation().WarehouseType))
+    {
+        while select * from reserveBatchTmp
+        {
+            select firstOnly view
+                where view.SalesId == _salesId
+                    && view.ItemId == reserveBatchTmp.ItemId
+                    && view.InventBatchId == reserveBatchTmp.InventBatchId;
+            if (view.RecId == 0)
+            {
+                table.clear();
+                table.initValue();
+                table.SalesId    = _salesId;
+                table.ItemId        = reserveBatchTmp.ItemId;
+                table.WMSPalletId   = reserveBatchTmp.WMSPalletId;
+                table.InventBatchId = reserveBatchTmp.InventBatchId;
+                table.InventTransId = salesLine::findItemId(_salesId, reserveBatchTmp.ItemId).InventTransId;
+                table.Qty           = reserveBatchTmp.Qty;
+                table.insert();
+            }
+        }
+        while select * from reserveBatchTmp
+        {
+            select sum(qty), sum(qtyDAX)
+                , count(RecId) //X5SHP_INT_1_000002056_01, SMironov, 17.03.2025
+                from view
+                where view.salesId == _salesId
+                    && view.ItemId == reserveBatchTmp.ItemId
+                    && view.InventBatchId == reserveBatchTmp.InventBatchId
+                    //&& view.WMSPalletId == reserveBatchTmp.WMSPalletId
+                    && view.StatusIssue == _statusIssue
+                    && view.InventBatchId == view.inventBatchIdDAX;
+            if (view.Qty == 0 && view.QtyDAX == 0)
+            {
+                error(strFmt("@MIK13820", reserveBatchTmp.ItemId, reserveBatchTmp.InventBatchId, _statusIssue));
+                ret = false;
+            }
+            //X5SHP_INT_1_000002056_01, SMironov, 17.03.2025 ->
+            //else if (abs(view.Qty) > abs(view.QtyDAX))
+            else if (view.RecId && (abs(view.Qty)/view.RecId) > abs(view.QtyDAX))
+            //X5SHP_INT_1_000002056_01, SMironov, 17.03.2025 <-
+            {
+                error(strFmt("@MIK11220", reserveBatchTmp.ItemId, reserveBatchTmp.InventBatchId));
+                ret = false;
+            }
+        }
+    }
+    return ret;
+}
